@@ -20,7 +20,7 @@
  ***************************************************************************/
 """
 build_vers = '2018-04-AA (QGIS 2.x)'
-build_type = 'release' #release / developmental
+build_type = 'developmental' #release / developmental
 
 # Import the PyQt and QGIS libraries
 from PyQt4.QtCore import *
@@ -183,17 +183,17 @@ class tuflowqgis_menu:
 		self.iface.addToolBarIcon(self.apply_auto_label_action)
 		self.iface.addPluginToMenu("&TUFLOW", self.apply_auto_label_action)
 		
+		#ES 2018/01 ARR2016 Beta
+		icon = QIcon(os.path.dirname(__file__) + "/icons/arr2016.PNG")
+		self.extract_arr2016_action = QAction(icon, "Extract ARR2016 for TUFLOW (beta)", self.iface.mainWindow())
+		QObject.connect(self.extract_arr2016_action, SIGNAL("triggered()"), self.extract_arr2016)
+		self.iface.addPluginToMenu("&TUFLOW", self.extract_arr2016_action)
+		self.iface.addToolBarIcon(self.extract_arr2016_action)
+		
 		# Check 1D network integrity
 		self.check_1d_integrity_action = QAction("Check 1D Network Integrity", self.iface.mainWindow())
 		self.check_1d_integrity_action.triggered.connect(self.check_1d_integrity)
 		self.iface.addPluginToMenu("&TUFLOW", self.check_1d_integrity_action)
-		
-		#ES 2018/01 ARR2016 Beta
-		#icon = QIcon(os.path.dirname(__file__) + "/icons/arr2016.PNG")
-		#self.extract_arr2016_action = QAction(icon, "Extract ARR2016 for TUFLOW (beta)", self.iface.mainWindow())
-		#QObject.connect(self.extract_arr2016_action, SIGNAL("triggered()"), self.extract_arr2016)
-		#self.iface.addPluginToMenu("&TUFLOW", self.extract_arr2016_action)
-		#self.iface.addToolBarIcon(self.extract_arr2016_action)
 		
 		#Init classes variables
 		self.dockOpened = False		#remember for not reopening dock if there's already one opened
@@ -353,7 +353,7 @@ class tuflowqgis_menu:
 		#QMessageBox.information(self.iface.mainWindow(), "About TUFLOW QGIS", 'This is a developmental version of the TUFLOW QGIS utitlity, build: '+build_vers)
 		QMessageBox.information(self.iface.mainWindow(), "About TUFLOW QGIS", "This is a {0} version of the TUFLOW QGIS utitlity\nBuild: {1}".format(build_type,build_vers))
 
-      # Added MJS 11/02  
+	# Added MJS 11/02
 	def import_check(self):
 		project = QgsProject.instance()
 		dialog = tuflowqgis_import_check_dialog(self.iface, project)
@@ -382,8 +382,7 @@ class tuflowqgis_menu:
 		error, message = tuflowqgis_apply_autoLabel_clayer(self.iface)
 		if error:
 			QMessageBox.critical(self.iface.mainWindow(), "Error", message)
-			
-			
+	
 	def check_1d_integrity(self):
 		dialog = tuflowqgis_check_1d_integrity_dialog(self.iface)
 		dialog.exec_()

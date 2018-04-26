@@ -36,6 +36,9 @@ import subprocess
 currentFolder = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.join(currentFolder, 'forms'))
 
+sys.path.append(r'C:\Program Files\JetBrains\PyCharm 2018.1\debug-eggs')
+sys.path.append(r'C:\Program Files\JetBrains\PyCharm 2018.1\helpers\pydev')
+import pydevd
 
 # ----------------------------------------------------------
 #    tuflowqgis increment selected layer
@@ -1435,7 +1438,7 @@ class tuflowqgis_extract_arr2016_dialog(QDialog, Ui_tuflowqgis_arr2016):
 				logfile = open(os.path.join(outFolder, 'log.txt'), 'a')
 			CREATE_NO_WINDOW = 0x08000000 # suppresses python console window
 			proc = subprocess.Popen(sys_args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, 
-								  creationflags=CREATE_NO_WINDOW)
+								    creationflags=CREATE_NO_WINDOW)
 			#proc = subprocess.Popen(sys_args)
 			try:
 				for line in proc.stdout:
@@ -1599,8 +1602,174 @@ class tuflowqgis_insert_tuflow_attributes_dialog(QDialog, Ui_tuflowqgis_insert_t
 		message = tuflowqgis_insert_tf_attributes(self.iface, inputLayer, basedir, runID, template, lenFields)
 		if message is not None:
 			QMessageBox.critical(self.iface.mainWindow(), "Importing TUFLOW Empty File(s)", message)
-			
-			
+
+
+# ----------------------------------------------------------
+#    tuflowqgis tuplot axis editor
+# ----------------------------------------------------------
+from ui_tuflowqgis_tuplotAxisEditor import *
+
+
+class tuflowqgis_tuplotAxisEditor(QDialog, Ui_tuplotAxisEditor):
+	def __init__(self, iface, xLim, yLim, xAuto, yAuto, xInc, yInc, axis2, x2Lim, y2Lim, x2Inc, y2Inc, x2Auto, y2Auto):
+		QDialog.__init__(self)
+		self.iface = iface
+		self.setupUi(self)
+		self.xLim = xLim
+		self.yLim = yLim
+		self.xInc = xInc
+		self.yInc = yInc
+		self.x2Lim = x2Lim
+		self.y2Lim = y2Lim
+		self.x2Inc = x2Inc
+		self.y2Inc = y2Inc
+		
+		# Set tabs enabled and secondary axis group boxes
+		if axis2 is None:
+			self.tabWidget.setTabEnabled(1, False)
+		else:
+			if axis2 == 'sharex':
+				self.groupBox_2.setEnabled(False)
+				self.yMin_sb_2.setValue(y2Lim[0])
+				self.yMax_sb_2.setValue(y2Lim[1])
+				self.yInc_sb_2.setValue(y2Inc)
+			elif axis2 == 'sharey':
+				self.groupBox.setEnabled(False)
+				self.xMin_sb_2.setValue(x2Lim[0])
+				self.xMax_sb_2.setValue(x2Lim[1])
+				self.xInc_sb_2.setValue(x2Inc)
+		
+		# Set Radio Buttons
+		if xAuto:
+			self.xAxisAuto_rb.setChecked(True)
+			self.xAxisCustom_rb.setChecked(False)
+		else:
+			self.xAxisAuto_rb.setChecked(False)
+			self.xAxisCustom_rb.setChecked(True)
+		if yAuto:
+			self.yAxisAuto_rb.setChecked(True)
+			self.yAxisCustom_rb.setChecked(False)
+		else:
+			self.yAxisAuto_rb.setChecked(False)
+			self.yAxisCustom_rb.setChecked(True)
+		if x2Auto:
+			self.xAxisAuto_rb_2.setChecked(True)
+			self.xAxisCustom_rb_2.setChecked(False)
+		else:
+			self.xAxisAuto_rb_2.setChecked(False)
+			self.xAxisCustom_rb_2.setChecked(True)
+		if y2Auto:
+			self.yAxisAuto_rb_2.setChecked(True)
+			self.yAxisCustom_rb_2.setChecked(False)
+		else:
+			self.yAxisAuto_rb_2.setChecked(False)
+			self.yAxisCustom_rb_2.setChecked(True)
+		
+		# Assign Limit values to primary axis dialog box
+		self.xMin_sb.setValue(xLim[0])
+		self.xMax_sb.setValue(xLim[1])
+		self.yMin_sb.setValue(yLim[0])
+		self.yMax_sb.setValue(yLim[1])
+		self.xInc_sb.setValue(xInc)
+		self.yInc_sb.setValue(yInc)
+		
+		# Signals
+		self.buttonBox.accepted.connect(self.run)
+		self.buttonBox.rejected.connect(lambda: self.cancel(xAuto, yAuto, x2Auto, y2Auto))
+		self.xMin_sb.valueChanged.connect(self.value_xChanged)
+		self.xMax_sb.valueChanged.connect(self.value_xChanged)
+		self.xInc_sb.valueChanged.connect(self.value_xChanged)
+		self.yMin_sb.valueChanged.connect(self.value_yChanged)
+		self.yMax_sb.valueChanged.connect(self.value_yChanged)
+		self.yInc_sb.valueChanged.connect(self.value_yChanged)
+		self.xMin_sb_2.valueChanged.connect(self.value_x2Changed)
+		self.xMax_sb_2.valueChanged.connect(self.value_x2Changed)
+		self.xInc_sb_2.valueChanged.connect(self.value_x2Changed)
+		self.yMin_sb_2.valueChanged.connect(self.value_y2Changed)
+		self.yMax_sb_2.valueChanged.connect(self.value_y2Changed)
+		self.yInc_sb_2.valueChanged.connect(self.value_y2Changed)
+	
+	def value_xChanged(self):
+		self.xAxisAuto_rb.setChecked(False)
+		self.xAxisCustom_rb.setChecked(True)
+	
+	def value_yChanged(self):
+		self.yAxisAuto_rb.setChecked(False)
+		self.yAxisCustom_rb.setChecked(True)
+	
+	def value_x2Changed(self):
+		self.xAxisAuto_rb_2.setChecked(False)
+		self.xAxisCustom_rb_2.setChecked(True)
+	
+	def value_y2Changed(self):
+		self.yAxisAuto_rb_2.setChecked(False)
+		self.yAxisCustom_rb_2.setChecked(True)
+	
+	def run(self):
+		if self.xAxisCustom_rb.isChecked():
+			self.xLim = [self.xMin_sb.value(), self.xMax_sb.value()]
+			self.xInc = self.xInc_sb.value()
+		if self.yAxisCustom_rb.isChecked():
+			self.yLim = [self.yMin_sb.value(), self.yMax_sb.value()]
+			self.yInc = self.yInc_sb.value()
+		if self.xAxisCustom_rb_2.isChecked():
+			self.x2Lim = [self.xMin_sb_2.value(), self.xMax_sb_2.value()]
+			self.x2Inc = self.xInc_sb_2.value()
+		if self.yAxisCustom_rb_2.isChecked():
+			self.y2Lim = [self.yMin_sb_2.value(), self.yMax_sb_2.value()]
+			self.y2Inc = self.yInc_sb_2.value()
+		return
+	
+	def cancel(self, xAuto, yAuto, x2Auto, y2Auto):
+		# revert back to original values
+		if xAuto:
+			self.xAxisAuto_rb.setChecked(True)
+			self.xAxisCustom_rb.setChecked(False)
+		else:
+			self.xAxisAuto_rb.setChecked(False)
+			self.xAxisCustom_rb.setChecked(True)
+		if yAuto:
+			self.yAxisAuto_rb.setChecked(True)
+			self.yAxisCustom_rb.setChecked(False)
+		else:
+			self.yAxisAuto_rb.setChecked(False)
+			self.yAxisCustom_rb.setChecked(True)
+		if x2Auto:
+			self.xAxisAuto_rb_2.setChecked(True)
+			self.xAxisCustom_rb_2.setChecked(False)
+		else:
+			self.xAxisAuto_rb_2.setChecked(False)
+			self.xAxisCustom_rb_2.setChecked(True)
+		if y2Auto:
+			self.yAxisAuto_rb_2.setChecked(True)
+			self.yAxisCustom_rb_2.setChecked(False)
+		else:
+			self.yAxisAuto_rb_2.setChecked(False)
+			self.yAxisCustom_rb_2.setChecked(True)
+
+
+# ----------------------------------------------------------
+#    tuflowqgis 1D integrity output window
+# ----------------------------------------------------------
+from ui_tuflowqgis_integrityOutput import *
+
+
+class tuflowqgis_1d_integrity_output(QDialog, Ui_integrityOutput):
+	def __init__(self, iface, results):
+		QDialog.__init__(self)
+		self.iface = iface
+		self.setupUi(self)
+		
+		# populate text box with results
+		self.textBrowser.append(results)
+		
+		# Signals
+		self.buttonBox.accepted.connect(self.run)
+		
+	def run(self):
+		return
+
+
 # ----------------------------------------------------------
 #    tuflowqgis check 1D network integrity
 # ----------------------------------------------------------
@@ -1617,27 +1786,55 @@ class tuflowqgis_check_1d_integrity_dialog(QDialog, Ui_check1dIntegrity):
 		for name, layer in QgsMapLayerRegistry.instance().mapLayers().iteritems():
 			if layer.type() == QgsMapLayer.VectorLayer:
 				if layer.geometryType() == 0:
-					self.addPoint_combo.addItem(layer.name())	
+					self.addPoint_combo.addItem(layer.name())
 				elif layer.geometryType() == 1:
 					self.addLine_combo.addItem(layer.name())
 		
 		# signals
 		self.addLine_button.clicked.connect(lambda: self.addLyr('line'))
 		self.addPoint_button.clicked.connect(lambda: self.addLyr('point'))
+		self.removeLine_button.clicked.connect(lambda: self.removeLyr('line'))
+		self.removePoint_button.clicked.connect(lambda: self.removeLyr('point'))
 		self.browse_button.clicked.connect(self.browse)
 		self.outTxtFile_cb.clicked.connect(self.toggleOutFile)
+		self.autoSnap_cb.clicked.connect(self.toggleSearchRadius_sb)
+		self.correctPipeDir_cb.clicked.connect(self.toggleInvertFields)
+		self.lineLyrs_lw.currentItemChanged.connect(self.toggleInvertFields)
+		self.addLine_button.clicked.connect(self.toggleInvertFields)
+		self.getDsConnection_cb.clicked.connect(self.toggleStartElement)
+		self.addLine_button.clicked.connect(self.toggleStartElement)
+		self.getGroundElev_cb.clicked.connect(self.toggleDemSel)
 		self.buttonBox.accepted.connect(self.run)
-		
-		
+	
 	def addLyr(self, type):
 		if type == 'point':
 			inLyr = self.addPoint_combo.currentText()
-			self.pointLyrs_lw.insertItem(-1, inLyr)
+			self.pointLyrs_lw.insertItem(0, inLyr)
+			item = self.pointLyrs_lw.item(0)
+			self.pointLyrs_lw.setItemSelected(item, True)
 		elif type == 'line':
 			inLyr = self.addLine_combo.currentText()
-			self.lineLyrs_lw.insertItem(-1, inLyr)
-		
-			
+			self.lineLyrs_lw.insertItem(0, inLyr)
+			item = self.lineLyrs_lw.item(0)
+			self.lineLyrs_lw.setItemSelected(item, True)
+	
+	def removeLyr(self, type):
+		if type == 'point':
+			removeIndex = []
+			for i in range(self.pointLyrs_lw.count()):
+				if self.pointLyrs_lw.item(i).isSelected():
+					removeIndex.append(i)
+			for i in reversed(removeIndex):
+				self.pointLyrs_lw.takeItem(i)
+		elif type == 'line':
+			removeIndex = []
+			for i in range(self.lineLyrs_lw.count()):
+				if self.lineLyrs_lw.item(i).isSelected():
+					removeIndex.append(i)
+			for i in reversed(removeIndex):
+				self.lineLyrs_lw.takeItem(i)
+
+	
 	def browse(self):
 		outFile_old = None
 		if len(self.outFile.text()) > 0:
@@ -1656,7 +1853,6 @@ class tuflowqgis_check_1d_integrity_dialog(QDialog, Ui_check1dIntegrity):
 			settings.setValue("check1dIntegrity", os.path.dirname(outFile))
 			self.outFile.setText(outFile)
 	
-	
 	def toggleOutFile(self):
 		if self.outTxtFile_cb.isChecked():
 			self.outFile.setEnabled(True)
@@ -1665,11 +1861,69 @@ class tuflowqgis_check_1d_integrity_dialog(QDialog, Ui_check1dIntegrity):
 			self.outFile.setEnabled(False)
 			self.browse_button.setEnabled(False)
 	
+	def toggleSearchRadius_sb(self):
+		if self.autoSnap_cb.isChecked():
+			self.snapSearchDis_sb.setenabled(True)
+		else:
+			self.snapSearchDis_sb.setenabled(False)
+			
+	def toggleInvertFields(self):
+		self.usInvField_combo.clear()
+		self.dsInvField_combo.clear()
+		if self.correctPipeDir_cb.isChecked():
+			self.usInvField_combo.setEnabled(True)
+			self.dsInvField_combo.setEnabled(True)
+			if self.lineLyrs_lw.count() > 0:
+				name = self.lineLyrs_lw.item(0).text()
+				lyr = tuflowqgis_find_layer(name)
+				if lyr is not None:
+					for f in lyr.fields():
+						self.usInvField_combo.addItem(f.name())
+						self.dsInvField_combo.addItem(f.name())
+				
+		else:
+			self.usInvField_combo.setEnabled(False)
+			self.dsInvField_combo.setEnabled(False)
+			
+	def toggleStartElement(self):
+		if self.getDsConnection_cb.isChecked():
+			self.name1d_combo.setEnabled(True)
+			self.plotDsConn_cb.setEnabled(True)
+			self.getGroundElev_cb.setEnabled(True)
+			if self.lineLyrs_lw.count() > 0:
+				name = self.lineLyrs_lw.item(0).text()
+				lyr = tuflowqgis_find_layer(name)
+				if lyr is not None:
+					for feature in lyr.getFeatures():
+						try:
+							self.name1d_combo.addItem(feature.attributes()[0])
+						except:
+							pass
+		else:
+			self.name1d_combo.setEnabled(False)
+			self.plotDsConn_cb.setEnabled(False)
+			self.getGroundElev_cb.setEnabled(False)
+			
+	def toggleDemSel(self):
+		self.dem_combo.clear()
+		if self.getGroundElev_cb.isChecked():
+			self.dem_combo.setEnabled(True)
+			rasterLyrs = findAllRasterLyrs()
+			if len(rasterLyrs) > 0:
+				for raster in rasterLyrs:
+					self.dem_combo.addItem(raster)
+		else:
+			self.dem_combo.setEnabled(False)
 	
 	def run(self):
 		# Get inputs
 		checkLine = False
 		checkPoint = False
+		autoSnap = False
+		correctPipeDir = False
+		getDnsConn = False
+		plotDnsConn = False
+		getDemElev = False
 		outMsg = False
 		outSel = False
 		outTxt = False
@@ -1677,6 +1931,21 @@ class tuflowqgis_check_1d_integrity_dialog(QDialog, Ui_check1dIntegrity):
 			checkLine = True
 		if self.check1dPoint_cb.isChecked():
 			checkPoint = True
+		if self.autoSnap_cb.isChecked():
+			autoSnap = True
+			searchRadius = self.snapSearchDis_sb.value()
+		if self.correctPipeDir_cb.isChecked():
+			correctPipeDir = True
+			usInvField = self.usInvField_combo.text()
+			dsInvField = self.dsInvField_combo.text()
+		if self.getDsConnection_cb.isChecked():
+			getDnsConn = True
+			startElem = self.name1d_combo.text()
+			if self.plotDsConn_cb.isChecked():
+				plotDnsConn = True
+			if self.getGroundElev_cb.isChecked():
+				getDemElev = True
+				dem = tuflowqgis_find_layer(self.dem_combo.text())
 		if self.outMessBox_cb.isChecked():
 			outMsg = True
 		if self.outSel_cb.isChecked():
@@ -1687,29 +1956,68 @@ class tuflowqgis_check_1d_integrity_dialog(QDialog, Ui_check1dIntegrity):
 		lineLyrs = []
 		for i in range(self.lineLyrs_lw.count()):
 			lineLyrs.append(tuflowqgis_find_layer(self.lineLyrs_lw.item(i).text()))
-			
+		
 		if checkPoint:
 			pointLyrs = []
 			for i in range(self.pointLyrs_lw.count()):
 				pointLyrs.append(tuflowqgis_find_layer(self.pointLyrs_lw.item(i).text()))
 		
-		if outTxt:
-			outFile = self.outFile.text()
-			
 		# create dictionary of line objects {name: [start vertice, end vertice]}
 		lineDict = getVertices(lineLyrs)  # get start and end line vertices
 		if checkPoint:
 			pointDict = getVertices(pointLyrs)
-			
+		
 		# Check snapping
 		if checkLine:
-			unsnappedLines = checkSnapping(lines=lineDict)
+			unsnappedLines, unsnappedLineNames = checkSnapping(lines=lineDict)
 		if checkPoint:
 			unsnappedPoints = checkSnapping(lines=lineDict, points=pointDict)
 		
-		if outMsg:
-			if checkLine:
-				QMessageBox.information(self.iface.mainWindow(), "Results", "Unsnapped Lines:\n{0}".format(unsnappedLines))
+		# Output
+		if outMsg or outTxt:
+			if outMsg:
+				results = '###############\n# 1D Integrity Output  #\n###############\n'
+			else:
+				results = '#######################\n# 1D Integrity Output #\n#######################\n'
 			if checkPoint:
-				QMessageBox.information(self.iface.mainWindow(), "Results", "Unsnapped Points:\n{0}".format(unsnappedPoints))
-		return
+				results += '\n' + r'\\ Unsnapped Nodes \\' + '\n\n'
+				if len(unsnappedPoints) == 0:
+					results += 'None\n'
+				else:
+					for node in unsnappedPoints:
+						results += '{0}\n'.format(node)
+			if checkLine:
+				results += '\n' + r'\\ Unsnapped Lines \\' + '\n\n'
+				if len(unsnappedLines) == 0:
+					results += 'None\n'
+				else:
+					for line in unsnappedLines:
+						results += '{0}\n'.format(line)
+			if outMsg:
+				self.outDialog = tuflowqgis_1d_integrity_output(self.iface, results)
+				self.outDialog.show()
+			if outTxt:
+				outFile = self.outFile.text()
+				f = open(outFile, 'w')
+				f.write(results)
+				f.close()
+		if outSel:
+			# remove any current selection
+			for layer in self.iface.mapCanvas().layers():
+				if layer.type() == 0:
+					layer.removeSelection()
+			# select points
+			if checkPoint:
+				for layer in pointLyrs:
+					for f in layer.getFeatures():
+						if f.attributes()[0] in unsnappedPoints:
+							fid = f.id()
+							layer.select(fid)
+			# select lines
+			if checkLine:
+				for layer in lineLyrs:
+					for f in layer.getFeatures():
+						if f.attributes()[0] in unsnappedLineNames:
+							fid = f.id()
+							layer.select(fid)
+

@@ -31,6 +31,9 @@ import matplotlib
 import glob # MJS 11/02
 import tuflowqgis_styles
 
+sys.path.append(r'C:\Program Files\JetBrains\PyCharm 2018.1\debug-eggs')
+sys.path.append(r'C:\Program Files\JetBrains\PyCharm 2018.1\helpers\pydev')
+import pydevd
 
 # --------------------------------------------------------
 #    tuflowqgis Utility Functions
@@ -43,6 +46,21 @@ def tuflowqgis_find_layer(layer_name):
 			return search_layer
 
 	return None
+
+def tuflowqgis_find_plot_layers():
+
+	plotLayers = []
+
+	for name, search_layer in QgsMapLayerRegistry.instance().mapLayers().iteritems():
+		if '_PLOT_P' in search_layer.name() or 'PLOT_L' in search_layer.name():
+			plotLayers.append(search_layer)
+		if len(plotLayers) == 2:
+			return plotLayers
+
+	if len(plotLayers) == 1:
+		return plotLayers
+	else:
+		return None
 	
 def tuflowqgis_duplicate_file(qgis, layer, savename, keepform):
 	if (layer == None) and (layer.type() != QgsMapLayer.VectorLayer):
@@ -897,12 +915,74 @@ def tuflowqgis_apply_autoLabel_clayer(qgis):
 	return error, message
 
 
+def find_waterLevelPoint(selection, plotLayer):
+	"""Finds snapped PLOT_P layer to selected XS layer
+
+	QgsFeatureLayer selection: current selection in map window
+	QgsVectorLayer plotLayer: PLOT_P layer
+	"""
+
+	message = ''
+	error = False
+	intersectedPoints = []
+	intersectedLines = []
+	plotP = None
+	plotL = None
+
+	if plotLayer is None:
+		error = True
+		message = 'Could not find result gis layers.'
+		return intersectedPoints, intersectedLines, message, error
+
+	for plot in plotLayer:
+		if '_PLOT_P' in plot.name():
+			plotP = plot
+		elif '_PLOT_L' in plot.name():
+			plotL = plot
+	if plotP is None and plotL is None:
+		error = True
+		message = 'Could not find result gis layers.'
+		return intersectedPoints, intersectedLines, message, error
+
+	for xSection in selection:
+		if plotP is not None:
+			found_intersect = False
+			for point in plotP.getFeatures():
+				if point.geometry().intersects(xSection.geometry()):
+					intersectedPoints.append(point['ID'].strip())
+					found_intersect = True
+			if found_intersect:
+				intersectedLines.append(None)
+				continue
+			else:
+				intersectedPoints.append(None)
+				if plotL is not None:
+					for line in plotL.getFeatures():
+						if line.geometry().intersects(xSection.geometry()):
+							intersectedLines.append(line['ID'].strip())
+							found_intersect = True
+				if not found_intersect:
+					intersectedLines.append(None)
+		else:
+			intersectedPoints.append(None)
+			if plotL is not None:
+				found_intersect = False
+				for line in plotL.getFeatures():
+					if line.geometry().intersects(xSection.geometry()):
+						intersectedLines.append(line['ID'].strip())
+						found_intersect = True
+			if not found_intersect:
+				intersectedLines.append(None)
+
+	return intersectedPoints, intersectedLines, message, error
+
+
 def getVertices(lyrs):
 	"""
 	Creates a dictionary from all layers. For line layers it will get both start and end, for points
 	it will get centroid.
-	
-	:lyrs: list of QgisVectorLayers
+
+	:param lyrs: list of QgisVectorLayers
 	:return: compiled dictionary of all QgsVectorLayers in format of {name: [vertices]}
 	"""
 	
@@ -924,14 +1004,14 @@ def checkSnapping(**kwargs):
 	Takes vertices and checks if there are any matching and returns a list if there are no matching.
 	For points, it will check points against lines.
 	For lines, it will check against other lines in the same layer
-	
-	:args: dictionary objects with names and vertices {name: [vertices]}
+
+	:param kwargs: dictionary objects with names and vertices {name: [vertices]}
 	:return: list of unsnapped objects
 	"""
 	
 	# determine which snapping check is being performed
 	checkPoint = False
-	checkLine = False	
+	checkLine = False
 	lineDict = kwargs['lines']  # will need lines no matter what
 	lineDict_len = len(lineDict)
 	if 'points' in kwargs.keys():
@@ -939,8 +1019,9 @@ def checkSnapping(**kwargs):
 		pointDict = kwargs['points']
 	else:
 		checkLine = True
-		
+	
 	unsnapped = []
+	unsnapped_names = []
 	# Check to see if line is snapped to another line at both ends
 	if checkLine:
 		for lName, lLoc in lineDict.items():
@@ -956,10 +1037,13 @@ def checkSnapping(**kwargs):
 							found = True
 							continue
 					if i + 1 == lineDict_len and not found:
+						if lName not in unsnapped_names:
+							unsnapped_names.append(lName)
 						if j == 0:
 							unsnapped.append('{0} upstream'.format(lName))
 						else:
 							unsnapped.append('{0} downstream'.format(lName))
+		return unsnapped, unsnapped_names
 	# Check to see if point is snapped to a line
 	if checkPoint:
 		for pName, pLoc in pointDict.items():  # loop through all points
@@ -973,6 +1057,19 @@ def checkSnapping(**kwargs):
 						continue
 				if i + 1 == lineDict_len and not found:
 					unsnapped.append(pName)
-					
-	return unsnapped
+	
+		return unsnapped
 
+
+def findAllRasterLyrs():
+	"""
+	
+	:return: list of open raster layers
+	"""
+	
+	rasterLyrs = []
+	for name, search_layer in QgsMapLayerRegistry.instance().mapLayers().iteritems():
+		if search_layer.type() == 1:
+			rasterLyrs.append(name)
+			
+	return rasterLyrs
