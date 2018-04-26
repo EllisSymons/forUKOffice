@@ -36,9 +36,9 @@ import subprocess
 currentFolder = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.join(currentFolder, 'forms'))
 
-sys.path.append(r'C:\Program Files\JetBrains\PyCharm 2018.1\debug-eggs')
-sys.path.append(r'C:\Program Files\JetBrains\PyCharm 2018.1\helpers\pydev')
-import pydevd
+#sys.path.append(r'C:\Program Files\JetBrains\PyCharm 2018.1\debug-eggs')
+#sys.path.append(r'C:\Program Files\JetBrains\PyCharm 2018.1\helpers\pydev')
+#import pydevd
 
 # ----------------------------------------------------------
 #    tuflowqgis increment selected layer

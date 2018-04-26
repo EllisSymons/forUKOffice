@@ -24,9 +24,9 @@ from tuflowqgis_library import *
 from tuflowqgis_dialog import *
 
 # Debug using PyCharm
-sys.path.append(r'C:\Program Files\JetBrains\PyCharm 2018.1\debug-eggs')
-sys.path.append(r'C:\Program Files\JetBrains\PyCharm 2018.1\helpers\pydev')
-import pydevd
+#sys.path.append(r'C:\Program Files\JetBrains\PyCharm 2018.1\debug-eggs')
+#sys.path.append(r'C:\Program Files\JetBrains\PyCharm 2018.1\helpers\pydev')
+#import pydevd
 #pydevd.settrace('localhost', port=53100, stdoutToServer=True, stderrToServer=True)
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)) + "/forms")

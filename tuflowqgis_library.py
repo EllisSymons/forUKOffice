@@ -31,9 +31,9 @@ import matplotlib
 import glob # MJS 11/02
 import tuflowqgis_styles
 
-sys.path.append(r'C:\Program Files\JetBrains\PyCharm 2018.1\debug-eggs')
-sys.path.append(r'C:\Program Files\JetBrains\PyCharm 2018.1\helpers\pydev')
-import pydevd
+#sys.path.append(r'C:\Program Files\JetBrains\PyCharm 2018.1\debug-eggs')
+#sys.path.append(r'C:\Program Files\JetBrains\PyCharm 2018.1\helpers\pydev')
+#import pydevd
 
 # --------------------------------------------------------
 #    tuflowqgis Utility Functions
