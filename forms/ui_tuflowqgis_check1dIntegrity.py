@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'ui_tuflowqgis_check1dIntegrity.ui'
 #
-# Created: Thu Apr 26 17:28:17 2018
+# Created: Fri Apr 27 10:21:18 2018
 #      by: PyQt4 UI code generator 4.10.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -82,7 +82,7 @@ class Ui_check1dIntegrity(object):
         self.groupBox_4.setTitle(_fromUtf8(""))
         self.groupBox_4.setObjectName(_fromUtf8("groupBox_4"))
         self.autoSnap_cb = QtGui.QCheckBox(self.groupBox_4)
-        self.autoSnap_cb.setEnabled(False)
+        self.autoSnap_cb.setEnabled(True)
         self.autoSnap_cb.setGeometry(QtCore.QRect(5, 2, 161, 20))
         self.autoSnap_cb.setObjectName(_fromUtf8("autoSnap_cb"))
         self.label_4 = QtGui.QLabel(self.groupBox_4)

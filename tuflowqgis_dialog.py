@@ -1863,7 +1863,7 @@ class tuflowqgis_check_1d_integrity_dialog(QDialog, Ui_check1dIntegrity):
 	
 	def toggleSearchRadius_sb(self):
 		if self.autoSnap_cb.isChecked():
-			self.snapSearchDis_sb.setenabled(True)
+			self.snapSearchDis_sb.setEnabled(True)
 		else:
 			self.snapSearchDis_sb.setenabled(False)
 			
@@ -1969,9 +1969,9 @@ class tuflowqgis_check_1d_integrity_dialog(QDialog, Ui_check1dIntegrity):
 		
 		# Check snapping
 		if checkLine:
-			unsnappedLines, unsnappedLineNames = checkSnapping(lines=lineDict)
+			unsnappedLines, unsnappedLineNames, closestVLines = checkSnapping(lines=lineDict)
 		if checkPoint:
-			unsnappedPoints = checkSnapping(lines=lineDict, points=pointDict)
+			unsnappedPoints, closestVPoints = checkSnapping(lines=lineDict, points=pointDict)
 		
 		# Output
 		if outMsg or outTxt:
@@ -1993,6 +1993,18 @@ class tuflowqgis_check_1d_integrity_dialog(QDialog, Ui_check1dIntegrity):
 				else:
 					for line in unsnappedLines:
 						results += '{0}\n'.format(line)
+			if checkPoint and autoSnap:
+				returnLog = moveVertices(pointLyrs, closestVPoints, searchRadius)
+				if len(returnLog) < 1:
+					results += '\n' + r'\\ Auto Snap Nodes \\' + '\n\nNone\n'
+				else:
+					results += '\n' + r'\\ Auto Snap Nodes \\' + '\n\n{0}\n'.format(returnLog)
+			if checkLine and autoSnap:
+				returnLog = moveVertices(lineLyrs, closestVLines, searchRadius)
+				if len(returnLog) < 1:
+					results += '\n' + r'\\ Auto Snap Lines \\' + '\n\nNone\n'
+				else:
+					results += '\n' + r'\\ Auto Snap Lines \\' + '\n\n{0}\n'.format(returnLog)
 			if outMsg:
 				self.outDialog = tuflowqgis_1d_integrity_output(self.iface, results)
 				self.outDialog.show()

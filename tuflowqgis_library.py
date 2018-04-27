@@ -983,18 +983,19 @@ def getVertices(lyrs):
 	it will get centroid.
 
 	:param lyrs: list of QgisVectorLayers
-	:return: compiled dictionary of all QgsVectorLayers in format of {name: [vertices]}
+	:return: compiled dictionary of all QgsVectorLayers in format of {name: [[vertices], feature id]}
 	"""
 	
 	vectorDict = {}
 	for line in lyrs:
 		for feature in line.dataProvider().getFeatures():
+			fid = feature.id()
 			if line.geometryType() == 0:
 				geom = feature.geometry().asPoint()
-				vectorDict[feature.attributes()[0]] = [geom]
+				vectorDict[feature.attributes()[0]] = [[geom], fid, line]
 			elif line.geometryType() == 1:
 				geom = feature.geometry().asPolyline()
-				vectorDict[feature.attributes()[0]] = [geom[0], geom[-1]]
+				vectorDict[feature.attributes()[0]] = [[geom[0], geom[-1]], fid, line]
 	
 	return vectorDict
 
@@ -1012,6 +1013,7 @@ def checkSnapping(**kwargs):
 	# determine which snapping check is being performed
 	checkPoint = False
 	checkLine = False
+	autoSnap = False
 	lineDict = kwargs['lines']  # will need lines no matter what
 	lineDict_len = len(lineDict)
 	if 'points' in kwargs.keys():
@@ -1019,46 +1021,77 @@ def checkSnapping(**kwargs):
 		pointDict = kwargs['points']
 	else:
 		checkLine = True
-	
-	unsnapped = []
-	unsnapped_names = []
+	pydevd.settrace('localhost', port=53100, stdoutToServer=True, stderrToServer=True)
+	closestV = {}  # dictionary of the original fid, closest node name, the vertex, and the distance away
+	unsnapped = []  # list of unsnapped vertices
+	unsnapped_names = []  # used for lines to get the line name (lines have 2 vertices so this is required)
 	# Check to see if line is snapped to another line at both ends
 	if checkLine:
-		for lName, lLoc in lineDict.items():
+		for lName, lParam in lineDict.items():
+			lLoc = lParam[0]
+			lFid = lParam[1]
+			lyr = lParam[2]
 			for j, v in enumerate(lLoc):
 				found = False
-				for i, (lName2, lLoc2) in enumerate(lineDict.items()):
+				minDist = 99999
+				for i, (lName2, lParam2) in enumerate(lineDict.items()):
+					lLoc2 = lParam2[0]
+					lFid2 = lParam2[1]
 					if lName == lName2:
 						continue
 					if found:
 						break
-					for v2 in lLoc2:
+					for j2, v2 in enumerate(lLoc2):
 						if v == v2:
 							found = True
 							continue
+						else:
+							dist = ((v2[0] - v[0]) ** 2 + (v2[1] - v[1]) ** 2) ** 0.5
+							minDist = min(minDist, dist)
+							if minDist == dist:
+								v3 = v2
+								name = lName2
+								node = j2
 					if i + 1 == lineDict_len and not found:
 						if lName not in unsnapped_names:
 							unsnapped_names.append(lName)
 						if j == 0:
 							unsnapped.append('{0} upstream'.format(lName))
+							closestV['{0}==0'.format(lName)] = [lyr, lFid, '{0}=={1}'.format(name, node), v3, minDist]
 						else:
 							unsnapped.append('{0} downstream'.format(lName))
-		return unsnapped, unsnapped_names
+							closestV['{0}==1'.format(lName)] = [lyr, lFid, '{0}=={1}'.format(name, node), v3, minDist]
+		
+		return unsnapped, unsnapped_names, closestV
 	# Check to see if point is snapped to a line
 	if checkPoint:
-		for pName, pLoc in pointDict.items():  # loop through all points
+		for pName, pParam in pointDict.items():  # loop through all points
+			pLoc = pParam[0]
+			pFid = pParam[1]
+			lyr = pParam[2]
 			found = False
-			for i, (lName, lLoc) in enumerate(lineDict.items()):  # loop through all lines
+			minDist = 99999
+			for i, (lName, lParam) in enumerate(lineDict.items()):  # loop through all lines
+				lLoc = lParam[0]
+				lFid = lParam[1]
 				if found:
 					break
-				for coord in lLoc:
+				for j, coord in enumerate(lLoc):
 					if coord == pLoc[0]:
 						found = True
 						continue
+					else:
+						dist = ((coord[0] - pLoc[0][0]) ** 2 + (coord[1] - pLoc[0][1]) ** 2) ** 0.5
+						minDist = min(minDist, dist)
+						if minDist == dist:
+							v = coord
+							name = lName
+							node = j
 				if i + 1 == lineDict_len and not found:
 					unsnapped.append(pName)
+					closestV['{0}'.format(pName)] = [lyr, pFid, '{0}=={1}'.format(name, node), v, minDist]
 	
-		return unsnapped
+		return unsnapped, closestV
 
 
 def findAllRasterLyrs():
@@ -1073,3 +1106,60 @@ def findAllRasterLyrs():
 			rasterLyrs.append(name)
 			
 	return rasterLyrs
+
+
+def moveVertices(lyrs, vertices_dict, dist):
+	"""
+	Edits the vertices within the layer to the snap location if within the distance
+	
+	:param lyr: layer being edited
+	:param dist: allowed move distance
+	:param vertices_dict: dictionary containing all information {orig lyr, orig name: [original id, snap name, snap vertex, snap distance]}
+	:return: string of logged moves
+	"""
+	
+	editedV = []
+	node = None
+	log = ''
+	for lyr in lyrs:
+		lyr.startEditing()
+		for id, param in vertices_dict.items():
+			if lyr == param[0]:
+				if id not in editedV:
+					if param[4] <= dist:
+						if len(id.split('==')) > 1:
+							name, node = id.split('==')
+						else:
+							name = id
+						fid = param[1]
+						id2 = param[2]
+						name2, node2 = id2.split('==')
+						v = param[3]
+						if node is None or node == '0':
+							lyr.moveVertex(v[0], v[1], fid, 0)
+						else:
+							for feature in lyr.getFeatures():  # QGIS 3 has the ability to select by FID rather than loop
+								if feature.id() == fid:
+									vertices = feature.geometry().asPolyline()
+									lastVertex = len(vertices) - 1
+							lyr.moveVertex(v[0], v[1], fid, lastVertex)
+						editedV.append(id)
+						editedV.append(id2)
+						if node is None:
+							if node2 == '0':
+								log += 'Connected {0} to {1} upstream ({2:.4f}, {3:.4f})\n'.format(name, name2, v[0], v[1])
+							else:
+								log += 'Connected {0} to {1} downstream ({2:.4f}, {3:.4f})\n'.format(name, name2, v[0], v[1])
+						elif node == '0':
+							if node2 == '0':
+								log += 'Connected {0} upstream to {1} upstream ({2:.4f}, {3:.4f})\n'.format(name, name2, v[0], v[1])
+							else:
+								log += 'Connected {0} upstream to {1} downstream ({2:.4f}, {3:.4f})\n'.format(name, name2, v[0], v[1])
+						else:
+							if node2 == '0':
+								log += 'Connected {0} downstream to {1} upstream ({2:.4f}, {3:.4f})\n'.format(name, name2, v[0], v[1])
+							else:
+								log += 'Connected {0} downstream to {1} downstream ({2:.4f}, {3:.4f})\n'.format(name, name2, v[0], v[1])
+		lyr.commitChanges()
+
+	return log

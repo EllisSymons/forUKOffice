@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'ui_tuflowqgis_integrityOutput.ui'
 #
-# Created: Thu Apr 26 14:36:52 2018
+# Created: Fri Apr 27 11:19:26 2018
 #      by: PyQt4 UI code generator 4.10.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -26,15 +26,17 @@ except AttributeError:
 class Ui_integrityOutput(object):
     def setupUi(self, integrityOutput):
         integrityOutput.setObjectName(_fromUtf8("integrityOutput"))
-        integrityOutput.resize(542, 678)
+        integrityOutput.resize(511, 672)
+        self.gridLayout = QtGui.QGridLayout(integrityOutput)
+        self.gridLayout.setObjectName(_fromUtf8("gridLayout"))
+        self.textBrowser = QtGui.QTextBrowser(integrityOutput)
+        self.textBrowser.setObjectName(_fromUtf8("textBrowser"))
+        self.gridLayout.addWidget(self.textBrowser, 0, 0, 1, 1)
         self.buttonBox = QtGui.QDialogButtonBox(integrityOutput)
-        self.buttonBox.setGeometry(QtCore.QRect(190, 640, 341, 32))
         self.buttonBox.setOrientation(QtCore.Qt.Horizontal)
         self.buttonBox.setStandardButtons(QtGui.QDialogButtonBox.Cancel|QtGui.QDialogButtonBox.Ok)
         self.buttonBox.setObjectName(_fromUtf8("buttonBox"))
-        self.textBrowser = QtGui.QTextBrowser(integrityOutput)
-        self.textBrowser.setGeometry(QtCore.QRect(10, 10, 521, 621))
-        self.textBrowser.setObjectName(_fromUtf8("textBrowser"))
+        self.gridLayout.addWidget(self.buttonBox, 1, 0, 1, 1)
 
         self.retranslateUi(integrityOutput)
         QtCore.QObject.connect(self.buttonBox, QtCore.SIGNAL(_fromUtf8("accepted()")), integrityOutput.accept)

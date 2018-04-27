@@ -216,7 +216,7 @@
     </property>
     <widget class="QCheckBox" name="autoSnap_cb">
      <property name="enabled">
-      <bool>false</bool>
+      <bool>true</bool>
      </property>
      <property name="geometry">
       <rect>
@@ -376,13 +376,6 @@
       <bool>true</bool>
      </property>
     </widget>
-    <zorder>correctPipeDir_cb</zorder>
-    <zorder>usInvField_combo</zorder>
-    <zorder>label_5</zorder>
-    <zorder>getDsConnection_cb</zorder>
-    <zorder>label_6</zorder>
-    <zorder>dsInvField_combo</zorder>
-    <zorder>label_7</zorder>
    </widget>
   </widget>
   <widget class="QGroupBox" name="groupBox_2">
