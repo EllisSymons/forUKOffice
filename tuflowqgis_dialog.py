@@ -1865,7 +1865,7 @@ class tuflowqgis_check_1d_integrity_dialog(QDialog, Ui_check1dIntegrity):
 		if self.autoSnap_cb.isChecked():
 			self.snapSearchDis_sb.setEnabled(True)
 		else:
-			self.snapSearchDis_sb.setenabled(False)
+			self.snapSearchDis_sb.setEnabled(False)
 			
 	def toggleInvertFields(self):
 		self.usInvField_combo.clear()
@@ -1962,30 +1962,36 @@ class tuflowqgis_check_1d_integrity_dialog(QDialog, Ui_check1dIntegrity):
 			for i in range(self.pointLyrs_lw.count()):
 				pointLyrs.append(tuflowqgis_find_layer(self.pointLyrs_lw.item(i).text()))
 		
-		# create dictionary of line objects {name: [start vertice, end vertice]}
-		lineDict = getVertices(lineLyrs)  # get start and end line vertices
-		if checkPoint:
-			pointDict = getVertices(pointLyrs)
-		
-		# Check snapping
+		# Start Line Check section
+		lineDict = getVertices(lineLyrs)  # create dictionary of line objects {name: [start vertice, end vertice]}
 		if checkLine:
-			unsnappedLines, unsnappedLineNames, closestVLines = checkSnapping(lines=lineDict)
+			unsnappedLines, unsnappedLineNames, closestVLines = checkSnapping(lines=lineDict)  # Get unsnapped line vertices
+			if autoSnap:
+				returnLogL = moveVertices(lineLyrs, closestVLines, searchRadius)  # perform auto snap routine
+				lineDict2 = getVertices(lineLyrs)  # reassess snapping
+				unsnappedLines2, unsnappedLineNames2, closestVLines2 = checkSnapping(lines=lineDict2)  # reassess snapping
+				
+		# Start Point Check Section				
 		if checkPoint:
-			unsnappedPoints, closestVPoints = checkSnapping(lines=lineDict, points=pointDict)
-		
+			pointDict = getVertices(pointLyrs)  # create dictionary of point objects {name: [vertex]}
+			if checkLine and autoSnap:  # Check if line layer has been edited
+				unsnappedPoints, closestVPoints = checkSnapping(lines=lineDict2, points=pointDict)  # Get unsnapped points
+			else:
+				unsnappedPoints, closestVPoints = checkSnapping(lines=lineDict, points=pointDict)  # Get unsnapped points
+			if autoSnap:
+				returnLogP = moveVertices(pointLyrs, closestVPoints, searchRadius)
+				pointDict2 = getVertices(pointLyrs)  # reassess snapping
+				if checkLine and autoSnap:  # Check if line layer has been edited
+					unsnappedPoints2, closestVPoints2 = checkSnapping(lines=lineDict2, points=pointDict2)  # Get unsnapped points
+				else:
+					unsnappedPoints2, closestVPoints2 = checkSnapping(lines=lineDict, points=pointDict2)  # Get unsnapped points
+				
 		# Output
 		if outMsg or outTxt:
 			if outMsg:
 				results = '###############\n# 1D Integrity Output  #\n###############\n'
 			else:
 				results = '#######################\n# 1D Integrity Output #\n#######################\n'
-			if checkPoint:
-				results += '\n' + r'\\ Unsnapped Nodes \\' + '\n\n'
-				if len(unsnappedPoints) == 0:
-					results += 'None\n'
-				else:
-					for node in unsnappedPoints:
-						results += '{0}\n'.format(node)
 			if checkLine:
 				results += '\n' + r'\\ Unsnapped Lines \\' + '\n\n'
 				if len(unsnappedLines) == 0:
@@ -1993,18 +1999,35 @@ class tuflowqgis_check_1d_integrity_dialog(QDialog, Ui_check1dIntegrity):
 				else:
 					for line in unsnappedLines:
 						results += '{0}\n'.format(line)
-			if checkPoint and autoSnap:
-				returnLog = moveVertices(pointLyrs, closestVPoints, searchRadius)
-				if len(returnLog) < 1:
-					results += '\n' + r'\\ Auto Snap Nodes \\' + '\n\nNone\n'
+				if autoSnap:
+					if len(returnLogL) < 1:
+						results += '\n' + r'\\ Auto Snap Lines \\' + '\n\nNone\n'
+					else:
+						results += '\n' + r'\\ Auto Snap Lines \\' + '\n\n{0}\n'.format(returnLogL)
+					results += '\n' + r'\\ Reassessment of Unsnapped Lines \\' + '\n\n'
+					if len(unsnappedLines2) == 0:
+						results += 'None\n'
+					else:
+						for line in unsnappedLines2:
+							results += '{0}\n'.format(line)
+			if checkPoint:
+				results += '\n' + r'\\ Unsnapped Nodes \\' + '\n\n'
+				if len(unsnappedPoints) == 0:
+					results += 'None\n'
 				else:
-					results += '\n' + r'\\ Auto Snap Nodes \\' + '\n\n{0}\n'.format(returnLog)
-			if checkLine and autoSnap:
-				returnLog = moveVertices(lineLyrs, closestVLines, searchRadius)
-				if len(returnLog) < 1:
-					results += '\n' + r'\\ Auto Snap Lines \\' + '\n\nNone\n'
-				else:
-					results += '\n' + r'\\ Auto Snap Lines \\' + '\n\n{0}\n'.format(returnLog)
+					for node in unsnappedPoints:
+						results += '{0}\n'.format(node)
+				if autoSnap:
+					if len(returnLogP) < 1:
+						results += '\n' + r'\\ Auto Snap Points \\' + '\n\nNone\n'
+					else:
+						results += '\n' + r'\\ Auto Snap Points \\' + '\n\n{0}\n'.format(returnLogP)
+					results += '\n' + r'\\ Reassessment of Unsnapped Nodes \\' + '\n\n'
+					if len(unsnappedPoints2) == 0:
+						results += 'None\n'
+					else:
+						for node in unsnappedPoints2:
+							results += '{0}\n'.format(node)
 			if outMsg:
 				self.outDialog = tuflowqgis_1d_integrity_output(self.iface, results)
 				self.outDialog.show()

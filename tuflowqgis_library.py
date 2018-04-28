@@ -31,8 +31,7 @@ import matplotlib
 import glob # MJS 11/02
 import tuflowqgis_styles
 
-#sys.path.append(r'C:\Program Files\JetBrains\PyCharm 2018.1\debug-eggs')
-#sys.path.append(r'C:\Program Files\JetBrains\PyCharm 2018.1\helpers\pydev')
+#sys.path.append(r'C:\Users\Ellis\.p2\pool\plugins\org.python.pydev.core_6.3.2.201803171248\pysrc')
 #import pydevd
 
 # --------------------------------------------------------
@@ -986,16 +985,27 @@ def getVertices(lyrs):
 	:return: compiled dictionary of all QgsVectorLayers in format of {name: [[vertices], feature id]}
 	"""
 	
+	nullCounter = 1
 	vectorDict = {}
 	for line in lyrs:
 		for feature in line.dataProvider().getFeatures():
 			fid = feature.id()
 			if line.geometryType() == 0:
 				geom = feature.geometry().asPoint()
-				vectorDict[feature.attributes()[0]] = [[geom], fid, line]
+				if feature.attributes()[0] == NULL:
+					name = '{0} {1}'.format(feature.attributes()[1], nullCounter)
+					nullCounter += 1
+					vectorDict[name] = [[geom], fid, line]
+				else:
+					vectorDict[feature.attributes()[0]] = [[geom], fid, line]
 			elif line.geometryType() == 1:
 				geom = feature.geometry().asPolyline()
-				vectorDict[feature.attributes()[0]] = [[geom[0], geom[-1]], fid, line]
+				if feature.attributes()[0] == NULL:
+					name = '{0} {1}'.format(feature.attributes()[1], nullCounter)
+					nullCounter += 1
+					vectorDict[name] = [[geom[0], geom[-1]], fid, line]
+				else:
+					vectorDict[feature.attributes()[0]] = [[geom[0], geom[-1]], fid, line]
 	
 	return vectorDict
 
@@ -1021,7 +1031,7 @@ def checkSnapping(**kwargs):
 		pointDict = kwargs['points']
 	else:
 		checkLine = True
-	pydevd.settrace('localhost', port=53100, stdoutToServer=True, stderrToServer=True)
+	
 	closestV = {}  # dictionary of the original fid, closest node name, the vertex, and the distance away
 	unsnapped = []  # list of unsnapped vertices
 	unsnapped_names = []  # used for lines to get the line name (lines have 2 vertices so this is required)
@@ -1037,7 +1047,7 @@ def checkSnapping(**kwargs):
 				for i, (lName2, lParam2) in enumerate(lineDict.items()):
 					lLoc2 = lParam2[0]
 					lFid2 = lParam2[1]
-					if lName == lName2:
+					if lFid == lFid2:
 						continue
 					if found:
 						break
@@ -1114,7 +1124,8 @@ def moveVertices(lyrs, vertices_dict, dist):
 	
 	:param lyr: layer being edited
 	:param dist: allowed move distance
-	:param vertices_dict: dictionary containing all information {orig lyr, orig name: [original id, snap name, snap vertex, snap distance]}
+	:param vertices_dict: dictionary containing all required information 
+	{origin name: [origin layer, origin fid, closest vertex name, closest vertex coords, distance to closest vertex]}
 	:return: string of logged moves
 	"""
 	
