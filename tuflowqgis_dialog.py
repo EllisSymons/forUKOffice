@@ -33,12 +33,15 @@ from tuflowqgis_library import *
 import sys
 import subprocess
 #sys.path.append(os.path.dirname(os.path.abspath(__file__)) + "/forms")
-currentFolder = os.path.dirname(os.path.abspath(__file__))
-sys.path.append(os.path.join(currentFolder, 'forms'))
+#currentFolder = os.path.dirname(os.path.abspath(__file__))
+#sys.path.append(os.path.join(currentFolder, 'forms'))
 
 #sys.path.append(r'C:\Program Files\JetBrains\PyCharm 2018.1\debug-eggs')
 #sys.path.append(r'C:\Program Files\JetBrains\PyCharm 2018.1\helpers\pydev')
 #import pydevd
+
+sys.path.append(r'C:\Users\Ellis\.p2\pool\plugins\org.python.pydev.core_6.3.2.201803171248\pysrc')
+import pydevd
 
 # ----------------------------------------------------------
 #    tuflowqgis increment selected layer
@@ -1891,15 +1894,27 @@ class tuflowqgis_check_1d_integrity_dialog(QDialog, Ui_check1dIntegrity):
 			self.plotDsConn_cb.setEnabled(True)
 			self.getGroundElev_cb.setEnabled(True)
 			if self.lineLyrs_lw.count() > 0:
-				name = self.lineLyrs_lw.item(0).text()
-				lyr = tuflowqgis_find_layer(name)
-				if lyr is not None:
-					for feature in lyr.getFeatures():
-						try:
-							self.name1d_combo.addItem(feature.attributes()[0])
-						except:
-							pass
+				for i in range(self.lineLyrs_lw.count()):
+					name = self.lineLyrs_lw.item(i).text()
+					lyr = tuflowqgis_find_layer(name)
+					if lyr is not None:
+						for feature in lyr.getFeatures():
+							try:
+								self.name1d_combo.addItem(feature.attributes()[0])
+							except:
+								pass
+				cLyr = self.iface.mapCanvas().currentLayer()
+				selFeat = cLyr.selectedFeatures()
+				txt = None
+				for f in selFeat:
+					txt = f.attributes()[0]
+					break
+				if txt is not None:
+					index = self.name1d_combo.findText(txt, Qt.MatchFixedString)
+					if index >= 0:
+						self.name1d_combo.setCurrentIndex(index)
 		else:
+			self.name1d_combo.clear()
 			self.name1d_combo.setEnabled(False)
 			self.plotDsConn_cb.setEnabled(False)
 			self.getGroundElev_cb.setEnabled(False)
@@ -1936,16 +1951,16 @@ class tuflowqgis_check_1d_integrity_dialog(QDialog, Ui_check1dIntegrity):
 			searchRadius = self.snapSearchDis_sb.value()
 		if self.correctPipeDir_cb.isChecked():
 			correctPipeDir = True
-			usInvField = self.usInvField_combo.text()
-			dsInvField = self.dsInvField_combo.text()
+			usInvField = self.usInvField_combo.currentText()
+			dsInvField = self.dsInvField_combo.currentText()
 		if self.getDsConnection_cb.isChecked():
 			getDnsConn = True
-			startElem = self.name1d_combo.text()
+			startElem = self.name1d_combo.currentText()
 			if self.plotDsConn_cb.isChecked():
 				plotDnsConn = True
 			if self.getGroundElev_cb.isChecked():
 				getDemElev = True
-				dem = tuflowqgis_find_layer(self.dem_combo.text())
+				dem = tuflowqgis_find_layer(self.dem_combo.currentText())
 		if self.outMessBox_cb.isChecked():
 			outMsg = True
 		if self.outSel_cb.isChecked():
@@ -1965,11 +1980,11 @@ class tuflowqgis_check_1d_integrity_dialog(QDialog, Ui_check1dIntegrity):
 		# Start Line Check section
 		lineDict = getVertices(lineLyrs)  # create dictionary of line objects {name: [start vertice, end vertice]}
 		if checkLine:
-			unsnappedLines, unsnappedLineNames, closestVLines = checkSnapping(lines=lineDict)  # Get unsnapped line vertices
+			unsnappedLines, unsnappedLineNames, closestVLines, dsLines = checkSnapping(lines=lineDict, dns_conn=getDnsConn)  # Get unsnapped line vertices
 			if autoSnap:
 				returnLogL = moveVertices(lineLyrs, closestVLines, searchRadius)  # perform auto snap routine
 				lineDict2 = getVertices(lineLyrs)  # reassess snapping
-				unsnappedLines2, unsnappedLineNames2, closestVLines2 = checkSnapping(lines=lineDict2)  # reassess snapping
+				unsnappedLines2, unsnappedLineNames2, closestVLines2, dsLines2 = checkSnapping(lines=lineDict2, dns_conn=getDnsConn)  # reassess snapping
 				
 		# Start Point Check Section				
 		if checkPoint:
@@ -1985,6 +2000,13 @@ class tuflowqgis_check_1d_integrity_dialog(QDialog, Ui_check1dIntegrity):
 					unsnappedPoints2, closestVPoints2 = checkSnapping(lines=lineDict2, points=pointDict2)  # Get unsnapped points
 				else:
 					unsnappedPoints2, closestVPoints2 = checkSnapping(lines=lineDict, points=pointDict2)  # Get unsnapped points
+					
+		# Start check downstream connections
+		if getDnsConn:
+			if not checkLine:  # hasn't yet been run
+				unsnappedLines, unsnappedLineNames, closestVLines, dsLines = checkSnapping(lines=lineDict, dns_conn=getDnsConn)
+			pass
+		
 				
 		# Output
 		if outMsg or outTxt:
@@ -2045,14 +2067,24 @@ class tuflowqgis_check_1d_integrity_dialog(QDialog, Ui_check1dIntegrity):
 			if checkPoint:
 				for layer in pointLyrs:
 					for f in layer.getFeatures():
-						if f.attributes()[0] in unsnappedPoints:
-							fid = f.id()
-							layer.select(fid)
+						if autoSnap:
+							if f.attributes()[0] in unsnappedPoints2:
+								fid = f.id()
+								layer.select(fid)
+						else:
+							if f.attributes()[0] in unsnappedPoints:
+								fid = f.id()
+								layer.select(fid)
 			# select lines
 			if checkLine:
 				for layer in lineLyrs:
 					for f in layer.getFeatures():
-						if f.attributes()[0] in unsnappedLineNames:
-							fid = f.id()
-							layer.select(fid)
+						if autoSnap:
+							if f.attributes()[0] in unsnappedLineNames2:
+								fid = f.id()
+								layer.select(fid)
+						else:
+							if f.attributes()[0] in unsnappedLineNames:
+								fid = f.id()
+								layer.select(fid)
 

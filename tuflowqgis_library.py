@@ -982,7 +982,7 @@ def getVertices(lyrs):
 	it will get centroid.
 
 	:param lyrs: list of QgisVectorLayers
-	:return: compiled dictionary of all QgsVectorLayers in format of {name: [[vertices], feature id]}
+	:return: compiled dictionary of all QgsVectorLayers in format of {name: [[vertices], feature id, origin lyr]}
 	"""
 	
 	nullCounter = 1
@@ -1001,7 +1001,7 @@ def getVertices(lyrs):
 			elif line.geometryType() == 1:
 				geom = feature.geometry().asPolyline()
 				if feature.attributes()[0] == NULL:
-					name = '{0} {1}'.format(feature.attributes()[1], nullCounter)
+					name = '__connector {0}'.format(nullCounter)
 					nullCounter += 1
 					vectorDict[name] = [[geom[0], geom[-1]], fid, line]
 				else:
@@ -1016,44 +1016,87 @@ def checkSnapping(**kwargs):
 	For points, it will check points against lines.
 	For lines, it will check against other lines in the same layer
 
-	:param kwargs: dictionary objects with names and vertices {name: [vertices]}
-	:return: list of unsnapped objects
+	:param **kwargs: dictionary with line or point vertices {name: [vertices, origin fid, origin lyr]}
+	:return: list of unsnapped objects (for lines will append '==0' or first vertex, '==1' for last vertex)
+	:return: list of unsnapped object names for lines without reference to first or last vertex (not returned for points)
+	:return: dict of closest line vertex for unsnapped points and lines {name: [origin lyr, origin fid, closest vertex name, closest vertex coords, closest vertex dist]}
+	:return: dict of downstream channels for lines if dnsConn is True {name: [dns network channels]}
 	"""
 	
 	# determine which snapping check is being performed
 	checkPoint = False
 	checkLine = False
-	autoSnap = False
+	dnsConn = False
 	lineDict = kwargs['lines']  # will need lines no matter what
 	lineDict_len = len(lineDict)
-	if 'points' in kwargs.keys():
+	if 'points' in kwargs.keys():  # assessing for points
 		checkPoint = True
 		pointDict = kwargs['points']
-	else:
+	else:  # assessing for lines
 		checkLine = True
+	if 'dns_conn' in kwargs.keys():  
+		if kwargs['dns_conn']:
+			dnsConn = True  # force script to loop through all pipes to get all dns connections
 	
-	closestV = {}  # dictionary of the original fid, closest node name, the vertex, and the distance away
+	xIns = []  # list of X connectors that are entering a side channel - used to determine dns direction for x connectors
+	dsNwk = {}  # dict listing the downstream lines
+	closestV = {}  # dict closest vertex results
 	unsnapped = []  # list of unsnapped vertices
-	unsnapped_names = []  # used for lines to get the line name (lines have 2 vertices so this is required)
+	unsnapped_names = []  # list of unsnapped vertices names (for lines)
+	
 	# Check to see if line is snapped to another line at both ends
 	if checkLine:
 		for lName, lParam in lineDict.items():
 			lLoc = lParam[0]
 			lFid = lParam[1]
 			lyr = lParam[2]
+			xIn = False  # helps determine downstream direction in relation to X connectors
 			for j, v in enumerate(lLoc):
 				found = False
 				minDist = 99999
-				for i, (lName2, lParam2) in enumerate(lineDict.items()):
+				for i, (lName2, lParam2) in enumerate(sorted(lineDict.items())):  # sort dict so x connectors are assessed first
 					lLoc2 = lParam2[0]
 					lFid2 = lParam2[1]
-					if lFid == lFid2:
+					if lName == lName2:
 						continue
-					if found:
+					if found and not dnsConn:
 						break
 					for j2, v2 in enumerate(lLoc2):
 						if v == v2:
 							found = True
+							if 'connector' in lName:
+								if j == 0 and j2 == 0:  # X Connector is entering side channel
+									xIn = True
+									if lName not in xIns:
+										xIns.append(lName)
+									if lName not in dsNwk.keys():
+										dsNwk[lName] = [lName2]
+									else:
+										dsNwk[lName].append(lName2)
+								elif j == 1 and j2 == 0 and not xIn:  # X connector is leaving side channel
+									if lName not in dsNwk.keys():
+										dsNwk[lName] = [lName2]
+									else:
+										dsNwk[lName].append(lName2)
+							elif 'connector' in lName2:  # end normal nwk connected to end X conn
+								if lName2 in xIns:  # entering side channel
+									if j == 1 and j2 == 1:
+										if lName not in dsNwk.keys():
+											dsNwk[lName] = [lName2]
+										else:
+											dsNwk[lName].append(lName2)
+								else:  # leaving side channel
+									if j == 1 and j2 == 0:
+										if lName not in dsNwk.keys():
+											dsNwk[lName] = [lName2]
+										else:
+											dsNwk[lName].append(lName2)
+							else:  # normal connection
+								if j == 1 and j2 == 0:  # end vertex connected to fist vertex i.e. found a dns nwk
+									if lName not in dsNwk.keys():
+										dsNwk[lName] = [lName2]
+									else:
+										dsNwk[lName].append(lName2)
 							continue
 						else:
 							dist = ((v2[0] - v[0]) ** 2 + (v2[1] - v[1]) ** 2) ** 0.5
@@ -1072,7 +1115,7 @@ def checkSnapping(**kwargs):
 							unsnapped.append('{0} downstream'.format(lName))
 							closestV['{0}==1'.format(lName)] = [lyr, lFid, '{0}=={1}'.format(name, node), v3, minDist]
 		
-		return unsnapped, unsnapped_names, closestV
+		return unsnapped, unsnapped_names, closestV, dsNwk
 	# Check to see if point is snapped to a line
 	if checkPoint:
 		for pName, pParam in pointDict.items():  # loop through all points

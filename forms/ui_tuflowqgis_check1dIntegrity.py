@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'ui_tuflowqgis_check1dIntegrity.ui'
 #
-# Created: Fri Apr 27 10:21:18 2018
+# Created: Sat Apr 28 16:32:57 2018
 #      by: PyQt4 UI code generator 4.10.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -58,7 +58,7 @@ class Ui_check1dIntegrity(object):
         self.dem_combo.setGeometry(QtCore.QRect(15, 95, 151, 22))
         self.dem_combo.setObjectName(_fromUtf8("dem_combo"))
         self.getDsConnection_cb = QtGui.QCheckBox(self.groupBox_3)
-        self.getDsConnection_cb.setEnabled(False)
+        self.getDsConnection_cb.setEnabled(True)
         self.getDsConnection_cb.setGeometry(QtCore.QRect(3, 2, 181, 20))
         self.getDsConnection_cb.setObjectName(_fromUtf8("getDsConnection_cb"))
         self.getGroundElev_cb = QtGui.QCheckBox(self.groupBox_3)
