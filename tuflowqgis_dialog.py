@@ -2005,7 +2005,7 @@ class tuflowqgis_check_1d_integrity_dialog(QDialog, Ui_check1dIntegrity):
 		if getDnsConn:
 			if not checkLine:  # hasn't yet been run
 				unsnappedLines, unsnappedLineNames, closestVLines, dsLines = checkSnapping(lines=lineDict, dns_conn=getDnsConn)
-			pass
+			dnsLog = checkDnsNwk(dsLines, startElem, lineLyrs)
 		
 				
 		# Output
@@ -2050,6 +2050,12 @@ class tuflowqgis_check_1d_integrity_dialog(QDialog, Ui_check1dIntegrity):
 					else:
 						for node in unsnappedPoints2:
 							results += '{0}\n'.format(node)
+			if getDnsConn:
+				results += '\n' + r'\\ Downstream Connections \\' + '\n\n'
+				if len(dnsLog) == 0:
+					results += 'None\n'
+				else:
+					results += '{0}\n'.format(dnsLog)
 			if outMsg:
 				self.outDialog = tuflowqgis_1d_integrity_output(self.iface, results)
 				self.outDialog.show()

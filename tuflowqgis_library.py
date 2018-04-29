@@ -1217,3 +1217,41 @@ def moveVertices(lyrs, vertices_dict, dist):
 		lyr.commitChanges()
 
 	return log
+
+
+def checkDnsNwk(dsLines, startLine, inLyrs):
+	"""
+	From a starting point, will list all downstream connections until there are none left. It will also print out inverts,
+	pipe size, and flow area. It will flag decrease in conveyance and adverse gradients.
+	
+	:param dsLines: dict {origin name: [dns nwk names]}
+	:param startline: string start id
+	:param inLyrs: list of QgsVectorLayers
+	:return: string log	
+	"""
+	
+	log = ''
+	keys = [startLine]
+	dns = True
+	while dns:
+		if len(keys) == 0:
+			dns = False
+		else:
+			for lyr in inLyrs:
+				fld = lyr.fields()[0]
+				features = []
+				for key in keys:
+					request = QgsFeatureRequest().setFilterExpression('"{0}" = \'{1}\''.format(fld, key))
+					for f in lyr.getFeatures(request):
+						features.append(f)
+			if len(key) == 1:
+				typ = features[0].attributes()[1]
+				log += '{0:10} -- {1}\n'.format(keys, typ)
+				keys = dsLines[keys][0]
+			#elif len(key) == 2:
+			#	if dsLines[keys0]] == dsLines[keys[1]]:
+			#		# is not a branch - probably varying size pipes
+			#		log += 
+				
+	return log
+	
