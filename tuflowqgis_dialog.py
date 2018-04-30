@@ -32,16 +32,16 @@ from tuflowqgis_library import *
 
 import sys
 import subprocess
-#sys.path.append(os.path.dirname(os.path.abspath(__file__)) + "/forms")
-#currentFolder = os.path.dirname(os.path.abspath(__file__))
-#sys.path.append(os.path.join(currentFolder, 'forms'))
+sys.path.append(os.path.dirname(os.path.abspath(__file__)) + "/forms")
+currentFolder = os.path.dirname(os.path.abspath(__file__))
+sys.path.append(os.path.join(currentFolder, 'forms'))
 
 #sys.path.append(r'C:\Program Files\JetBrains\PyCharm 2018.1\debug-eggs')
 #sys.path.append(r'C:\Program Files\JetBrains\PyCharm 2018.1\helpers\pydev')
 #import pydevd
 
-sys.path.append(r'C:\Users\Ellis\.p2\pool\plugins\org.python.pydev.core_6.3.2.201803171248\pysrc')
-import pydevd
+#sys.path.append(r'C:\Users\Ellis\.p2\pool\plugins\org.python.pydev.core_6.3.2.201803171248\pysrc')
+#import pydevd
 
 # ----------------------------------------------------------
 #    tuflowqgis increment selected layer
@@ -2003,10 +2003,17 @@ class tuflowqgis_check_1d_integrity_dialog(QDialog, Ui_check1dIntegrity):
 					
 		# Start check downstream connections
 		if getDnsConn:
+			dnsLogs = []
 			if not checkLine:  # hasn't yet been run
 				unsnappedLines, unsnappedLineNames, closestVLines, dsLines = checkSnapping(lines=lineDict, dns_conn=getDnsConn)
-			dnsLog = checkDnsNwk(dsLines, startElem, lineLyrs)
-		
+			dnsLog, branches = checkDnsNwk(dsLines, [startElem], lineLyrs)
+			dnsLogs.append(dnsLog)
+			while len(branches) > 0:
+				for branch in branches:
+					dnsLog, dnsBranches = checkDnsNwk(dsLines, branch, lineLyrs)
+					dnsLogs.append(dnsLog)
+					branches += dnsBranches
+					branches.remove(branch)
 				
 		# Output
 		if outMsg or outTxt:
@@ -2052,10 +2059,14 @@ class tuflowqgis_check_1d_integrity_dialog(QDialog, Ui_check1dIntegrity):
 							results += '{0}\n'.format(node)
 			if getDnsConn:
 				results += '\n' + r'\\ Downstream Connections \\' + '\n\n'
-				if len(dnsLog) == 0:
-					results += 'None\n'
+				if len(dnsLogs) == 0:
+					'None\n'
 				else:
-					results += '{0}\n'.format(dnsLog)
+					for i, dnsLog in enumerate(dnsLogs):
+						if len(dnsLog) == 0:
+							results += 'None\n'
+						else:
+							results += '# Branch {0}\n{1}\n'.format(i+1, dnsLog)
 			if outMsg:
 				self.outDialog = tuflowqgis_1d_integrity_output(self.iface, results)
 				self.outDialog.show()

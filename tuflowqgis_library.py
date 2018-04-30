@@ -31,6 +31,10 @@ import matplotlib
 import glob # MJS 11/02
 import tuflowqgis_styles
 
+#sys.path.append(r'C:\Program Files\JetBrains\PyCharm 2018.1\debug-eggs')
+#sys.path.append(r'C:\Program Files\JetBrains\PyCharm 2018.1\helpers\pydev')
+#import pydevd
+
 #sys.path.append(r'C:\Users\Ellis\.p2\pool\plugins\org.python.pydev.core_6.3.2.201803171248\pysrc')
 #import pydevd
 
@@ -1219,6 +1223,24 @@ def moveVertices(lyrs, vertices_dict, dist):
 	return log
 
 
+def listToString(lst):
+	"""
+	
+	:param lst: list of int
+	:return: string
+	"""
+	
+	s = ''
+	if len(lst) > 0:
+		for i, l in enumerate(lst):
+			if i == 0:
+				s += '{0}'.format(l)
+			else:
+				s += ' - {0}'.format(l)
+	
+	return s
+
+
 def checkDnsNwk(dsLines, startLine, inLyrs):
 	"""
 	From a starting point, will list all downstream connections until there are none left. It will also print out inverts,
@@ -1229,29 +1251,161 @@ def checkDnsNwk(dsLines, startLine, inLyrs):
 	:param inLyrs: list of QgsVectorLayers
 	:return: string log	
 	"""
-	
-	log = ''
-	keys = [startLine]
+
+	log = 'ID,Type,Number,Width,Height,Area,Us Invert,Ds Invert,Conveyance Decrease,Adverse Gradient\n'
+	keyPrev = None
+	keys = startLine
 	dns = True
+	bn = []  # branched network names to be dealt with at the end
 	while dns:
-		if len(keys) == 0:
-			dns = False
-		else:
-			for lyr in inLyrs:
+		features = []
+		for lyr in inLyrs:
+			fld = lyr.fields()[0]
+			for key in keys:
+				filter = '"{0}" = \'{1}\''.format(fld.name(), key)
+				request = QgsFeatureRequest().setFilterExpression(filter)
+				for f in lyr.getFeatures(request):
+					features.append(f)
+		if len(keys) == 1:  # one downstream channel
+			typ = features[0].attributes()[1]
+			if typ.lower() == 'r':
+				no = int(features[0].attributes()[15])
+				width = float(features[0].attributes()[13])
+				height = float(features[0].attributes()[14])
+				usInv = float(features[0].attributes()[6])
+				dsInv = float(features[0].attributes()[7])
+				area = float(no) * width * height
+				log += '{0},{1},{2},{3:.2f},{4:.2f},{5:.2f},{6:.2f},{7:.2f}\n'.\
+					   format(keys[0], typ, no, width, height, area, usInv, dsInv)
+			elif typ.lower() == 'c':
+				no = int(features[0].attributes()[15])
+				width = float(features[0].attributes()[13])
+				usInv = float(features[0].attributes()[6])
+				dsInv = float(features[0].attributes()[7])
+				area = float(no) * (width / 2) ** 2 * 3.14
+				log += '{0},{1},{2},{3:.2f},{4:.2f},{5:.2f},{6:.2f}\n'.\
+					   format(keys[0], typ, no, width, area, usInv, dsInv)
+			else:
+				log += '{0},{1}\n'.format(keys[0], typ)
+			if keys[0] in dsLines.keys():
+				keyPrev = keys[0]
+				keys = dsLines[keys[0]]
+			else:
+				dns = False
+		elif len(keys) > 1:  # consider what happens if there are 2 downstream channels
+			# get channels accounting for X connectors
+			nwks = []
+			for key in keys:
+				if 'connector' in key:
+					key = dsLines[key][0]
+				nwks.append(key)
+			# get next downstream channels accounting for X connectors
+			dns_nwks = []
+			for nwk in nwks:
+				if nwk in dsLines.keys():
+					dns_nwk = dsLines[nwk][0]
+					if 'connector' in dns_nwk:
+						dns_nwk = dsLines[dns_nwk][0]
+					dns_nwks.append(dns_nwk)
+				else:
+					dns_nwks.append('DOWNSTREAM NODE')
+			# check if dns nwk is the same
+			# if it is the same dns nwk, then it is probably part of the same network branch
+			# if it is different, then the network has probably split into a second branch
+			branches = []  # split downstream channels into branches
+			for i, dns_nwk in enumerate(dns_nwks):
+				for i2, dns_nwk2 in enumerate(dns_nwks):
+					already = False
+					if i != i2:
+						for b in branches:
+							if i in b:
+								already = True
+						if not already:
+							if dns_nwk == dns_nwk2:
+								branches.append([i, i2])
+							else:
+								branches.append([i])
+			for branch in branches:
+				a = []
+				for bi in branch:
+					a.append(nwks[bi])
+				bn.append(a)
+			if len(branches) == 1:
+				bn.pop()
 				fld = lyr.fields()[0]
 				features = []
-				for key in keys:
-					request = QgsFeatureRequest().setFilterExpression('"{0}" = \'{1}\''.format(fld, key))
-					for f in lyr.getFeatures(request):
-						features.append(f)
-			if len(key) == 1:
-				typ = features[0].attributes()[1]
-				log += '{0:10} -- {1}\n'.format(keys, typ)
-				keys = dsLines[keys][0]
-			#elif len(key) == 2:
-			#	if dsLines[keys0]] == dsLines[keys[1]]:
-			#		# is not a branch - probably varying size pipes
-			#		log += 
-				
-	return log
+				for lyr in inLyrs:
+					for nwk in nwks:
+						filter = '"{0}" = \'{1}\''.format(fld.name(), nwk)
+						request = QgsFeatureRequest().setFilterExpression(filter)
+						for f in lyr.getFeatures(request):
+							features.append(f)
+				typs = []
+				nos = []
+				widths = []
+				heights = []
+				usInvs = []
+				dsInvs = []
+				areas = []
+				for nwk in nwks:
+					for f in features:
+						name = f.attributes()[0]
+						if nwk == name:
+							typ = f.attributes()[1]
+							typs.append(typ)
+							if typ.lower() == 'r':
+								nos.append(int(f.attributes()[15]))
+								widths.append(float(f.attributes()[13]))
+								heights.append(float(f.attributes()[14]))
+								usInvs.append(float(features[0].attributes()[6]))
+								dsInvs.append(float(features[0].attributes()[7]))
+								areas.append(
+									float(f.attributes()[15]) * float(f.attributes()[13]) * float(f.attributes()[14]))
+							elif typ.lower() == 'c':
+								nos.append(int(f.attributes()[15]))
+								widths.append(float(f.attributes()[13]))
+								usInvs.append(float(features[0].attributes()[6]))
+								dsInvs.append(float(features[0].attributes()[7]))
+								areas.append(
+									float(f.attributes()[15]) * (float(f.attributes()[13]) / 2) ** 2 * 3.14)
+				area = sum(areas)
+				if 'r' in typs or 'R' in typs or 'c' in typs or 'C' in typs:
+					log += '{0},{1},{2},{3},{4},{5},{6},{7}\n'. \
+						format(listToString(nwks), listToString(typs), listToString(nos), listToString(widths),
+					           listToString(heights), area, listToString(usInvs), listToString(dsInvs))
+				else:
+					log += '{0},{1}\n'.format(listToString(nwks), listToString(typs))
+				if nwks[0] in dsLines.keys():
+					keyPrev = keys[0]
+					keys = dsLines[nwks[0]]
+				else:
+					dns = False
+			elif len(branches) > 1:
+				log += 'Branch split at {0} into {1} branches - '.format(keyPrev, len(branches))
+				for i, b in enumerate(bn):
+					if len(b) < 2:
+						if i == 0:
+							log += '{0}'.format(b[0])
+						elif i < len(bn) - 1:
+							log += ', {0}'.format(b[0])
+						else:
+							log += ', {0}\n'.format(b[0])
+					else:
+						a = '('
+						for j, br in enumerate(b):
+							if j < len(br) - 1:
+								a += '{0}'.format(br)
+							else:
+								a += '{0})'.foramt(br)
+						if i == 0:
+							log += '{0}'.format(a)
+						elif i < len(bn) - 1:
+							log += ', {0}'.format(a)
+						else:
+							log += ', {0}\n'.format(a)
+				if nwks[0] in dsLines.keys():
+					keys = dsLines[nwks[0]]
+				dns = False
+
+	return log, bn
 	
