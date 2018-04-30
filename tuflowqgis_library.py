@@ -986,7 +986,7 @@ def getVertices(lyrs):
 	it will get centroid.
 
 	:param lyrs: list of QgisVectorLayers
-	:return: compiled dictionary of all QgsVectorLayers in format of {name: [[vertices], feature id, origin lyr]}
+	:return: compiled dictionary of all QgsVectorLayers in format of {name: [[vertices], feature id, origin lyr, [us invert, ds invert]}
 	"""
 	
 	nullCounter = 1
@@ -999,17 +999,20 @@ def getVertices(lyrs):
 				if feature.attributes()[0] == NULL:
 					name = '{0} {1}'.format(feature.attributes()[1], nullCounter)
 					nullCounter += 1
-					vectorDict[name] = [[geom], fid, line]
+					vectorDict[name] = [[geom], fid, line, [feature.attributes()[6], feature.attributes()[7]]]
 				else:
-					vectorDict[feature.attributes()[0]] = [[geom], fid, line]
+					vectorDict[feature.attributes()[0]] = [[geom], fid, line, [feature.attributes()[6], 
+					                                      feature.attributes()[7]]]
 			elif line.geometryType() == 1:
 				geom = feature.geometry().asPolyline()
 				if feature.attributes()[0] == NULL:
 					name = '__connector {0}'.format(nullCounter)
 					nullCounter += 1
-					vectorDict[name] = [[geom[0], geom[-1]], fid, line]
+					vectorDict[name] = [[geom[0], geom[-1]], fid, line, [feature.attributes()[6], 
+					                   feature.attributes()[7]]]
 				else:
-					vectorDict[feature.attributes()[0]] = [[geom[0], geom[-1]], fid, line]
+					vectorDict[feature.attributes()[0]] = [[geom[0], geom[-1]], fid, line, [feature.attributes()[6], 
+					                                      feature.attributes()[7]]]
 	
 	return vectorDict
 
@@ -1020,7 +1023,7 @@ def checkSnapping(**kwargs):
 	For points, it will check points against lines.
 	For lines, it will check against other lines in the same layer
 
-	:param **kwargs: dictionary with line or point vertices {name: [vertices, origin fid, origin lyr]}
+	:param **kwargs: dictionary with line or point vertices {name: [vertices, origin fid, origin lyr, [us invert, ds invert]]}
 	:return: list of unsnapped objects (for lines will append '==0' or first vertex, '==1' for last vertex)
 	:return: list of unsnapped object names for lines without reference to first or last vertex (not returned for points)
 	:return: dict of closest line vertex for unsnapped points and lines {name: [origin lyr, origin fid, closest vertex name, closest vertex coords, closest vertex dist]}
@@ -1039,6 +1042,8 @@ def checkSnapping(**kwargs):
 			checkLine = True
 		if 'points' in kwargs.keys():  # if points included, check elevations in dns connections
 			pointDict = kwargs['points']
+			if len(pointDict) > 0:
+				checkPoint = True
 	elif 'assessment' in kwargs.keys():
 		if kwargs['assessment'] == 'lines':
 			checkLine = True
@@ -1063,6 +1068,8 @@ def checkSnapping(**kwargs):
 			lLoc = lParam[0]
 			lFid = lParam[1]
 			lyr = lParam[2]
+			lUsInv = lParam[3][0]
+			lDsInv = lParam[3][1]
 			xIn = False  # helps determine downstream direction in relation to X connectors
 			for j, v in enumerate(lLoc):
 				found = False
@@ -1110,6 +1117,7 @@ def checkSnapping(**kwargs):
 										dsNwk[lName] = [[lName2]]
 									else:
 										dsNwk[lName][0].append(lName2)
+							dsNwk[lName].append([lUsInv, lDsInv])
 							continue
 						else:
 							dist = ((v2[0] - v[0]) ** 2 + (v2[1] - v[1]) ** 2) ** 0.5
@@ -1119,6 +1127,7 @@ def checkSnapping(**kwargs):
 								name = lName2
 								node = j2
 					if i + 1 == lineDict_len and not found:
+						dsNwk[lName] = [lUsInv, lDsInv]
 						if lName not in unsnapped_names:
 							unsnapped_names.append(lName)
 						if j == 0:
@@ -1128,23 +1137,50 @@ def checkSnapping(**kwargs):
 							unsnapped.append('{0} downstream'.format(lName))
 							closestV['{0}==1'.format(lName)] = [lyr, lFid, '{0}=={1}'.format(name, node), v3, minDist]
 		
-		return unsnapped, unsnapped_names, closestV, dsNwk
+		if not checkPoint:
+			return unsnapped, unsnapped_names, closestV, dsNwk
+		
 	# Check to see if point is snapped to a line
 	if checkPoint:
 		for pName, pParam in pointDict.items():  # loop through all points
 			pLoc = pParam[0]
 			pFid = pParam[1]
 			lyr = pParam[2]
+			pUsInv = pParam[3][0]
+			pDsInv = pParam[3][1]
 			found = False
 			minDist = 99999
 			for i, (lName, lParam) in enumerate(lineDict.items()):  # loop through all lines
 				lLoc = lParam[0]
 				lFid = lParam[1]
+				lUsInv = lParam[3][0]
+				lDsInv = lParam[3][1]
 				if found:
 					break
 				for j, coord in enumerate(lLoc):
 					if coord == pLoc[0]:
 						found = True
+						if dnsConn:
+							if j == 0:
+								if lUsInv == -99999:
+									if pDsInv != -99999:
+										usInv = pDsIn
+									else:
+										usInv = -99999
+								else:
+									usInv = lUsInv
+							elif j == 1:
+								if lDsInv == -99999:
+									if pDsInv != -99999:
+										dsInv = pDsIn
+									else:
+										dsInv = -99999
+								else:
+									dsInv = lDsInv
+							if lName not in dsNwk.keys():
+								dsNwk[lName] = [usInv, dsInv]
+							else:
+								dsNwk[lName].append([usInv, dsInv])
 						continue
 					else:
 						dist = ((coord[0] - pLoc[0][0]) ** 2 + (coord[1] - pLoc[0][1]) ** 2) ** 0.5
@@ -1157,7 +1193,10 @@ def checkSnapping(**kwargs):
 					unsnapped.append(pName)
 					closestV['{0}'.format(pName)] = [lyr, pFid, '{0}=={1}'.format(name, node), v, minDist]
 	
-		return unsnapped, closestV
+		if not dnsConn:
+			return unsnapped, closestV
+		else:
+			return unsnapped, unsnapped_names, closestV, dsNwk
 
 
 def findAllRasterLyrs():
