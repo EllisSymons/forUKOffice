@@ -1972,40 +1972,44 @@ class tuflowqgis_check_1d_integrity_dialog(QDialog, Ui_check1dIntegrity):
 		for i in range(self.lineLyrs_lw.count()):
 			lineLyrs.append(tuflowqgis_find_layer(self.lineLyrs_lw.item(i).text()))
 		
-		if checkPoint:
-			pointLyrs = []
-			for i in range(self.pointLyrs_lw.count()):
-				pointLyrs.append(tuflowqgis_find_layer(self.pointLyrs_lw.item(i).text()))
+		pointLyrs = []
+		for i in range(self.pointLyrs_lw.count()):
+			pointLyrs.append(tuflowqgis_find_layer(self.pointLyrs_lw.item(i).text()))
 		
 		# Start Line Check section
 		lineDict = getVertices(lineLyrs)  # create dictionary of line objects {name: [start vertice, end vertice]}
 		if checkLine:
-			unsnappedLines, unsnappedLineNames, closestVLines, dsLines = checkSnapping(lines=lineDict, dns_conn=getDnsConn)  # Get unsnapped line vertices
+			if getDnsConn:
+				pointDict = getVertices(pointLyrs)
+				unsnappedLines, unsnappedLineNames, closestVLines, dsLines = checkSnapping(assessment='lines', lines=lineDict, points=pointDict, dns_conn=getDnsConn)  # Get unsnapped line vertices
 			if autoSnap:
 				returnLogL = moveVertices(lineLyrs, closestVLines, searchRadius)  # perform auto snap routine
 				lineDict2 = getVertices(lineLyrs)  # reassess snapping
-				unsnappedLines2, unsnappedLineNames2, closestVLines2, dsLines2 = checkSnapping(lines=lineDict2, dns_conn=getDnsConn)  # reassess snapping
+				unsnappedLines2, unsnappedLineNames2, closestVLines2, dsLines2 = checkSnapping(assessment='lines', lines=lineDict2, points=pointDict, dns_conn=getDnsConn)  # reassess snapping
 				
 		# Start Point Check Section				
 		if checkPoint:
-			pointDict = getVertices(pointLyrs)  # create dictionary of point objects {name: [vertex]}
+			if not getDnsConn:
+				pointDict = getVertices(pointLyrs)  # create dictionary of point objects {name: [vertex]}
 			if checkLine and autoSnap:  # Check if line layer has been edited
-				unsnappedPoints, closestVPoints = checkSnapping(lines=lineDict2, points=pointDict)  # Get unsnapped points
+				unsnappedPoints, closestVPoints = checkSnapping(assessment='points', lines=lineDict2, points=pointDict)  # Get unsnapped points
 			else:
-				unsnappedPoints, closestVPoints = checkSnapping(lines=lineDict, points=pointDict)  # Get unsnapped points
+				unsnappedPoints, closestVPoints = checkSnapping(assessment='points', lines=lineDict, points=pointDict)  # Get unsnapped points
 			if autoSnap:
 				returnLogP = moveVertices(pointLyrs, closestVPoints, searchRadius)
 				pointDict2 = getVertices(pointLyrs)  # reassess snapping
 				if checkLine and autoSnap:  # Check if line layer has been edited
-					unsnappedPoints2, closestVPoints2 = checkSnapping(lines=lineDict2, points=pointDict2)  # Get unsnapped points
+					unsnappedPoints2, closestVPoints2 = checkSnapping(assessment='points', lines=lineDict2, points=pointDict2)  # Get unsnapped points
 				else:
-					unsnappedPoints2, closestVPoints2 = checkSnapping(lines=lineDict, points=pointDict2)  # Get unsnapped points
+					unsnappedPoints2, closestVPoints2 = checkSnapping(assessment='points', lines=lineDict, points=pointDict2)  # Get unsnapped points
 					
 		# Start check downstream connections
 		if getDnsConn:
 			dnsLogs = []
 			if not checkLine:  # hasn't yet been run
-				unsnappedLines, unsnappedLineNames, closestVLines, dsLines = checkSnapping(lines=lineDict, dns_conn=getDnsConn)
+				if not checkPoint:
+					pointDict = getVertices(pointLyrs)
+			unsnappedLines, unsnappedLineNames, closestVLines, dsLines = checkSnapping(lines=lineDict, points=pointDict, dns_conn=getDnsConn)
 			dnsLog, branches = checkDnsNwk(dsLines, [startElem], lineLyrs)
 			dnsLogs.append(dnsLog)
 			while len(branches) > 0:

@@ -1024,7 +1024,7 @@ def checkSnapping(**kwargs):
 	:return: list of unsnapped objects (for lines will append '==0' or first vertex, '==1' for last vertex)
 	:return: list of unsnapped object names for lines without reference to first or last vertex (not returned for points)
 	:return: dict of closest line vertex for unsnapped points and lines {name: [origin lyr, origin fid, closest vertex name, closest vertex coords, closest vertex dist]}
-	:return: dict of downstream channels for lines if dnsConn is True {name: [dns network channels]}
+	:return: dict of downstream channels for lines if dnsConn is True {name: [[dns network channels], [us invert, ds invert]]}
 	"""
 	
 	# determine which snapping check is being performed
@@ -1033,14 +1033,23 @@ def checkSnapping(**kwargs):
 	dnsConn = False
 	lineDict = kwargs['lines']  # will need lines no matter what
 	lineDict_len = len(lineDict)
-	if 'points' in kwargs.keys():  # assessing for points
-		checkPoint = True
-		pointDict = kwargs['points']
-	else:  # assessing for lines
-		checkLine = True
 	if 'dns_conn' in kwargs.keys():  
 		if kwargs['dns_conn']:
 			dnsConn = True  # force script to loop through all pipes to get all dns connections
+			checkLine = True
+		if 'points' in kwargs.keys():  # if points included, check elevations in dns connections
+			pointDict = kwargs['points']
+	elif 'assessment' in kwargs.keys():
+		if kwargs['assessment'] == 'lines':
+			checkLine = True
+		elif kwargs['assessment'] == 'points':
+			if 'points' in kwargs.keys():  # assessing snapping for points
+				checkPoint = True
+				pointDict = kwargs['points']
+			checkPoint = True
+			pointDict = kwargs['points']
+	else:  # assessing for lines
+		checkLine = True
 	
 	xIns = []  # list of X connectors that are entering a side channel - used to determine dns direction for x connectors
 	dsNwk = {}  # dict listing the downstream lines
@@ -1074,33 +1083,33 @@ def checkSnapping(**kwargs):
 									if lName not in xIns:
 										xIns.append(lName)
 									if lName not in dsNwk.keys():
-										dsNwk[lName] = [lName2]
+										dsNwk[lName] = [[lName2]]
 									else:
-										dsNwk[lName].append(lName2)
+										dsNwk[lName][0].append(lName2)
 								elif j == 1 and j2 == 0 and not xIn:  # X connector is leaving side channel
 									if lName not in dsNwk.keys():
-										dsNwk[lName] = [lName2]
+										dsNwk[lName] = [[lName2]]
 									else:
-										dsNwk[lName].append(lName2)
+										dsNwk[lName][0].append(lName2)
 							elif 'connector' in lName2:  # end normal nwk connected to end X conn
 								if lName2 in xIns:  # entering side channel
 									if j == 1 and j2 == 1:
 										if lName not in dsNwk.keys():
-											dsNwk[lName] = [lName2]
+											dsNwk[lName] = [[lName2]]
 										else:
-											dsNwk[lName].append(lName2)
+											dsNwk[lName][0].append(lName2)
 								else:  # leaving side channel
 									if j == 1 and j2 == 0:
 										if lName not in dsNwk.keys():
-											dsNwk[lName] = [lName2]
+											dsNwk[lName] = [[lName2]]
 										else:
-											dsNwk[lName].append(lName2)
+											dsNwk[lName][0].append(lName2)
 							else:  # normal connection
 								if j == 1 and j2 == 0:  # end vertex connected to fist vertex i.e. found a dns nwk
 									if lName not in dsNwk.keys():
-										dsNwk[lName] = [lName2]
+										dsNwk[lName] = [[lName2]]
 									else:
-										dsNwk[lName].append(lName2)
+										dsNwk[lName][0].append(lName2)
 							continue
 						else:
 							dist = ((v2[0] - v[0]) ** 2 + (v2[1] - v[1]) ** 2) ** 0.5
@@ -1289,7 +1298,7 @@ def checkDnsNwk(dsLines, startLine, inLyrs):
 				log += '{0},{1}\n'.format(keys[0], typ)
 			if keys[0] in dsLines.keys():
 				keyPrev = keys[0]
-				keys = dsLines[keys[0]]
+				keys = dsLines[keys[0]][0]
 			else:
 				dns = False
 		elif len(keys) > 1:  # consider what happens if there are 2 downstream channels
@@ -1297,15 +1306,15 @@ def checkDnsNwk(dsLines, startLine, inLyrs):
 			nwks = []
 			for key in keys:
 				if 'connector' in key:
-					key = dsLines[key][0]
+					key = dsLines[key][0][0]
 				nwks.append(key)
 			# get next downstream channels accounting for X connectors
 			dns_nwks = []
 			for nwk in nwks:
 				if nwk in dsLines.keys():
-					dns_nwk = dsLines[nwk][0]
+					dns_nwk = dsLines[nwk][0][0]
 					if 'connector' in dns_nwk:
-						dns_nwk = dsLines[dns_nwk][0]
+						dns_nwk = dsLines[dns_nwk][0][0]
 					dns_nwks.append(dns_nwk)
 				else:
 					dns_nwks.append('DOWNSTREAM NODE')
@@ -1377,7 +1386,7 @@ def checkDnsNwk(dsLines, startLine, inLyrs):
 					log += '{0},{1}\n'.format(listToString(nwks), listToString(typs))
 				if nwks[0] in dsLines.keys():
 					keyPrev = keys[0]
-					keys = dsLines[nwks[0]]
+					keys = dsLines[nwks[0]][0]
 				else:
 					dns = False
 			elif len(branches) > 1:
@@ -1404,7 +1413,7 @@ def checkDnsNwk(dsLines, startLine, inLyrs):
 						else:
 							log += ', {0}\n'.format(a)
 				if nwks[0] in dsLines.keys():
-					keys = dsLines[nwks[0]]
+					keys = dsLines[nwks[0]][0]
 				dns = False
 
 	return log, bn
