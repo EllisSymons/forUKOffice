@@ -980,6 +980,26 @@ def find_waterLevelPoint(selection, plotLayer):
 	return intersectedPoints, intersectedLines, message, error
 
 
+def getAngle(line1, line2):
+	"""
+	Gets the angle between 2 lines
+	
+	:param line1: list of 2 vertices [start vertex, end vertex]
+	:param line2: list of 2 vertices [start vertex, end vertex]
+	:return: float angle
+	"""
+	from math import acos, pi
+
+	a = ((line1[1][1] - line1[0][1]) ** 2 + (line1[1][0] - line1[0][0]) ** 2) ** 0.5  # triangle side a
+	b = ((line2[1][1] - line2[0][1]) ** 2 + (line2[1][0] - line2[0][0]) ** 2) ** 0.5  # triangle side b
+	c = ((line2[1][1] - line1[0][1]) ** 2 + (line2[1][0] - line1[0][0]) ** 2) ** 0.5  # triangle side c
+	
+	cosC = float(str((a ** 2 + b ** 2 - c ** 2) / (2 * a * b)))  # cosine rule - annoyingly wasn't working without convert to string then convert back to float!
+	angle = acos(cosC) * 180 / pi  # convert to degrees
+	
+	return angle
+
+
 def getVertices(lyrs):
 	"""
 	Creates a dictionary from all layers. For line layers it will get both start and end, for points
@@ -1044,15 +1064,13 @@ def checkSnapping(**kwargs):
 			pointDict = kwargs['points']
 			if len(pointDict) > 0:
 				checkPoint = True
-	elif 'assessment' in kwargs.keys():
+	if 'assessment' in kwargs.keys():
 		if kwargs['assessment'] == 'lines':
 			checkLine = True
 		elif kwargs['assessment'] == 'points':
 			if 'points' in kwargs.keys():  # assessing snapping for points
 				checkPoint = True
 				pointDict = kwargs['points']
-			checkPoint = True
-			pointDict = kwargs['points']
 	else:  # assessing for lines
 		checkLine = True
 	
@@ -1073,6 +1091,7 @@ def checkSnapping(**kwargs):
 			xIn = False  # helps determine downstream direction in relation to X connectors
 			for j, v in enumerate(lLoc):
 				found = False
+				found_dns = False
 				minDist = 99999
 				for i, (lName2, lParam2) in enumerate(sorted(lineDict.items())):  # sort dict so x connectors are assessed first
 					lLoc2 = lParam2[0]
@@ -1086,6 +1105,7 @@ def checkSnapping(**kwargs):
 							found = True
 							if 'connector' in lName:
 								if j == 0 and j2 == 0:  # X Connector is entering side channel
+									found_dns = True
 									xIn = True
 									if lName not in xIns:
 										xIns.append(lName)
@@ -1093,31 +1113,59 @@ def checkSnapping(**kwargs):
 										dsNwk[lName] = [[lName2]]
 									else:
 										dsNwk[lName][0].append(lName2)
+									if len(dsNwk[lName]) < 2:
+										dsNwk[lName].append([lUsInv, lDsInv])
+									if len(dsNwk[lName]) < 3:
+										dsNwk[lName].append([])
 								elif j == 1 and j2 == 0 and not xIn:  # X connector is leaving side channel
+									found_dns = True
 									if lName not in dsNwk.keys():
 										dsNwk[lName] = [[lName2]]
 									else:
 										dsNwk[lName][0].append(lName2)
+									if len(dsNwk[lName]) < 2:
+										dsNwk[lName].append([lUsInv, lDsInv])
+									if len(dsNwk[lName]) < 3:
+										dsNwk[lName].append([])
 							elif 'connector' in lName2:  # end normal nwk connected to end X conn
 								if lName2 in xIns:  # entering side channel
 									if j == 1 and j2 == 1:
+										found_dns = True
 										if lName not in dsNwk.keys():
 											dsNwk[lName] = [[lName2]]
 										else:
 											dsNwk[lName][0].append(lName2)
+										if len(dsNwk[lName]) < 2:
+											dsNwk[lName].append([lUsInv, lDsInv])
+										if len(dsNwk[lName]) < 3:
+											dsNwk[lName].append([])
 								else:  # leaving side channel
 									if j == 1 and j2 == 0:
+										found_dns = True
 										if lName not in dsNwk.keys():
 											dsNwk[lName] = [[lName2]]
 										else:
 											dsNwk[lName][0].append(lName2)
+										if len(dsNwk[lName]) < 2:
+											dsNwk[lName].append([lUsInv, lDsInv])
+										if len(dsNwk[lName]) < 3:
+											dsNwk[lName].append([])
 							else:  # normal connection
 								if j == 1 and j2 == 0:  # end vertex connected to fist vertex i.e. found a dns nwk
+									found_dns = True
 									if lName not in dsNwk.keys():
 										dsNwk[lName] = [[lName2]]
 									else:
 										dsNwk[lName][0].append(lName2)
-							dsNwk[lName].append([lUsInv, lDsInv])
+									if len(dsNwk[lName]) < 2:
+										dsNwk[lName].append([lUsInv, lDsInv])
+									if len(dsNwk[lName]) < 3:
+										angle = getAngle(lLoc, lLoc2)
+										dsNwk[lName].append([angle])
+									else:
+										angle = getAngle(lLoc, lLoc2)
+										if angle not in dsNwk[lName][2]:
+											dsNwk[lName][2].append(angle)
 							continue
 						else:
 							dist = ((v2[0] - v[0]) ** 2 + (v2[1] - v[1]) ** 2) ** 0.5
@@ -1126,8 +1174,10 @@ def checkSnapping(**kwargs):
 								v3 = v2
 								name = lName2
 								node = j2
+					if i + 1 == lineDict_len and not found_dns:
+						dsNwk[lName] = [[], [lUsInv, lDsInv], []]
 					if i + 1 == lineDict_len and not found:
-						dsNwk[lName] = [lUsInv, lDsInv]
+						dsNwk[lName] = [[], [lUsInv, lDsInv]]
 						if lName not in unsnapped_names:
 							unsnapped_names.append(lName)
 						if j == 0:
@@ -1155,7 +1205,7 @@ def checkSnapping(**kwargs):
 				lFid = lParam[1]
 				lUsInv = lParam[3][0]
 				lDsInv = lParam[3][1]
-				if found:
+				if found and not dnsConn:
 					break
 				for j, coord in enumerate(lLoc):
 					if coord == pLoc[0]:
@@ -1164,23 +1214,33 @@ def checkSnapping(**kwargs):
 							if j == 0:
 								if lUsInv == -99999:
 									if pDsInv != -99999:
-										usInv = pDsIn
+										usInv = pDsInv
 									else:
 										usInv = -99999
 								else:
 									usInv = lUsInv
+								if lName not in dsNwk.keys():
+									dsNwk[lName] = [[], [usInv]]
+								else:
+									if len(dsNwk[lName]) < 2:
+										dsNwk[lName].append([usInv])
+									else:
+										dsNwk[lName][1][0] = usInv
 							elif j == 1:
 								if lDsInv == -99999:
 									if pDsInv != -99999:
-										dsInv = pDsIn
+										dsInv = pDsInv
 									else:
 										dsInv = -99999
 								else:
 									dsInv = lDsInv
-							if lName not in dsNwk.keys():
-								dsNwk[lName] = [usInv, dsInv]
-							else:
-								dsNwk[lName].append([usInv, dsInv])
+								if lName not in dsNwk.keys():
+									dsNwk[lName] = [[], [dsInv]]
+								else:
+									if len(dsNwk[lName]) < 2:
+										dsNwk[lName].append([dsInv])
+									else:
+										dsNwk[lName][1][1] = dsInv
 						continue
 					else:
 						dist = ((coord[0] - pLoc[0][0]) ** 2 + (coord[1] - pLoc[0][1]) ** 2) ** 0.5
@@ -1289,20 +1349,22 @@ def listToString(lst):
 	return s
 
 
-def checkDnsNwk(dsLines, startLine, inLyrs):
+def checkDnsNwk(dsLines, startLine, inLyrs, angleLimit):
 	"""
 	From a starting point, will list all downstream connections until there are none left. It will also print out inverts,
 	pipe size, and flow area. It will flag decrease in conveyance and adverse gradients.
 	
-	:param dsLines: dict {origin name: [dns nwk names]}
+	:param dsLines: dict {origin name: [[dns nwk names], [us invert, ds invert]]}
 	:param startline: string start id
 	:param inLyrs: list of QgsVectorLayers
 	:return: string log	
 	"""
 
-	log = 'ID,Type,Number,Width,Height,Area,Us Invert,Ds Invert,Conveyance Decrease,Adverse Gradient\n'
+	log = 'ID,Type,Number,Width,Height,Area,Us Invert,Ds Invert,Min Angle into Downstream Pipe,Area Decrease,Adverse Gradient,Sharp Angle\n'
 	keyPrev = None
 	keys = startLine
+	area_prev = 0
+	dsInv_prev = 99999
 	dns = True
 	bn = []  # branched network names to be dealt with at the end
 	while dns:
@@ -1320,24 +1382,56 @@ def checkDnsNwk(dsLines, startLine, inLyrs):
 				no = int(features[0].attributes()[15])
 				width = float(features[0].attributes()[13])
 				height = float(features[0].attributes()[14])
-				usInv = float(features[0].attributes()[6])
-				dsInv = float(features[0].attributes()[7])
+				usInv = float(dsLines[keys[0]][1][0])
+				dsInv =  float(dsLines[keys[0]][1][1])
 				area = float(no) * width * height
-				log += '{0},{1},{2},{3:.2f},{4:.2f},{5:.2f},{6:.2f},{7:.2f}\n'.\
-					   format(keys[0], typ, no, width, height, area, usInv, dsInv)
+				if len(dsLines[keys[0]][2]) > 0:
+					angle = min(dsLines[keys[0]][2])
+				else:
+					angle = 0
+				advSlope = ''
+				if (dsInv > usInv and usInv != -99999.00) or (usInv > dsInv_prev and dsInv_prev != -99999.00):
+					advSlope = 'T'
+				decArea = ''
+				if area < area_prev:
+					decArea = 'T'
+				sharpAngle = ''
+				if angle < angleLimit and angle != 0:
+					sharpAngle = 'T'
+				log += '{0},{1},{2},{3:.2f},{4:.2f},{5:.2f},{6:.2f},{7:.2f},{8:.1f},{9},{10},{11}\n'.\
+				   format(keys[0], typ, no, width, height, area, usInv, dsInv, angle, decArea, advSlope, sharpAngle)
 			elif typ.lower() == 'c':
 				no = int(features[0].attributes()[15])
 				width = float(features[0].attributes()[13])
-				usInv = float(features[0].attributes()[6])
-				dsInv = float(features[0].attributes()[7])
+				height = 0
+				usInv = float(dsLines[keys[0]][1][0])
+				dsInv = float(dsLines[keys[0]][1][1])
 				area = float(no) * (width / 2) ** 2 * 3.14
-				log += '{0},{1},{2},{3:.2f},{4:.2f},{5:.2f},{6:.2f}\n'.\
-					   format(keys[0], typ, no, width, area, usInv, dsInv)
+				if len(dsLines[keys[0]][2]) > 0:
+					angle = min(dsLines[keys[0]][2])
+				else:
+					angle = 0
+				advSlope = ''
+				if (dsInv > usInv and usInv != -99999.00) or (usInv > dsInv_prev and dsInv_prev != -99999.00):
+					advSlope = 'T'
+				decArea = ''
+				if area < area_prev:
+					decArea = 'T'
+				sharpAngle = ''
+				if angle < angleLimit and angle != 0:
+					sharpAngle = 'T'
+				log += '{0},{1},{2},{3:.2f},{4:.2f},{5:.2f},{6:.2f},{7:.2f},{8:.1f},{9},{10},{11}\n'. \
+					format(keys[0], typ, no, width, height, area, usInv, dsInv, angle, decArea, advSlope, sharpAngle)
 			else:
 				log += '{0},{1}\n'.format(keys[0], typ)
 			if keys[0] in dsLines.keys():
-				keyPrev = keys[0]
-				keys = dsLines[keys[0]][0]
+				if len(dsLines[keys[0]][0]) == 0:
+					dns = False
+				else:
+					keyPrev = keys[0]
+					area_prev = area
+					dsInv_prev = dsInv
+					keys = dsLines[keys[0]][0]
 			else:
 				dns = False
 		elif len(keys) > 1:  # consider what happens if there are 2 downstream channels
@@ -1351,10 +1445,13 @@ def checkDnsNwk(dsLines, startLine, inLyrs):
 			dns_nwks = []
 			for nwk in nwks:
 				if nwk in dsLines.keys():
-					dns_nwk = dsLines[nwk][0][0]
-					if 'connector' in dns_nwk:
-						dns_nwk = dsLines[dns_nwk][0][0]
-					dns_nwks.append(dns_nwk)
+					if len(dsLines[nwk][0]) == 0:
+						dns_nwks.append('DOWNSTREAM NODE')
+					else:
+						dns_nwk = dsLines[nwk][0][0]
+						if 'connector' in dns_nwk:
+							dns_nwk = dsLines[dns_nwk][0][0]
+						dns_nwks.append(dns_nwk)
 				else:
 					dns_nwks.append('DOWNSTREAM NODE')
 			# check if dns nwk is the same
@@ -1395,6 +1492,7 @@ def checkDnsNwk(dsLines, startLine, inLyrs):
 				usInvs = []
 				dsInvs = []
 				areas = []
+				angles = []
 				for nwk in nwks:
 					for f in features:
 						name = f.attributes()[0]
@@ -1405,31 +1503,57 @@ def checkDnsNwk(dsLines, startLine, inLyrs):
 								nos.append(int(f.attributes()[15]))
 								widths.append(float(f.attributes()[13]))
 								heights.append(float(f.attributes()[14]))
-								usInvs.append(float(features[0].attributes()[6]))
-								dsInvs.append(float(features[0].attributes()[7]))
+								usInv = float(dsLines[nwk][1][0])
+								dsInv = float(dsLines[nwk][1][1])
 								areas.append(
 									float(f.attributes()[15]) * float(f.attributes()[13]) * float(f.attributes()[14]))
+								if len(dsLines[nwk][2]) > 0:
+									angles.append(min(dsLines[nwk][2]))
+								else:
+									angles.append(0)
 							elif typ.lower() == 'c':
 								nos.append(int(f.attributes()[15]))
 								widths.append(float(f.attributes()[13]))
-								usInvs.append(float(features[0].attributes()[6]))
-								dsInvs.append(float(features[0].attributes()[7]))
+								heights.append(0)
+								usInv = float(dsLines[nwk][1][0])
+								dsInv = float(dsLines[nwk][1][1])
 								areas.append(
 									float(f.attributes()[15]) * (float(f.attributes()[13]) / 2) ** 2 * 3.14)
+								if len(dsLines[nwk][2]) > 0:
+									angles.append(min(dsLines[nwk][2]))
+								else:
+									angles.append(0)
 				area = sum(areas)
+				angle = min(angles)
+				advSlope = ''
+				if (min(dsInv) > min(usInv) and min(usInv) != -99999) or (
+						min(usInv) > dsInv_prev and dsInv_prev != -99999):
+					advSlope = 'T'
+				decArea = ''
+				if area < area_prev:
+					decArea = 'T'
+				sharpAngle = ''
+				if angle < angleLimit:
+					sharpAngle = 'T'
 				if 'r' in typs or 'R' in typs or 'c' in typs or 'C' in typs:
-					log += '{0},{1},{2},{3},{4},{5},{6},{7}\n'. \
+					log += '{0},{1},{2},{3},{4},{5},{6},{7},{8},{9},{10},{11}\n'. \
 						format(listToString(nwks), listToString(typs), listToString(nos), listToString(widths),
-					           listToString(heights), area, listToString(usInvs), listToString(dsInvs))
+					           listToString(heights), area, listToString(usInvs), listToString(dsInvs), angle, decArea,
+					           advSlope, sharpAngle)
 				else:
 					log += '{0},{1}\n'.format(listToString(nwks), listToString(typs))
 				if nwks[0] in dsLines.keys():
-					keyPrev = keys[0]
-					keys = dsLines[nwks[0]][0]
+					if len(dsLines[nwks[0]][0]) == 0:
+						dns = False
+					else:
+						keyPrev = keys[0]
+						area_prev = area
+						dsInv_prev = min(dsInvs)
+						keys = dsLines[nwks[0]][0]
 				else:
 					dns = False
 			elif len(branches) > 1:
-				log += 'Branch split at {0} into {1} branches - '.format(keyPrev, len(branches))
+				log += '-- Branch split at {0} into {1} branches - '.format(keyPrev, len(branches))
 				for i, b in enumerate(bn):
 					if len(b) < 2:
 						if i == 0:

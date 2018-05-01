@@ -1798,6 +1798,9 @@ class tuflowqgis_check_1d_integrity_dialog(QDialog, Ui_check1dIntegrity):
 		self.addPoint_button.clicked.connect(lambda: self.addLyr('point'))
 		self.removeLine_button.clicked.connect(lambda: self.removeLyr('line'))
 		self.removePoint_button.clicked.connect(lambda: self.removeLyr('point'))
+		self.addStartNwk_button.clicked.connect(self.addFeature)
+		self.removeStartNwk_button.clicked.connect(self.removeFeature)
+		self.addLine_button.clicked.connect(self.toggleStartElement)
 		self.browse_button.clicked.connect(self.browse)
 		self.outTxtFile_cb.clicked.connect(self.toggleOutFile)
 		self.autoSnap_cb.clicked.connect(self.toggleSearchRadius_sb)
@@ -1811,15 +1814,25 @@ class tuflowqgis_check_1d_integrity_dialog(QDialog, Ui_check1dIntegrity):
 	
 	def addLyr(self, type):
 		if type == 'point':
+			inLyrs = []
+			for i in range(self.pointLyrs_lw.count()):
+				a = self.pointLyrs_lw.item(i).text()
+				inLyrs.append(a)
 			inLyr = self.addPoint_combo.currentText()
-			self.pointLyrs_lw.insertItem(0, inLyr)
-			item = self.pointLyrs_lw.item(0)
-			self.pointLyrs_lw.setItemSelected(item, True)
+			if inLyr not in inLyrs:
+				self.pointLyrs_lw.insertItem(0, inLyr)
+				item = self.pointLyrs_lw.item(0)
+				self.pointLyrs_lw.setItemSelected(item, True)
 		elif type == 'line':
+			inLyrs = []
+			for i in range(self.pointLyrs_lw.count()):
+				a = self.pointLyrs_lw.item(i).text()
+				inLyrs.append(a)
 			inLyr = self.addLine_combo.currentText()
-			self.lineLyrs_lw.insertItem(0, inLyr)
-			item = self.lineLyrs_lw.item(0)
-			self.lineLyrs_lw.setItemSelected(item, True)
+			if inLyr not in inLyrs:
+				self.lineLyrs_lw.insertItem(0, inLyr)
+				item = self.lineLyrs_lw.item(0)
+				self.lineLyrs_lw.setItemSelected(item, True)
 	
 	def removeLyr(self, type):
 		if type == 'point':
@@ -1836,8 +1849,24 @@ class tuflowqgis_check_1d_integrity_dialog(QDialog, Ui_check1dIntegrity):
 					removeIndex.append(i)
 			for i in reversed(removeIndex):
 				self.lineLyrs_lw.takeItem(i)
+				
+	def addFeature(self):
+		inFeatures = []
+		for i in range(self.startNwk_lw.count()):
+			a = self.startNwk_lw.item(i).text()
+			inFeatures.append(a)
+		inFeat = self.name1d_combo.currentText()
+		if inFeat not in inFeatures:
+			self.startNwk_lw.insertItem(0, inFeat)
+		
+	def removeFeature(self):
+		removeIndex = []
+		for i in range(self.startNwk_lw.count()):
+			if self.startNwk_lw.item(i).isSelected():
+				removeIndex.append(i)
+		for i in reversed(removeIndex):
+			self.startNwk_lw.takeItem(i)
 
-	
 	def browse(self):
 		outFile_old = None
 		if len(self.outFile.text()) > 0:
@@ -1891,8 +1920,18 @@ class tuflowqgis_check_1d_integrity_dialog(QDialog, Ui_check1dIntegrity):
 	def toggleStartElement(self):
 		if self.getDsConnection_cb.isChecked():
 			self.name1d_combo.setEnabled(True)
+			self.addStartNwk_button.setEnabled(True)
+			self.removeStartNwk_button.setEnabled(True)
+			self.label_3.setEnabled(True)
+			self.label_9.setEnabled(True)
+			self.angle_sb.setEnabled(True)
+			self.startNwk_lw.setEnabled(True)
 			self.plotDsConn_cb.setEnabled(True)
 			self.getGroundElev_cb.setEnabled(True)
+			features = []
+			for i in range(self.startNwk_lw.count()):
+				a = self.startNwk_lw.item(i).text()
+				features.append(a)
 			if self.lineLyrs_lw.count() > 0:
 				for i in range(self.lineLyrs_lw.count()):
 					name = self.lineLyrs_lw.item(i).text()
@@ -1903,19 +1942,33 @@ class tuflowqgis_check_1d_integrity_dialog(QDialog, Ui_check1dIntegrity):
 								self.name1d_combo.addItem(feature.attributes()[0])
 							except:
 								pass
-				cLyr = self.iface.mapCanvas().currentLayer()
-				selFeat = cLyr.selectedFeatures()
+				#cLyr = self.iface.mapCanvas().currentLayer()
+				selFeatures = []
+				for i in range(self.lineLyrs_lw.count()):
+					name = self.lineLyrs_lw.item(i).text()
+					#pydevd.settrace('localhost', port=53100, stdoutToServer=True, stderrToServer=True)
+					lyr = tuflowqgis_find_layer(name)
+					selFeat = lyr.selectedFeatures()
+					selFeatures.append(selFeat)
 				txt = None
-				for f in selFeat:
-					txt = f.attributes()[0]
-					break
-				if txt is not None:
-					index = self.name1d_combo.findText(txt, Qt.MatchFixedString)
-					if index >= 0:
-						self.name1d_combo.setCurrentIndex(index)
+				for selFeat in selFeatures:
+					for f in selFeat:
+						txt = f.attributes()[0]
+						if txt is not None:
+							index = self.name1d_combo.findText(txt, Qt.MatchFixedString)
+							if index >= 0:
+								self.name1d_combo.setCurrentIndex(index)
+							if txt not in features:
+								self.startNwk_lw.insertItem(0, txt)
 		else:
 			self.name1d_combo.clear()
 			self.name1d_combo.setEnabled(False)
+			self.addStartNwk_button.setEnabled(False)
+			self.removeStartNwk_button.setEnabled(False)
+			self.label_3.setEnabled(False)
+			self.label_9.setEnabled(False)
+			self.angle_sb.setEnabled(False)
+			self.startNwk_lw.setEnabled(False)
 			self.plotDsConn_cb.setEnabled(False)
 			self.getGroundElev_cb.setEnabled(False)
 			
@@ -1955,7 +2008,11 @@ class tuflowqgis_check_1d_integrity_dialog(QDialog, Ui_check1dIntegrity):
 			dsInvField = self.dsInvField_combo.currentText()
 		if self.getDsConnection_cb.isChecked():
 			getDnsConn = True
-			startElem = self.name1d_combo.currentText()
+			angleLimit = self.angle_sb.value()
+			startElem = []
+			for i in range(self.startNwk_lw.count()):
+				a = self.startNwk_lw.item(i).text()
+				startElem.append(a)
 			if self.plotDsConn_cb.isChecked():
 				plotDnsConn = True
 			if self.getGroundElev_cb.isChecked():
@@ -1973,6 +2030,7 @@ class tuflowqgis_check_1d_integrity_dialog(QDialog, Ui_check1dIntegrity):
 			lineLyrs.append(tuflowqgis_find_layer(self.lineLyrs_lw.item(i).text()))
 		
 		pointLyrs = []
+		pointDict = {}
 		for i in range(self.pointLyrs_lw.count()):
 			pointLyrs.append(tuflowqgis_find_layer(self.pointLyrs_lw.item(i).text()))
 		
@@ -1980,8 +2038,10 @@ class tuflowqgis_check_1d_integrity_dialog(QDialog, Ui_check1dIntegrity):
 		lineDict = getVertices(lineLyrs)  # create dictionary of line objects {name: [start vertice, end vertice]}
 		if checkLine:
 			if getDnsConn:
-				pointDict = getVertices(pointLyrs)
-				unsnappedLines, unsnappedLineNames, closestVLines, dsLines = checkSnapping(assessment='lines', lines=lineDict, points=pointDict, dns_conn=getDnsConn)  # Get unsnapped line vertices
+				if not checkPoint:
+					if len(pointLyrs) > 0:
+						pointDict = getVertices(pointLyrs)
+			unsnappedLines, unsnappedLineNames, closestVLines, dsLines = checkSnapping(assessment='lines', lines=lineDict, points=pointDict, dns_conn=getDnsConn)  # Get unsnapped line vertices
 			if autoSnap:
 				returnLogL = moveVertices(lineLyrs, closestVLines, searchRadius)  # perform auto snap routine
 				lineDict2 = getVertices(lineLyrs)  # reassess snapping
@@ -1989,8 +2049,7 @@ class tuflowqgis_check_1d_integrity_dialog(QDialog, Ui_check1dIntegrity):
 				
 		# Start Point Check Section				
 		if checkPoint:
-			if not getDnsConn:
-				pointDict = getVertices(pointLyrs)  # create dictionary of point objects {name: [vertex]}
+			pointDict = getVertices(pointLyrs)  # create dictionary of point objects {name: [vertex]}
 			if checkLine and autoSnap:  # Check if line layer has been edited
 				unsnappedPoints, closestVPoints = checkSnapping(assessment='points', lines=lineDict2, points=pointDict)  # Get unsnapped points
 			else:
@@ -2008,13 +2067,14 @@ class tuflowqgis_check_1d_integrity_dialog(QDialog, Ui_check1dIntegrity):
 			dnsLogs = []
 			if not checkLine:  # hasn't yet been run
 				if not checkPoint:
-					pointDict = getVertices(pointLyrs)
-			unsnappedLines, unsnappedLineNames, closestVLines, dsLines = checkSnapping(lines=lineDict, points=pointDict, dns_conn=getDnsConn)
-			dnsLog, branches = checkDnsNwk(dsLines, [startElem], lineLyrs)
+					if len(pointLyrs) > 0:
+						pointDict = getVertices(pointLyrs)
+				unsnappedLines, unsnappedLineNames, closestVLines, dsLines = checkSnapping(lines=lineDict, points=pointDict, dns_conn=getDnsConn)
+			dnsLog, branches = checkDnsNwk(dsLines, startElem, lineLyrs, angleLimit)
 			dnsLogs.append(dnsLog)
 			while len(branches) > 0:
 				for branch in branches:
-					dnsLog, dnsBranches = checkDnsNwk(dsLines, branch, lineLyrs)
+					dnsLog, dnsBranches = checkDnsNwk(dsLines, branch, lineLyrs, angleLimit)
 					dnsLogs.append(dnsLog)
 					branches += dnsBranches
 					branches.remove(branch)

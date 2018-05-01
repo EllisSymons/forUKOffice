@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>421</width>
-    <height>665</height>
+    <width>701</width>
+    <height>710</height>
    </rect>
   </property>
   <property name="focusPolicy">
@@ -22,9 +22,9 @@
   <widget class="QDialogButtonBox" name="buttonBox">
    <property name="geometry">
     <rect>
-     <x>210</x>
-     <y>632</y>
-     <width>201</width>
+     <x>524</x>
+     <y>669</y>
+     <width>161</width>
      <height>32</height>
     </rect>
    </property>
@@ -65,51 +65,31 @@
    <property name="geometry">
     <rect>
      <x>10</x>
-     <y>260</y>
-     <width>401</width>
-     <height>251</height>
+     <y>270</y>
+     <width>681</width>
+     <height>321</height>
     </rect>
    </property>
    <property name="title">
-    <string>Integrity Options</string>
+    <string/>
    </property>
-   <widget class="QCheckBox" name="check1dPoint_cb">
-    <property name="geometry">
-     <rect>
-      <x>210</x>
-      <y>20</y>
-      <width>161</width>
-      <height>20</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Check 1D Point-Line snapping</string>
-    </property>
-   </widget>
-   <widget class="QCheckBox" name="check1dLine_cb">
-    <property name="geometry">
-     <rect>
-      <x>10</x>
-      <y>20</y>
-      <width>181</width>
-      <height>20</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Check 1D Line-Line snapping</string>
-    </property>
-   </widget>
    <widget class="QGroupBox" name="groupBox_3">
     <property name="geometry">
      <rect>
       <x>5</x>
-      <y>115</y>
-      <width>181</width>
-      <height>124</height>
+      <y>90</y>
+      <width>391</width>
+      <height>221</height>
      </rect>
     </property>
+    <property name="font">
+     <font>
+      <weight>75</weight>
+      <bold>true</bold>
+     </font>
+    </property>
     <property name="title">
-     <string/>
+     <string>Downstream Profile</string>
     </property>
     <widget class="QComboBox" name="dem_combo">
      <property name="enabled">
@@ -118,10 +98,16 @@
      <property name="geometry">
       <rect>
        <x>15</x>
-       <y>95</y>
-       <width>151</width>
+       <y>190</y>
+       <width>361</width>
        <height>22</height>
       </rect>
+     </property>
+     <property name="font">
+      <font>
+       <weight>50</weight>
+       <bold>false</bold>
+      </font>
      </property>
     </widget>
     <widget class="QCheckBox" name="getDsConnection_cb">
@@ -131,13 +117,19 @@
      <property name="geometry">
       <rect>
        <x>3</x>
-       <y>2</y>
+       <y>20</y>
        <width>181</width>
        <height>20</height>
       </rect>
      </property>
+     <property name="font">
+      <font>
+       <weight>50</weight>
+       <bold>false</bold>
+      </font>
+     </property>
      <property name="text">
-      <string>Get downstream connections</string>
+      <string>Check Downstream Integrity</string>
      </property>
     </widget>
     <widget class="QCheckBox" name="getGroundElev_cb">
@@ -147,10 +139,16 @@
      <property name="geometry">
       <rect>
        <x>10</x>
-       <y>76</y>
+       <y>171</y>
        <width>181</width>
        <height>20</height>
       </rect>
+     </property>
+     <property name="font">
+      <font>
+       <weight>50</weight>
+       <bold>false</bold>
+      </font>
      </property>
      <property name="text">
       <string>Get ground elevations</string>
@@ -163,13 +161,19 @@
      <property name="geometry">
       <rect>
        <x>12</x>
-       <y>20</y>
-       <width>101</width>
+       <y>50</y>
+       <width>111</width>
        <height>16</height>
       </rect>
      </property>
+     <property name="font">
+      <font>
+       <weight>50</weight>
+       <bold>false</bold>
+      </font>
+     </property>
      <property name="text">
-      <string>Starting at element:</string>
+      <string>Starting at elements:</string>
      </property>
     </widget>
     <widget class="QComboBox" name="name1d_combo">
@@ -179,10 +183,16 @@
      <property name="geometry">
       <rect>
        <x>10</x>
-       <y>39</y>
-       <width>151</width>
+       <y>68</y>
+       <width>261</width>
        <height>22</height>
       </rect>
+     </property>
+     <property name="font">
+      <font>
+       <weight>50</weight>
+       <bold>false</bold>
+      </font>
      </property>
     </widget>
     <widget class="QCheckBox" name="plotDsConn_cb">
@@ -192,13 +202,138 @@
      <property name="geometry">
       <rect>
        <x>10</x>
-       <y>60</y>
+       <y>155</y>
        <width>181</width>
        <height>20</height>
       </rect>
      </property>
+     <property name="font">
+      <font>
+       <weight>50</weight>
+       <bold>false</bold>
+      </font>
+     </property>
      <property name="text">
       <string>Plot output in TUPLOT</string>
+     </property>
+    </widget>
+    <widget class="QListWidget" name="startNwk_lw">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>93</y>
+       <width>371</width>
+       <height>51</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <weight>50</weight>
+       <bold>false</bold>
+      </font>
+     </property>
+     <property name="dragDropMode">
+      <enum>QAbstractItemView::NoDragDrop</enum>
+     </property>
+     <property name="selectionMode">
+      <enum>QAbstractItemView::ExtendedSelection</enum>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="addStartNwk_button">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
+     <property name="geometry">
+      <rect>
+       <x>279</x>
+       <y>67</y>
+       <width>51</width>
+       <height>21</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <weight>50</weight>
+       <bold>false</bold>
+      </font>
+     </property>
+     <property name="text">
+      <string>Add</string>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="removeStartNwk_button">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
+     <property name="geometry">
+      <rect>
+       <x>333</x>
+       <y>67</y>
+       <width>51</width>
+       <height>21</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <weight>50</weight>
+       <bold>false</bold>
+      </font>
+     </property>
+     <property name="text">
+      <string>Remove</string>
+     </property>
+    </widget>
+    <widget class="QSpinBox" name="angle_sb">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
+     <property name="geometry">
+      <rect>
+       <x>170</x>
+       <y>40</y>
+       <width>61</width>
+       <height>22</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <weight>50</weight>
+       <bold>false</bold>
+      </font>
+     </property>
+     <property name="minimum">
+      <number>1</number>
+     </property>
+     <property name="maximum">
+      <number>360</number>
+     </property>
+     <property name="value">
+      <number>90</number>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_9">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
+     <property name="geometry">
+      <rect>
+       <x>170</x>
+       <y>20</y>
+       <width>211</width>
+       <height>16</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <weight>50</weight>
+       <bold>false</bold>
+      </font>
+     </property>
+     <property name="text">
+      <string>Flag Network Connection Angles less than:</string>
      </property>
     </widget>
    </widget>
@@ -206,13 +341,19 @@
     <property name="geometry">
      <rect>
       <x>5</x>
-      <y>41</y>
-      <width>181</width>
+      <y>9</y>
+      <width>391</width>
       <height>71</height>
      </rect>
     </property>
+    <property name="font">
+     <font>
+      <weight>75</weight>
+      <bold>true</bold>
+     </font>
+    </property>
     <property name="title">
-     <string/>
+     <string>Snapping</string>
     </property>
     <widget class="QCheckBox" name="autoSnap_cb">
      <property name="enabled">
@@ -220,11 +361,17 @@
      </property>
      <property name="geometry">
       <rect>
-       <x>5</x>
-       <y>2</y>
-       <width>161</width>
+       <x>10</x>
+       <y>40</y>
+       <width>71</width>
        <height>20</height>
       </rect>
+     </property>
+     <property name="font">
+      <font>
+       <weight>50</weight>
+       <bold>false</bold>
+      </font>
      </property>
      <property name="text">
       <string>Auto snap </string>
@@ -236,11 +383,17 @@
      </property>
      <property name="geometry">
       <rect>
-       <x>15</x>
-       <y>20</y>
+       <x>164</x>
+       <y>43</y>
        <width>131</width>
        <height>16</height>
       </rect>
+     </property>
+     <property name="font">
+      <font>
+       <weight>50</weight>
+       <bold>false</bold>
+      </font>
      </property>
      <property name="text">
       <string>Search radius (map units)</string>
@@ -252,11 +405,17 @@
      </property>
      <property name="geometry">
       <rect>
-       <x>15</x>
-       <y>38</y>
+       <x>90</x>
+       <y>40</y>
        <width>71</width>
        <height>22</height>
       </rect>
+     </property>
+     <property name="font">
+      <font>
+       <weight>50</weight>
+       <bold>false</bold>
+      </font>
      </property>
      <property name="decimals">
       <number>4</number>
@@ -265,18 +424,62 @@
       <double>0.000100000000000</double>
      </property>
     </widget>
+    <widget class="QCheckBox" name="check1dPoint_cb">
+     <property name="geometry">
+      <rect>
+       <x>210</x>
+       <y>20</y>
+       <width>161</width>
+       <height>20</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <weight>50</weight>
+       <bold>false</bold>
+      </font>
+     </property>
+     <property name="text">
+      <string>Check 1D Point-Line snapping</string>
+     </property>
+    </widget>
+    <widget class="QCheckBox" name="check1dLine_cb">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>20</y>
+       <width>181</width>
+       <height>20</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <weight>50</weight>
+       <bold>false</bold>
+      </font>
+     </property>
+     <property name="text">
+      <string>Check 1D Line-Line snapping</string>
+     </property>
+    </widget>
    </widget>
    <widget class="QGroupBox" name="groupBox_6">
     <property name="geometry">
      <rect>
-      <x>205</x>
-      <y>41</y>
-      <width>171</width>
+      <x>410</x>
+      <y>9</y>
+      <width>261</width>
       <height>131</height>
      </rect>
     </property>
+    <property name="font">
+     <font>
+      <weight>75</weight>
+      <bold>true</bold>
+     </font>
+    </property>
     <property name="title">
-     <string/>
+     <string>Pipe Direction</string>
     </property>
     <widget class="QCheckBox" name="correctPipeDir_cb">
      <property name="enabled">
@@ -284,14 +487,20 @@
      </property>
      <property name="geometry">
       <rect>
-       <x>5</x>
-       <y>1</y>
+       <x>6</x>
+       <y>39</y>
        <width>161</width>
        <height>20</height>
       </rect>
      </property>
+     <property name="font">
+      <font>
+       <weight>50</weight>
+       <bold>false</bold>
+      </font>
+     </property>
      <property name="text">
-      <string>Correct pipe direction</string>
+      <string>Auto correct pipe direction</string>
      </property>
     </widget>
     <widget class="QComboBox" name="usInvField_combo">
@@ -301,10 +510,16 @@
      <property name="geometry">
       <rect>
        <x>11</x>
-       <y>34</y>
-       <width>151</width>
+       <y>74</y>
+       <width>111</width>
        <height>22</height>
       </rect>
+     </property>
+     <property name="font">
+      <font>
+       <weight>50</weight>
+       <bold>false</bold>
+      </font>
      </property>
     </widget>
     <widget class="QLabel" name="label_5">
@@ -314,10 +529,16 @@
      <property name="geometry">
       <rect>
        <x>12</x>
-       <y>18</y>
+       <y>58</y>
        <width>101</width>
        <height>16</height>
       </rect>
+     </property>
+     <property name="font">
+      <font>
+       <weight>50</weight>
+       <bold>false</bold>
+      </font>
      </property>
      <property name="text">
       <string>Upstream Invert field</string>
@@ -329,11 +550,17 @@
      </property>
      <property name="geometry">
       <rect>
-       <x>11</x>
-       <y>55</y>
+       <x>132</x>
+       <y>61</y>
        <width>121</width>
-       <height>16</height>
+       <height>10</height>
       </rect>
+     </property>
+     <property name="font">
+      <font>
+       <weight>50</weight>
+       <bold>false</bold>
+      </font>
      </property>
      <property name="text">
       <string>Downstream Invert field</string>
@@ -345,11 +572,17 @@
      </property>
      <property name="geometry">
       <rect>
-       <x>10</x>
-       <y>71</y>
-       <width>151</width>
+       <x>130</x>
+       <y>74</y>
+       <width>111</width>
        <height>22</height>
       </rect>
+     </property>
+     <property name="font">
+      <font>
+       <weight>50</weight>
+       <bold>false</bold>
+      </font>
      </property>
     </widget>
     <widget class="QLabel" name="label_7">
@@ -358,15 +591,17 @@
      </property>
      <property name="geometry">
       <rect>
-       <x>10</x>
+       <x>12</x>
        <y>96</y>
-       <width>151</width>
+       <width>231</width>
        <height>31</height>
       </rect>
      </property>
      <property name="font">
       <font>
        <pointsize>6</pointsize>
+       <weight>50</weight>
+       <bold>false</bold>
       </font>
      </property>
      <property name="text">
@@ -376,15 +611,177 @@
       <bool>true</bool>
      </property>
     </widget>
+    <widget class="QCheckBox" name="correctPipeDir_cb_2">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
+     <property name="geometry">
+      <rect>
+       <x>6</x>
+       <y>19</y>
+       <width>161</width>
+       <height>20</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <weight>50</weight>
+       <bold>false</bold>
+      </font>
+     </property>
+     <property name="text">
+      <string>Check pipe direction</string>
+     </property>
+    </widget>
    </widget>
+   <widget class="QGroupBox" name="groupBox_7">
+    <property name="geometry">
+     <rect>
+      <x>410</x>
+      <y>150</y>
+      <width>261</width>
+      <height>161</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <weight>75</weight>
+      <bold>true</bold>
+     </font>
+    </property>
+    <property name="title">
+     <string>Continuity Check</string>
+    </property>
+    <widget class="QCheckBox" name="checkFlowArea_cb">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>20</y>
+       <width>191</width>
+       <height>20</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <weight>50</weight>
+       <bold>false</bold>
+      </font>
+     </property>
+     <property name="text">
+      <string>Check Downstream Pipe Flow Area</string>
+     </property>
+    </widget>
+    <widget class="QCheckBox" name="checkGradients_cb">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>50</y>
+       <width>181</width>
+       <height>20</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <weight>50</weight>
+       <bold>false</bold>
+      </font>
+     </property>
+     <property name="text">
+      <string>Check Pipe Gradients</string>
+     </property>
+    </widget>
+    <widget class="QCheckBox" name="checkAngle_cb">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>80</y>
+       <width>181</width>
+       <height>20</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <weight>50</weight>
+       <bold>false</bold>
+      </font>
+     </property>
+     <property name="text">
+      <string>Check Pipe Inflow Angle</string>
+     </property>
+    </widget>
+    <widget class="QSpinBox" name="angle2_sb">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
+     <property name="geometry">
+      <rect>
+       <x>35</x>
+       <y>120</y>
+       <width>61</width>
+       <height>22</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <weight>50</weight>
+       <bold>false</bold>
+      </font>
+     </property>
+     <property name="minimum">
+      <number>1</number>
+     </property>
+     <property name="maximum">
+      <number>360</number>
+     </property>
+     <property name="value">
+      <number>90</number>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_10">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
+     <property name="geometry">
+      <rect>
+       <x>32</x>
+       <y>103</y>
+       <width>211</width>
+       <height>16</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <weight>50</weight>
+       <bold>false</bold>
+      </font>
+     </property>
+     <property name="text">
+      <string>Flag Network Connection Angles less than:</string>
+     </property>
+    </widget>
+   </widget>
+   <zorder>groupBox_3</zorder>
+   <zorder>groupBox_4</zorder>
+   <zorder>correctPipeDir_cb</zorder>
+   <zorder>groupBox_6</zorder>
+   <zorder>groupBox_7</zorder>
   </widget>
   <widget class="QGroupBox" name="groupBox_2">
    <property name="geometry">
     <rect>
      <x>10</x>
-     <y>520</y>
-     <width>401</width>
-     <height>111</height>
+     <y>600</y>
+     <width>511</width>
+     <height>101</height>
     </rect>
    </property>
    <property name="title">
@@ -394,7 +791,7 @@
     <property name="geometry">
      <rect>
       <x>205</x>
-      <y>20</y>
+      <y>17</y>
       <width>151</width>
       <height>20</height>
      </rect>
@@ -407,7 +804,7 @@
     <property name="geometry">
      <rect>
       <x>15</x>
-      <y>20</y>
+      <y>17</y>
       <width>171</width>
       <height>20</height>
      </rect>
@@ -420,8 +817,8 @@
     <property name="geometry">
      <rect>
       <x>9</x>
-      <y>43</y>
-      <width>381</width>
+      <y>40</y>
+      <width>491</width>
       <height>51</height>
      </rect>
     </property>
@@ -449,7 +846,7 @@
       <rect>
        <x>6</x>
        <y>23</y>
-       <width>291</width>
+       <width>401</width>
        <height>22</height>
       </rect>
      </property>
@@ -460,8 +857,8 @@
      </property>
      <property name="geometry">
       <rect>
-       <x>302</x>
-       <y>23</y>
+       <x>415</x>
+       <y>24</y>
        <width>71</width>
        <height>21</height>
       </rect>
@@ -477,7 +874,7 @@
     <rect>
      <x>10</x>
      <y>30</y>
-     <width>291</width>
+     <width>541</width>
      <height>22</height>
     </rect>
    </property>
@@ -485,9 +882,9 @@
   <widget class="QPushButton" name="addLine_button">
    <property name="geometry">
     <rect>
-     <x>306</x>
-     <y>30</y>
-     <width>51</width>
+     <x>564</x>
+     <y>31</y>
+     <width>61</width>
      <height>21</height>
     </rect>
    </property>
@@ -500,7 +897,7 @@
     <rect>
      <x>10</x>
      <y>153</y>
-     <width>291</width>
+     <width>541</width>
      <height>22</height>
     </rect>
    </property>
@@ -510,7 +907,7 @@
     <rect>
      <x>10</x>
      <y>60</y>
-     <width>401</width>
+     <width>681</width>
      <height>71</height>
     </rect>
    </property>
@@ -526,7 +923,7 @@
     <rect>
      <x>10</x>
      <y>183</y>
-     <width>401</width>
+     <width>681</width>
      <height>71</height>
     </rect>
    </property>
@@ -540,9 +937,9 @@
   <widget class="QPushButton" name="removeLine_button">
    <property name="geometry">
     <rect>
-     <x>360</x>
-     <y>30</y>
-     <width>51</width>
+     <x>630</x>
+     <y>31</y>
+     <width>61</width>
      <height>21</height>
     </rect>
    </property>
@@ -553,9 +950,9 @@
   <widget class="QPushButton" name="removePoint_button">
    <property name="geometry">
     <rect>
-     <x>360</x>
-     <y>154</y>
-     <width>51</width>
+     <x>628</x>
+     <y>153</y>
+     <width>61</width>
      <height>21</height>
     </rect>
    </property>
@@ -566,9 +963,9 @@
   <widget class="QPushButton" name="addPoint_button">
    <property name="geometry">
     <rect>
-     <x>306</x>
-     <y>154</y>
-     <width>51</width>
+     <x>562</x>
+     <y>153</y>
+     <width>61</width>
      <height>21</height>
     </rect>
    </property>
@@ -576,6 +973,19 @@
     <string>Add</string>
    </property>
   </widget>
+  <zorder>groupBox_2</zorder>
+  <zorder>buttonBox</zorder>
+  <zorder>label</zorder>
+  <zorder>label_2</zorder>
+  <zorder>groupBox</zorder>
+  <zorder>addLine_combo</zorder>
+  <zorder>addLine_button</zorder>
+  <zorder>addPoint_combo</zorder>
+  <zorder>lineLyrs_lw</zorder>
+  <zorder>pointLyrs_lw</zorder>
+  <zorder>removeLine_button</zorder>
+  <zorder>removePoint_button</zorder>
+  <zorder>addPoint_button</zorder>
  </widget>
  <resources/>
  <connections>
