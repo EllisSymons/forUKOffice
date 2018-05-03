@@ -1000,6 +1000,27 @@ def getAngle(line1, line2):
 	return angle
 
 
+def getLength(feature):
+	"""
+	Gets the length of a line from the geometry
+	
+	:param feature: QgsFeature
+	:return: float
+	"""
+	
+	length = 0
+	pPrev = None
+	geom = feature.geometry().asPolyline()
+	for i, p in enumerate(geom):
+		if i == 0:
+			pPrev = p
+		else:
+			length += ((pPrev[1] - p[1]) ** 2 + (pPrev[0] - p[0]) ** 2) ** 0.5
+			pPrev = p
+	
+	return length
+
+
 def getVertices(lyrs):
 	"""
 	Creates a dictionary from all layers. For line layers it will get both start and end, for points
@@ -1349,7 +1370,7 @@ def listToString(lst):
 	return s
 
 
-def checkDnsNwk(dsLines, startLine, inLyrs, angleLimit):
+def checkDnsNwk(dsLines, startLine, inLyrs, angleLimit, used_nwks, plot):
 	"""
 	From a starting point, will list all downstream connections until there are none left. It will also print out inverts,
 	pipe size, and flow area. It will flag decrease in conveyance and adverse gradients.
@@ -1357,6 +1378,8 @@ def checkDnsNwk(dsLines, startLine, inLyrs, angleLimit):
 	:param dsLines: dict {origin name: [[dns nwk names], [us invert, ds invert]]}
 	:param startline: string start id
 	:param inLyrs: list of QgsVectorLayers
+	:param used_nwks: list of networks that have been considered already
+	:param plot: dict of plotting params {x : [], bed: [], pipes: [], ground: [], branches: []}
 	:return: string log	
 	"""
 
@@ -1367,6 +1390,10 @@ def checkDnsNwk(dsLines, startLine, inLyrs, angleLimit):
 	dsInv_prev = 99999
 	dns = True
 	bn = []  # branched network names to be dealt with at the end
+	x = []
+	bed = []
+	pipes = []
+	branches = []
 	while dns:
 		features = []
 		for lyr in inLyrs:
@@ -1377,13 +1404,26 @@ def checkDnsNwk(dsLines, startLine, inLyrs, angleLimit):
 				for f in lyr.getFeatures(request):
 					features.append(f)
 		if len(keys) == 1:  # one downstream channel
+			if keys[0] in used_nwks:
+				dns = False
+				break
 			typ = features[0].attributes()[1]
+			length = features[0].attributes()[4]
+			if len(x) == 0:
+				x.append(0)
+			if length > 0:
+				x.append(length)
+			else:
+				x.append(getLength(features[0]))
 			if typ.lower() == 'r':
 				no = int(features[0].attributes()[15])
 				width = float(features[0].attributes()[13])
 				height = float(features[0].attributes()[14])
 				usInv = float(dsLines[keys[0]][1][0])
 				dsInv =  float(dsLines[keys[0]][1][1])
+				bed.append(usInv)
+				bed.append(dsInv)
+				pipes.append(height)
 				area = float(no) * width * height
 				if len(dsLines[keys[0]][2]) > 0:
 					angle = min(dsLines[keys[0]][2])
@@ -1406,6 +1446,9 @@ def checkDnsNwk(dsLines, startLine, inLyrs, angleLimit):
 				height = 0
 				usInv = float(dsLines[keys[0]][1][0])
 				dsInv = float(dsLines[keys[0]][1][1])
+				bed.append(usInv)
+				bed.append(dsInv)
+				pipes.append(width)
 				area = float(no) * (width / 2) ** 2 * 3.14
 				if len(dsLines[keys[0]][2]) > 0:
 					angle = min(dsLines[keys[0]][2])
@@ -1428,11 +1471,13 @@ def checkDnsNwk(dsLines, startLine, inLyrs, angleLimit):
 				if len(dsLines[keys[0]][0]) == 0:
 					dns = False
 				else:
+					used_nwks.append(keys[0])
 					keyPrev = keys[0]
 					area_prev = area
 					dsInv_prev = dsInv
 					keys = dsLines[keys[0]][0]
 			else:
+				used_nwks.append(keys[0])
 				dns = False
 		elif len(keys) > 1:  # consider what happens if there are 2 downstream channels
 			# get channels accounting for X connectors
@@ -1485,6 +1530,7 @@ def checkDnsNwk(dsLines, startLine, inLyrs, angleLimit):
 						request = QgsFeatureRequest().setFilterExpression(filter)
 						for f in lyr.getFeatures(request):
 							features.append(f)
+				params = False
 				typs = []
 				nos = []
 				widths = []
@@ -1497,6 +1543,15 @@ def checkDnsNwk(dsLines, startLine, inLyrs, angleLimit):
 					for f in features:
 						name = f.attributes()[0]
 						if nwk == name:
+							if 'connector' not in name and not params:
+								length = f.attributes()[4]
+								if len(x) == 0:
+									x.append(0)
+								if length > 0:
+									x.append(length)
+								else:
+									x.append(getLength(f))
+								params = True
 							typ = f.attributes()[1]
 							typs.append(typ)
 							if typ.lower() == 'r':
@@ -1505,6 +1560,11 @@ def checkDnsNwk(dsLines, startLine, inLyrs, angleLimit):
 								heights.append(float(f.attributes()[14]))
 								usInv = float(dsLines[nwk][1][0])
 								dsInv = float(dsLines[nwk][1][1])
+								if not params:
+									bed.append(usInv)
+									bed.append(dsInv)
+									pipes.append(f.attributes()[14])
+									params = True
 								areas.append(
 									float(f.attributes()[15]) * float(f.attributes()[13]) * float(f.attributes()[14]))
 								if len(dsLines[nwk][2]) > 0:
@@ -1517,6 +1577,13 @@ def checkDnsNwk(dsLines, startLine, inLyrs, angleLimit):
 								heights.append(0)
 								usInv = float(dsLines[nwk][1][0])
 								dsInv = float(dsLines[nwk][1][1])
+								if not params:
+									bed.append(usInv)
+									bed.append(dsInv)
+									pipes.append(f.attributes()[13])
+									params = True
+								bed.append(usInv)
+								bed.append(dsInv)
 								areas.append(
 									float(f.attributes()[15]) * (float(f.attributes()[13]) / 2) ** 2 * 3.14)
 								if len(dsLines[nwk][2]) > 0:
@@ -1546,11 +1613,13 @@ def checkDnsNwk(dsLines, startLine, inLyrs, angleLimit):
 					if len(dsLines[nwks[0]][0]) == 0:
 						dns = False
 					else:
+						used_nwks.append(keys[0])
 						keyPrev = keys[0]
 						area_prev = area
 						dsInv_prev = min(dsInvs)
 						keys = dsLines[nwks[0]][0]
 				else:
+					used_nwks.append(keys[0])
 					dns = False
 			elif len(branches) > 1:
 				log += '-- Branch split at {0} into {1} branches - '.format(keyPrev, len(branches))
@@ -1568,7 +1637,7 @@ def checkDnsNwk(dsLines, startLine, inLyrs, angleLimit):
 							if j < len(br) - 1:
 								a += '{0}'.format(br)
 							else:
-								a += '{0})'.foramt(br)
+								a += '{0})'.format(br)
 						if i == 0:
 							log += '{0}'.format(a)
 						elif i < len(bn) - 1:
@@ -1578,6 +1647,9 @@ def checkDnsNwk(dsLines, startLine, inLyrs, angleLimit):
 				if nwks[0] in dsLines.keys():
 					keys = dsLines[nwks[0]][0]
 				dns = False
-
-	return log, bn
+	
+	plot['x'].append(x)
+	plot['bed'].append(bed)
+	plot['pipes'].append(pipes)
+	return log, bn, used_nwks, plot
 	

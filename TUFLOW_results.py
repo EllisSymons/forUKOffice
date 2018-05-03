@@ -1564,9 +1564,19 @@ class ResData():
 			elif (dat_type=='Reporting Location Regions Volumes'):
 				if rdata != 'NONE':
 					fullpath = os.path.join(self.fpath,rdata)
-					error, message = self.Data_RL.Vol_R.Load(fullpath,'Q',self.displayname)
+					error, message = self.Data_RL.Vol_R.Load(fullpath,'Vol',self.displayname)
 					if error:
 						return error, message
+					self.nTypes = self.nTypes + 1
+					self.Types.append('2D Region Volume')
+					try:
+						chk_nLocs = self.Data_RL.nRegion
+						if (chk_nLocs != self.Data_RL.Vol_R.nLocs):
+							message = 'ERROR - number of locations in .csv doesn''t match value in .tpc'
+							error = True
+							return error, message
+					except:
+						print('WARNING - Unable to extact number of values in .tpc file entry')
 			elif (dat_type=='1D Node Maximums'):
 				if rdata != 'NONE':
 					fullpath = os.path.join(self.fpath,rdata[2:])

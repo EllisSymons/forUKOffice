@@ -29,6 +29,8 @@ from qgis.core import *
 import processing
 import glob
 from tuflowqgis_library import *
+from tuflowqgis_TuPlot import *
+import TUFLOW_longprofile
 
 import sys
 import subprocess
@@ -1780,9 +1782,12 @@ from ui_tuflowqgis_check1dIntegrity import *
 
 
 class tuflowqgis_check_1d_integrity_dialog(QDialog, Ui_check1dIntegrity):
-	def __init__(self, iface):
+	def __init__(self, iface, dockOpened, resdock):
 		QDialog.__init__(self)
 		self.iface = iface
+		self.dockOpened = dockOpened
+		self.resdock = resdock
+		
 		self.setupUi(self)
 		
 		# Set up input line and point layer combobox
@@ -1946,7 +1951,6 @@ class tuflowqgis_check_1d_integrity_dialog(QDialog, Ui_check1dIntegrity):
 				selFeatures = []
 				for i in range(self.lineLyrs_lw.count()):
 					name = self.lineLyrs_lw.item(i).text()
-					#pydevd.settrace('localhost', port=53100, stdoutToServer=True, stderrToServer=True)
 					lyr = tuflowqgis_find_layer(name)
 					selFeat = lyr.selectedFeatures()
 					selFeatures.append(selFeat)
@@ -2064,20 +2068,41 @@ class tuflowqgis_check_1d_integrity_dialog(QDialog, Ui_check1dIntegrity):
 					
 		# Start check downstream connections
 		if getDnsConn:
+			used_nwks = []
 			dnsLogs = []
+			plot = {'x': [], 'bed': [], 'pipes': [], 'ground': [], 'branches': []}
 			if not checkLine:  # hasn't yet been run
 				if not checkPoint:
 					if len(pointLyrs) > 0:
 						pointDict = getVertices(pointLyrs)
 				unsnappedLines, unsnappedLineNames, closestVLines, dsLines = checkSnapping(lines=lineDict, points=pointDict, dns_conn=getDnsConn)
-			dnsLog, branches = checkDnsNwk(dsLines, startElem, lineLyrs, angleLimit)
+			branch_counter = 1
+			dnsLog, branches, used_nwks, plot = checkDnsNwk(dsLines, startElem, lineLyrs, angleLimit, used_nwks, plot)
+			plot['branches'].append(branch_counter)
 			dnsLogs.append(dnsLog)
 			while len(branches) > 0:
 				for branch in branches:
-					dnsLog, dnsBranches = checkDnsNwk(dsLines, branch, lineLyrs, angleLimit)
+					dnsLog, dnsBranches, used_nwk, plot = checkDnsNwk(dsLines, branch, lineLyrs, angleLimit, used_nwks, plot)
 					dnsLogs.append(dnsLog)
 					branches += dnsBranches
 					branches.remove(branch)
+					branch_counter += 1
+					plot['branches'].append(branch_counter)
+			if plotDnsConn:
+				plotter = TUFLOW_longprofile.LongProfile()
+				plotter.addX(plot['x'])
+				plotter.addBed(plot['bed'])
+				plotter.addPipes(plot['pipes'])
+				plotter.addGround(plot['ground'])
+				plotter.addBranches(plot['branches'])
+				if self.dockOpened:
+					self.resdock.qgis_connect()
+					self.resdock.show()
+					self.resdock.layerChanged()
+				else:
+					self.dockOpened = True
+					self.resdock = TuPlot(self.iface)
+					self.iface.addDockWidget(Qt.RightDockWidgetArea, self.resdock)
 				
 		# Output
 		if outMsg or outTxt:
@@ -2168,4 +2193,3 @@ class tuflowqgis_check_1d_integrity_dialog(QDialog, Ui_check1dIntegrity):
 							if f.attributes()[0] in unsnappedLineNames:
 								fid = f.id()
 								layer.select(fid)
-

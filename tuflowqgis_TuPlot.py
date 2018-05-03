@@ -27,7 +27,7 @@ from tuflowqgis_dialog import *
 #sys.path.append(r'C:\Program Files\JetBrains\PyCharm 2018.1\debug-eggs')
 #sys.path.append(r'C:\Program Files\JetBrains\PyCharm 2018.1\helpers\pydev')
 #import pydevd
-#pydevd.settrace('localhost', port=53100, stdoutToServer=True, stderrToServer=True)
+
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)) + "/forms")
 from ui_tuflowqgis_TuPlot import Ui_tuflowqgis_TuPlot
@@ -2838,6 +2838,14 @@ class TuPlot(QDockWidget, Ui_tuflowqgis_TuPlot):
 					yinc = 50000
 				elif ymax < 1000000:
 					yinc = 100000
+				elif ymax < 10000000:
+					yinc = 1000000
+				elif ymax < 100000000:
+					yinc = 10000000
+				elif ymax < 1000000000:
+					yinc = 100000000
+				elif ymax < 10000000000:
+					yinc = 1000000000
 				
 				ymax = math.ceil(ymax / yinc) * yinc  # round upper to nearest xinc
 				self.subplot.set_ybound(lower=ymin, upper=ymax)
