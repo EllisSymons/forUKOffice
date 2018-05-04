@@ -2070,24 +2070,26 @@ class tuflowqgis_check_1d_integrity_dialog(QDialog, Ui_check1dIntegrity):
 		if getDnsConn:
 			used_nwks = []
 			dnsLogs = []
-			plot = {'x': [], 'bed': [], 'pipes': [], 'ground': [], 'branches': []}
+			plot = {'x': [], 'bed': [], 'pipes': [], 'ground': [], 'branches': [], 'Downstream pipe': []}
 			if not checkLine:  # hasn't yet been run
 				if not checkPoint:
 					if len(pointLyrs) > 0:
 						pointDict = getVertices(pointLyrs)
 				unsnappedLines, unsnappedLineNames, closestVLines, dsLines = checkSnapping(lines=lineDict, points=pointDict, dns_conn=getDnsConn)
 			branch_counter = 1
-			dnsLog, branches, used_nwks, plot = checkDnsNwk(dsLines, startElem, lineLyrs, angleLimit, used_nwks, plot)
+			dnsLog, branches, used_nwks, plot, dnsPipe = checkDnsNwk(dsLines, startElem, lineLyrs, angleLimit, used_nwks, plot)
 			plot['branches'].append(branch_counter)
+			plot['Downstream pipe'].append(dnsPipe)
 			dnsLogs.append(dnsLog)
 			while len(branches) > 0:
 				for branch in branches:
-					dnsLog, dnsBranches, used_nwk, plot = checkDnsNwk(dsLines, branch, lineLyrs, angleLimit, used_nwks, plot)
+					dnsLog, dnsBranches, used_nwk, plot, dnsPipe = checkDnsNwk(dsLines, branch, lineLyrs, angleLimit, used_nwks, plot)
 					dnsLogs.append(dnsLog)
 					branches += dnsBranches
 					branches.remove(branch)
 					branch_counter += 1
 					plot['branches'].append(branch_counter)
+					plot['Downstream pipe'].append(dnsPipe)
 			if plotDnsConn:
 				plotter = TUFLOW_longprofile.LongProfile()
 				plotter.addX(plot['x'])
@@ -2095,6 +2097,9 @@ class tuflowqgis_check_1d_integrity_dialog(QDialog, Ui_check1dIntegrity):
 				plotter.addPipes(plot['pipes'])
 				plotter.addGround(plot['ground'])
 				plotter.addBranches(plot['branches'])
+				plotter.addDnsPipe(plot['Downstream pipe'])
+				plotter.organiseData()
+				pydevd.settrace('localhost', port=53100, stdoutToServer=True, stderrToServer=True)
 				if self.dockOpened:
 					self.resdock.qgis_connect()
 					self.resdock.show()

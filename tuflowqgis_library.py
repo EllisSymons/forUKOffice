@@ -1394,6 +1394,7 @@ def checkDnsNwk(dsLines, startLine, inLyrs, angleLimit, used_nwks, plot):
 	bed = []
 	pipes = []
 	branches = []
+	dns_pipe = None
 	while dns:
 		features = []
 		for lyr in inLyrs:
@@ -1405,6 +1406,7 @@ def checkDnsNwk(dsLines, startLine, inLyrs, angleLimit, used_nwks, plot):
 					features.append(f)
 		if len(keys) == 1:  # one downstream channel
 			if keys[0] in used_nwks:
+				dns_pipe = keys[0]
 				dns = False
 				break
 			typ = features[0].attributes()[1]
@@ -1469,6 +1471,7 @@ def checkDnsNwk(dsLines, startLine, inLyrs, angleLimit, used_nwks, plot):
 				log += '{0},{1}\n'.format(keys[0], typ)
 			if keys[0] in dsLines.keys():
 				if len(dsLines[keys[0]][0]) == 0:
+					used_nwks.append(keys[0])
 					dns = False
 				else:
 					used_nwks.append(keys[0])
@@ -1611,6 +1614,7 @@ def checkDnsNwk(dsLines, startLine, inLyrs, angleLimit, used_nwks, plot):
 					log += '{0},{1}\n'.format(listToString(nwks), listToString(typs))
 				if nwks[0] in dsLines.keys():
 					if len(dsLines[nwks[0]][0]) == 0:
+						used_nwks.append(keys[0])
 						dns = False
 					else:
 						used_nwks.append(keys[0])
@@ -1620,6 +1624,7 @@ def checkDnsNwk(dsLines, startLine, inLyrs, angleLimit, used_nwks, plot):
 						keys = dsLines[nwks[0]][0]
 				else:
 					used_nwks.append(keys[0])
+					ups_pipe = keys[0]
 					dns = False
 			elif len(branches) > 1:
 				log += '-- Branch split at {0} into {1} branches - '.format(keyPrev, len(branches))
@@ -1646,10 +1651,11 @@ def checkDnsNwk(dsLines, startLine, inLyrs, angleLimit, used_nwks, plot):
 							log += ', {0}\n'.format(a)
 				if nwks[0] in dsLines.keys():
 					keys = dsLines[nwks[0]][0]
+				dns_pipe = nwks
 				dns = False
 	
 	plot['x'].append(x)
 	plot['bed'].append(bed)
 	plot['pipes'].append(pipes)
-	return log, bn, used_nwks, plot
+	return log, bn, used_nwks, plot, dns_pipe
 	
