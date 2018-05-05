@@ -2068,46 +2068,56 @@ class tuflowqgis_check_1d_integrity_dialog(QDialog, Ui_check1dIntegrity):
 					
 		# Start check downstream connections
 		if getDnsConn:
-			used_nwks = []
-			dnsLogs = []
-			plot = {'x': [], 'bed': [], 'pipes': [], 'ground': [], 'branches': [], 'Downstream pipe': []}
 			if not checkLine:  # hasn't yet been run
 				if not checkPoint:
 					if len(pointLyrs) > 0:
 						pointDict = getVertices(pointLyrs)
-				unsnappedLines, unsnappedLineNames, closestVLines, dsLines = checkSnapping(lines=lineDict, points=pointDict, dns_conn=getDnsConn)
-			branch_counter = 1
-			dnsLog, branches, used_nwks, plot, dnsPipe = checkDnsNwk(dsLines, startElem, lineLyrs, angleLimit, used_nwks, plot)
-			plot['branches'].append(branch_counter)
-			plot['Downstream pipe'].append(dnsPipe)
-			dnsLogs.append(dnsLog)
-			while len(branches) > 0:
-				for branch in branches:
-					dnsLog, dnsBranches, used_nwk, plot, dnsPipe = checkDnsNwk(dsLines, branch, lineLyrs, angleLimit, used_nwks, plot)
-					dnsLogs.append(dnsLog)
-					branches += dnsBranches
-					branches.remove(branch)
-					branch_counter += 1
-					plot['branches'].append(branch_counter)
-					plot['Downstream pipe'].append(dnsPipe)
-			if plotDnsConn:
-				plotter = TUFLOW_longprofile.LongProfile()
-				plotter.addX(plot['x'])
-				plotter.addBed(plot['bed'])
-				plotter.addPipes(plot['pipes'])
-				plotter.addGround(plot['ground'])
-				plotter.addBranches(plot['branches'])
-				plotter.addDnsPipe(plot['Downstream pipe'])
-				plotter.organiseData()
-				pydevd.settrace('localhost', port=53100, stdoutToServer=True, stderrToServer=True)
-				if self.dockOpened:
-					self.resdock.qgis_connect()
-					self.resdock.show()
-					self.resdock.layerChanged()
-				else:
-					self.dockOpened = True
-					self.resdock = TuPlot(self.iface)
-					self.iface.addDockWidget(Qt.RightDockWidgetArea, self.resdock)
+			unsnappedLines, unsnappedLineNames, closestVLines, dsLines = checkSnapping(lines=lineDict, points=pointDict, dns_conn=getDnsConn)
+			longProfile = TUFLOW_longprofile.DownstreamConnectivity(dsLines, startElem, lineLyrs, angleLimit)
+			longProfile.getBranches()
+			longProfile.reportLog()
+			#used_nwks = []
+			#dnsLogs = []
+			#plot = {'x': [], 'bed': [], 'pipes': [], 'ground': [], 'branches': [], 'Downstream pipe': []}
+			#if not checkLine:  # hasn't yet been run
+			#	if not checkPoint:
+			#		if len(pointLyrs) > 0:
+			#			pointDict = getVertices(pointLyrs)
+			#	unsnappedLines, unsnappedLineNames, closestVLines, dsLines = checkSnapping(lines=lineDict, points=pointDict, dns_conn=getDnsConn)
+			#branch_counter = 1
+			#dnsLog, branches, used_nwks, plot, dnsPipe = checkDnsNwk(dsLines, startElem, lineLyrs, angleLimit, used_nwks, plot)
+			#plot['branches'].append(branch_counter)
+			#plot['Downstream pipe'].append(dnsPipe)
+			#dnsLogs.append(dnsLog)
+			#while len(branches) > 0:
+			#	for branch in branches:
+			#		dnsLog, dnsBranches, used_nwk, plot, dnsPipe = checkDnsNwk(dsLines, branch, lineLyrs, angleLimit, used_nwks, plot)
+			#		dnsLogs.append(dnsLog)
+			#		branches += dnsBranches
+			#		branches.remove(branch)
+			#		branch_counter += 1
+			#		plot['branches'].append(branch_counter)
+			#		plot['Downstream pipe'].append(dnsPipe)
+			#if plotDnsConn:
+				#plotter = TUFLOW_longprofile.LongProfile()
+				#plotter.addX(plot['x'])
+				#plotter.addBed(plot['bed'])
+				#plotter.addPipes(plot['pipes'])
+				#plotter.addGround(plot['ground'])
+				#plotter.addBranches(plot['branches'])
+				#plotter.addDnsPipe(plot['Downstream pipe'])
+				#plotter.organiseData()
+				
+				
+				
+				#if self.dockOpened:
+				#	self.resdock.qgis_connect()
+				#	self.resdock.show()
+				#	self.resdock.layerChanged()
+				#else:
+				#	self.dockOpened = True
+				#	self.resdock = TuPlot(self.iface)
+				#	self.iface.addDockWidget(Qt.RightDockWidgetArea, self.resdock)
 				
 		# Output
 		if outMsg or outTxt:
@@ -2153,14 +2163,7 @@ class tuflowqgis_check_1d_integrity_dialog(QDialog, Ui_check1dIntegrity):
 							results += '{0}\n'.format(node)
 			if getDnsConn:
 				results += '\n' + r'\\ Downstream Connections \\' + '\n\n'
-				if len(dnsLogs) == 0:
-					'None\n'
-				else:
-					for i, dnsLog in enumerate(dnsLogs):
-						if len(dnsLog) == 0:
-							results += 'None\n'
-						else:
-							results += '# Branch {0}\n{1}\n'.format(i+1, dnsLog)
+				results += longProfile.log
 			if outMsg:
 				self.outDialog = tuflowqgis_1d_integrity_output(self.iface, results)
 				self.outDialog.show()

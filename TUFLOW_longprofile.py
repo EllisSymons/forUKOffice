@@ -57,7 +57,7 @@ class LongProfile():
 		:param pipes: list[list]
 		:return: void
 		"""
-		#pydevd.settrace('localhost', port=53100, stdoutToServer=True, stderrToServer=True)
+
 		for i, branch in enumerate(pipes):
 			a = []
 			b = []
@@ -125,13 +125,12 @@ class DownstreamConnectivity():
 	def __init__(self, dsLines, startLines, inLyrs, angleLimit):
 		self.dsLines = dsLines
 		self.startLines = startLines
-		self.network = startLines
 		self.inLyrs = inLyrs
 		self.angleLimit = angleLimit
 		self.processed_nwks = []
 		self.log = ''
-		self.names = []
-		self.branch_names = []
+		self.name = []
+		self.branchName = []
 		self.usInvert = []
 		self.dsInvert = []
 		self.angle = []
@@ -142,71 +141,143 @@ class DownstreamConnectivity():
 		self.area = []
 		self.branchCounter = 1
 		self.branchExists = False
-		self.dnsConnectionPipe = []
+		self.branchDnsConnectionPipe = []
 		self.adverseGradient = []
 		self.decreaseFlowArea = []
 		self.sharpAngle = []
+		self.network = []
+		self.bName = []
+		self.bUsInvert = []
+		self.bDsInvert = []
+		self.bAngle = []
+		self.bLength = []
+		self.bNo = []
+		self.bWidth = []
+		self.bHeight = []
+		self.bArea = []
+		self.bDnsConnectionPipe = []
+		self.bAdverseGradient = []
+		self.bDecreaseFlowArea = []
+		self.bSharpAngle = []
 		
-	def getDownstreamConnectivity(self):
+	def getDownstreamConnectivity(self, network):
 		"""
 		Determines the 1D network branch and gets the pipe data for it.
 		
 		:return: void
 		"""
+		
+		self.bName = []
+		self.bUsInvert = []
+		self.bDsInvert = []
+		self.bAngle = []
+		self.bLength = []
+		self.bNo = []
+		self.bWidth = []
+		self.bHeight = []
+		self.bArea = []
+		self.bDnsConnectionPipe = []
+		self.bAdverseGradient = []
+		self.bDecreaseFlowArea = []
+		self.bSharpAngle = []
 		area_prev = 0
 		dsInv_prev = 99999
-		x = []
-		bed = []
-		pipes = []
-		adverseGradient = False
-		decreaseFlowArea = False
-		sharpAngle = False
 		bn = []
 		# Determine if there are pipes downstream of starting locations
-		for network in self.network:
+		if type(network) == list:
+			for nwk in network:
+				if len(self.dsLines[nwk]) > 0:
+					dns = True  # there are downstream pipes available
+				else:
+					dns = False
+		else:
 			if len(self.dsLines[network]) > 0:
+				network = [network]
 				dns = True  # there are downstream pipes available
-				break
 			else:
 				dns = False
 		while dns:
 			# Get QgsFeature layers for start lines
+			adverseGradient = False
+			decreaseFlowArea = False
+			sharpAngle = False
 			features = []
 			for lyr in self.inLyrs:
 				fld = lyr.fields()[0]
-				for network in self.network:
-					filter = '"{0}" = \'{1}\''.format(fld.name(), network)
+				for nwk in network:
+					filter = '"{0}" = \'{1}\''.format(fld.name(), nwk)
 					request = QgsFeatureRequest().setFilterExpression(filter)
 					for f in lyr.getFeatures(request):
 						features.append(f)
 			# Get data for starting lines
-			if len(self.network) == 1:  # dealing with one channel
+			if len(network) == 1:  # dealing with one channel
 				self.branchExists = True
-				if self.network[0] in self.processed_nwks:
-					self.dnsConnectionPipe.append(self.network[0])
+				if network[0] in self.processed_nwks:
+					self.branchDnsConnectionPipe.append(network[0])
 					dns = False
 					break
-#
-				if self.network[0] in self.dsLines.keys():
-					if len(self.dsLines[self.network[0]][0]) == 0:
-						self.processed_nwks.append(self.network[0])
+				typ = features[0].attributes()[1]
+				length = features[0].attributes()[4]
+				if length <= 0:
+					length = getLength(features[0])
+				name = network[0]
+				no = features[0].attributes()[15]
+				width = features[0].attributes()[13]
+				height = features[0].attributes()[14]
+				usInv = self.dsLines[network[0]][1][0]
+				dsInv = self.dsLines[network[0]][1][1]
+				if network[0] in self.dsLines.keys():
+					if len(self.dsLines[network[0]][2]) > 0:
+						angle = min(self.dsLines[network[0]][2])
+					else:
+						angle = 0
+				else:
+					angle = 0
+				if typ.lower() == 'r':
+					area = float(no) * width * height
+				elif typ.lower() == 'c':
+					area = float(no) * (width / 2) ** 2 * 3.14
+				else:
+					area = 0
+				if (dsInv > usInv and usInv != -99999.00) or (usInv > dsInv_prev and dsInv_prev != -99999.00):
+					adverseGradient = True
+				if area < area_prev and area != 0:
+					decreaseFlowArea = True
+				if angle < self.angleLimit and angle != 0:
+					sharpAngle = True
+				self.bLength.append(length)
+				self.bName.append(name)
+				self.bNo.append(no)
+				self.bWidth.append(width)
+				self.bHeight.append(height)
+				self.bUsInvert.append(usInv)
+				self.bDsInvert.append(dsInv)
+				self.bAngle.append(angle)
+				self.bArea.append(area)
+				self.bAdverseGradient.append(adverseGradient)
+				self.bDecreaseFlowArea.append(decreaseFlowArea)
+				self.bSharpAngle.append(sharpAngle)
+				if network[0] in self.dsLines.keys():
+					if len(self.dsLines[network[0]][0]) == 0:
+						self.branchDnsConnectionPipe.append([])
+						self.processed_nwks.append(network[0])
 						dns = False
 					else:
-						self.processed_nwks.append(self.network[0])
-						keyPrev = self.network[0]
+						self.processed_nwks.append(network[0])
 						area_prev = area
 						dsInv_prev = dsInv
-						self.network = self.dsLines[self.network[0]][0]
+						network = self.dsLines[network[0]][0]
 				else:
-					self.processed_nwks.append(self.network[0])
+					self.branchDnsConnectionPipe.append([])
+					self.processed_nwks.append(network[0])
 					dns = False
-			elif len(self.network) > 1:  # consider what happens if there are 2 downstream channels
+			elif len(network) > 1:  # consider what happens if there are 2 downstream channels
 				# get channels accounting for X connectors
 				nwks = []
-				for network in self.networks:
+				for nwk in network:
 					if 'connector' in network:
-						network = self.dsLines[network][0][0]
-					nwks.append(network)
+						nwk = self.dsLines[nwk][0][0]
+					nwks.append(nwk)
 				# get next downstream channels accounting for X connectors
 				dns_nwks = []
 				for nwk in nwks:
@@ -264,117 +335,85 @@ class DownstreamConnectivity():
 					for nwk in nwks:
 						for f in features:
 							id = f.attributes()[0]
-							name.append(id)
 							if nwk == id:
-								l = f.attributes()[4]
-								if len(x) == 0:
-									x.append(0)
-								if length > 0:
-									x.append(length)
+								self.branchExists = True
+								if network[0] in self.processed_nwks:
+									self.branchDnsConnectionPipe.append(network)
+									dns = False
+									break
+								typ = features[0].attributes()[1]
+								length = features[0].attributes()[4]
+								if l <= 0:
+									l = getLength(features[0])
+								na = id
+								n = features[0].attributes()[15]
+								w = features[0].attributes()[13]
+								h = features[0].attributes()[14]
+								uI = self.dsLines[nwk][1][0]
+								dI = self.dsLines[nwk[0]][1][1]
+								if nwk in self.dsLines.keys():
+									if len(self.dsLines[nwk][2]) > 0:
+										ang = min(self.dsLines[nwk][2])
 								else:
-									x.append(getLength(f))
-								t = f.attributes()[1]
-								typ.append(t)
-								
-								
-								
-								if typ.lower() == 'r':
-									nos.append(int(f.attributes()[15]))
-									widths.append(float(f.attributes()[13]))
-									heights.append(float(f.attributes()[14]))
-									usInv = float(dsLines[nwk][1][0])
-									dsInv = float(dsLines[nwk][1][1])
-									if not params:
-										bed.append(usInv)
-										bed.append(dsInv)
-										pipes.append(f.attributes()[14])
-										params = True
-									areas.append(
-										float(f.attributes()[15]) * float(f.attributes()[13]) * float(
-											f.attributes()[14]))
-									if len(dsLines[nwk][2]) > 0:
-										angles.append(min(dsLines[nwk][2]))
-									else:
-										angles.append(0)
+									ang = 0
+								if t.lower() == 'r':
+									a = float(no) * width * height
 								elif typ.lower() == 'c':
-									nos.append(int(f.attributes()[15]))
-									widths.append(float(f.attributes()[13]))
-									heights.append(0)
-									usInv = float(dsLines[nwk][1][0])
-									dsInv = float(dsLines[nwk][1][1])
-									if not params:
-										bed.append(usInv)
-										bed.append(dsInv)
-										pipes.append(f.attributes()[13])
-										params = True
-									bed.append(usInv)
-									bed.append(dsInv)
-									areas.append(
-										float(f.attributes()[15]) * (float(f.attributes()[13]) / 2) ** 2 * 3.14)
-									if len(dsLines[nwk][2]) > 0:
-										angles.append(min(dsLines[nwk][2]))
-									else:
-										angles.append(0)
-					area = sum(areas)
-					angle = min(angles)
-					advSlope = ''
-					if (min(dsInv) > min(usInv) and min(usInv) != -99999) or (
-							min(usInv) > dsInv_prev and dsInv_prev != -99999):
-						advSlope = 'T'
-					decArea = ''
-					if area < area_prev:
-						decArea = 'T'
-					sharpAngle = ''
-					if angle < angleLimit:
-						sharpAngle = 'T'
-					if 'r' in typs or 'R' in typs or 'c' in typs or 'C' in typs:
-						log += '{0},{1},{2},{3},{4},{5},{6},{7},{8},{9},{10},{11}\n'. \
-							format(listToString(nwks), listToString(typs), listToString(nos), listToString(widths),
-						           listToString(heights), area, listToString(usInvs), listToString(dsInvs), angle,
-						           decArea,
-						           advSlope, sharpAngle)
-					else:
-						log += '{0},{1}\n'.format(listToString(nwks), listToString(typs))
-					if nwks[0] in dsLines.keys():
-						if len(dsLines[nwks[0]][0]) == 0:
-							used_nwks.append(keys[0])
+									a = float(n) * (w / 2) ** 2 * 3.14
+								else:
+									a = 0
+								if (dI > uI and uI != -99999.00) or (uI > dsInv_prev and dsInv_prev != -99999.00):
+									adG = True
+								if a < area_prev and a != 0:
+									decFA = True
+								if ang < self.angleLimit and ang != 0:
+									sA = True
+								name.append(na)
+								typ.append(t)
+								no.append(n)
+								width.append(w)
+								height.append(h)
+								usInv.append(uI)
+								dsInv.append(dI)
+								area.append(a)
+								angle.append(ang)
+								length.append(l)
+					self.bLength.append(length)
+					self.bName.append(name)
+					self.bNo.append(no)
+					self.bWidth.append(width)
+					self.bHeight.append(height)
+					self.bUsInvert.append(usInv)
+					self.bDsInvert.append(dsInv)
+					self.bAngle.append(angle)
+					self.bArea.append(area)
+					self.bAdverseGradient.append(adverseGradient)
+					self.bDecreaseFlowArea.append(decreaseFlowArea)
+					self.bSharpAngle.append(sharpAngle)
+					if nwks[0] in self.dsLines.keys():
+						if len(self.dsLines[nwks][0]) == 0:
+							self.branchDnsConnectionPipe.append([])
+							for nwk in nwks:
+								self.processed_nwks.append(nwk)
 							dns = False
 						else:
-							used_nwks.append(keys[0])
-							keyPrev = keys[0]
-							area_prev = area
-							dsInv_prev = min(dsInvs)
-							keys = dsLines[nwks[0]][0]
+							for nwk in nwks:
+								self.processed_nwks.append(nwk)
+							area_prev = sum(area)
+							dsInv_prev = min(dsInv)
+							network = self.dsLines[nwks[0]][0]
 					else:
-						used_nwks.append(keys[0])
-						ups_pipe = keys[0]
+						self.branchDnsConnectionPipe.append([])
+						for nwk in nwks:
+							self.processed_nwks.append(nwk)
 						dns = False
 				elif len(branches) > 1:
-					log += '-- Branch split at {0} into {1} branches - '.format(keyPrev, len(branches))
-					for i, b in enumerate(bn):
-						if len(b) < 2:
-							if i == 0:
-								log += '{0}'.format(b[0])
-							elif i < len(bn) - 1:
-								log += ', {0}'.format(b[0])
-							else:
-								log += ', {0}\n'.format(b[0])
-						else:
-							a = '('
-							for j, br in enumerate(b):
-								if j < len(br) - 1:
-									a += '{0}'.format(br)
-								else:
-									a += '{0})'.format(br)
-							if i == 0:
-								log += '{0}'.format(a)
-							elif i < len(bn) - 1:
-								log += ', {0}'.format(a)
-							else:
-								log += ', {0}\n'.format(a)
-					if nwks[0] in dsLines.keys():
-						keys = dsLines[nwks[0]][0]
-					dns_pipe = nwks
+					self.branchDnsConnectionPipe.append(nwks)
+					for nwk in nwks:
+						if nwk in self.processed_nwks:
+							nwks.remove(nwk)
+					for nwk in nwks:
+						self.network.append(nwk)
 					dns = False
 	
 	def getBranches(self):
@@ -383,10 +422,61 @@ class DownstreamConnectivity():
 		
 		:return: void
 		"""
-		while len(self.startLine) > 0:
-			for startLine in self.startLine:
-				self.branchExists = False
-				self.getDownstreamConnectivity()
-				if self.branchExists:
-					self.branchNames.append('Branch {0}'.format(self.branchCounter))
-					self.branchCounter += 1
+
+		self.getDownstreamConnectivity(self.startLines)
+		if self.branchExists:
+			self.branchName.append('Branch {0}'.format(self.branchCounter))
+			self.branchCounter += 1
+			self.length.append(self.bLength)
+			self.name.append(self.bName)
+			self.no.append(self.bNo)
+			self.width.append(self.bWidth)
+			self.height.append(self.bHeight)
+			self.usInvert.append(self.bUsInvert)
+			self.dsInvert.append(self.bDsInvert)
+			self.angle.append(self.bAngle)
+			self.area.append(self.bArea)
+			self.adverseGradient.append(self.bAdverseGradient)
+			self.decreaseFlowArea.append(self.bDecreaseFlowArea)
+			self.sharpAngle.append(self.bSharpAngle)
+		while len(self.network) > 0:
+			nwk = self.network[0]
+			self.branchExists = False
+			self.getDownstreamConnectivity(nwk)
+			if self.branchExists:
+				self.branchName.append('Branch {0}'.format(self.branchCounter))
+				self.branchCounter += 1
+				self.length.append(self.bLength)
+				self.name.append(self.bName)
+				self.no.append(self.bNo)
+				self.width.append(self.bWidth)
+				self.height.append(self.bHeight)
+				self.usInvert.append(self.bUsInvert)
+				self.dsInvert.append(self.bDsInvert)
+				self.angle.append(self.bAngle)
+				self.area.append(self.bArea)
+				self.adverseGradient.append(self.bAdverseGradient)
+				self.decreaseFlowArea.append(self.bDecreaseFlowArea)
+				self.sharpAngle.append(self.bSharpAngle)
+			self.network.remove(nwk)
+			
+	def reportLog(self):
+		"""
+		log branch results
+		
+		:return:
+		"""
+
+		for i, branch in enumerate(self.branchName):
+			self.log += '\n# {0}\n\n'.format(branch)
+			for j, name in enumerate(self.name[i]):
+				advG = ''
+				decA = ''
+				sharpA = ''
+				if self.adverseGradient[i][j]:
+					advG = ' -- Adverse Gradient'
+				if self.decreaseFlowArea[i][j]:
+					decA = ' -- Decrease in Area'
+				if self.sharpAngle[i][j]:
+					sharpA = ' -- Sharp Outflow Angle'
+				self.log += '{0}{1}{2}{3}\n'.format(name, advG, decA, sharpA)
