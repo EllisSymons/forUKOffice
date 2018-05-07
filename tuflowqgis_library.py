@@ -1068,7 +1068,7 @@ def checkSnapping(**kwargs):
 	:return: list of unsnapped objects (for lines will append '==0' or first vertex, '==1' for last vertex)
 	:return: list of unsnapped object names for lines without reference to first or last vertex (not returned for points)
 	:return: dict of closest line vertex for unsnapped points and lines {name: [origin lyr, origin fid, closest vertex name, closest vertex coords, closest vertex dist]}
-	:return: dict of downstream channels for lines if dnsConn is True {name: [[dns network channels], [us invert, ds invert]]}
+	:return: dict of downstream channels for lines if dnsConn is True {name: [[dns network channels], [us invert, ds invert], [other connecting channels]]}
 	"""
 	
 	# determine which snapping check is being performed
@@ -1124,6 +1124,8 @@ def checkSnapping(**kwargs):
 					for j2, v2 in enumerate(lLoc2):
 						if v == v2:
 							found = True
+							if lName not in dsNwk.keys():
+								dsNwk[lName] = [[], [], [], []]  # dsNwk name, us and ds invert, outflow angle, joining nwk names
 							if 'connector' in lName:
 								if j == 0 and j2 == 0:  # X Connector is entering side channel
 									found_dns = True
@@ -1174,19 +1176,14 @@ def checkSnapping(**kwargs):
 							else:  # normal connection
 								if j == 1 and j2 == 0:  # end vertex connected to fist vertex i.e. found a dns nwk
 									found_dns = True
-									if lName not in dsNwk.keys():
-										dsNwk[lName] = [[lName2]]
-									else:
-										dsNwk[lName][0].append(lName2)
-									if len(dsNwk[lName]) < 2:
-										dsNwk[lName].append([lUsInv, lDsInv])
-									if len(dsNwk[lName]) < 3:
-										angle = getAngle(lLoc, lLoc2)
-										dsNwk[lName].append([angle])
-									else:
-										angle = getAngle(lLoc, lLoc2)
-										if angle not in dsNwk[lName][2]:
-											dsNwk[lName][2].append(angle)
+									dsNwk[lName][0].append(lName2)
+									if len(dsNwk[lName][1]) == 0:
+										dsNwk[lName][1].append(lUsInv)
+										dsNwk[lName][1].append(lDsInv)
+									angle = getAngle(lLoc, lLoc2)
+									dsNwk[lName][2].append(angle)
+								elif j == 1 and j2 == 1:
+									dsNwk[lName][3].append(lName2)
 							continue
 						else:
 							dist = ((v2[0] - v[0]) ** 2 + (v2[1] - v[1]) ** 2) ** 0.5
@@ -1196,9 +1193,17 @@ def checkSnapping(**kwargs):
 								name = lName2
 								node = j2
 					if i + 1 == lineDict_len and not found_dns:
-						dsNwk[lName] = [[], [lUsInv, lDsInv], []]
+						if lName not in dsNwk.keys():
+							dsNwk[lName] = [[], [], [], []]
+						if len(dsNwk[lName][1]) == 0:
+							dsNwk[lName][1].append(lUsInv)
+							dsNwk[lName][1].append(lDsInv)
 					if i + 1 == lineDict_len and not found:
-						dsNwk[lName] = [[], [lUsInv, lDsInv]]
+						if lName not in dsNwk.keys():
+							dsNwk[lName] = [[], [], [], []]
+						if len(dsNwk[lName][1]) == 0:
+							dsNwk[lName][1].append(lUsInv)
+							dsNwk[lName][1].append(lDsInv)
 						if lName not in unsnapped_names:
 							unsnapped_names.append(lName)
 						if j == 0:
@@ -1210,7 +1215,7 @@ def checkSnapping(**kwargs):
 		
 		if not checkPoint:
 			return unsnapped, unsnapped_names, closestV, dsNwk
-		
+	
 	# Check to see if point is snapped to a line
 	if checkPoint:
 		for pName, pParam in pointDict.items():  # loop through all points
@@ -1240,13 +1245,7 @@ def checkSnapping(**kwargs):
 										usInv = -99999
 								else:
 									usInv = lUsInv
-								if lName not in dsNwk.keys():
-									dsNwk[lName] = [[], [usInv]]
-								else:
-									if len(dsNwk[lName]) < 2:
-										dsNwk[lName].append([usInv])
-									else:
-										dsNwk[lName][1][0] = usInv
+								dsNwk[lName][1][0] = usInv
 							elif j == 1:
 								if lDsInv == -99999:
 									if pDsInv != -99999:
@@ -1255,13 +1254,7 @@ def checkSnapping(**kwargs):
 										dsInv = -99999
 								else:
 									dsInv = lDsInv
-								if lName not in dsNwk.keys():
-									dsNwk[lName] = [[], [dsInv]]
-								else:
-									if len(dsNwk[lName]) < 2:
-										dsNwk[lName].append([dsInv])
-									else:
-										dsNwk[lName][1][1] = dsInv
+								dsNwk[lName][1][1] = dsInv
 						continue
 					else:
 						dist = ((coord[0] - pLoc[0][0]) ** 2 + (coord[1] - pLoc[0][1]) ** 2) ** 0.5

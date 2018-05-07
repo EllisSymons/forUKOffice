@@ -2076,6 +2076,8 @@ class tuflowqgis_check_1d_integrity_dialog(QDialog, Ui_check1dIntegrity):
 			longProfile = TUFLOW_longprofile.DownstreamConnectivity(dsLines, startElem, lineLyrs, angleLimit)
 			longProfile.getBranches()
 			longProfile.reportLog()
+			if plotDnsConn:
+				longProfile.getPlotFormat()
 			#used_nwks = []
 			#dnsLogs = []
 			#plot = {'x': [], 'bed': [], 'pipes': [], 'ground': [], 'branches': [], 'Downstream pipe': []}

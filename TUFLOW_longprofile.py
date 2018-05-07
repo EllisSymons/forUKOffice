@@ -142,6 +142,12 @@ class DownstreamConnectivity():
 		self.branchCounter = 1
 		self.branchExists = False
 		self.branchDnsConnectionPipe = []
+		self.joiningOutlet = []  # only necessary if another pipe is joining at the outlet
+		self.upsBranches = []
+		self.dnsBranches = []
+		self.paths = []
+		self.pathsNwks = []
+		self.pathsLen = []
 		self.adverseGradient = []
 		self.decreaseFlowArea = []
 		self.sharpAngle = []
@@ -180,6 +186,7 @@ class DownstreamConnectivity():
 		self.bAdverseGradient = []
 		self.bDecreaseFlowArea = []
 		self.bSharpAngle = []
+		self.first_sel = True
 		area_prev = 0
 		dsInv_prev = 99999
 		bn = []
@@ -188,6 +195,7 @@ class DownstreamConnectivity():
 			for nwk in network:
 				if len(self.dsLines[nwk]) > 0:
 					dns = True  # there are downstream pipes available
+					break
 				else:
 					dns = False
 		else:
@@ -211,9 +219,11 @@ class DownstreamConnectivity():
 						features.append(f)
 			# Get data for starting lines
 			if len(network) == 1:  # dealing with one channel
+				self.first_sel = False
 				self.branchExists = True
 				if network[0] in self.processed_nwks:
-					self.branchDnsConnectionPipe.append(network[0])
+					self.branchDnsConnectionPipe.append([network[0]])
+					self.joiningOutlet.append('JOINING EXISTING BRANCH')
 					dns = False
 					break
 				typ = features[0].attributes()[1]
@@ -259,7 +269,8 @@ class DownstreamConnectivity():
 				self.bSharpAngle.append(sharpAngle)
 				if network[0] in self.dsLines.keys():
 					if len(self.dsLines[network[0]][0]) == 0:
-						self.branchDnsConnectionPipe.append([])
+						self.joiningOutlet.append(self.dsLines[network[0]][3])
+						self.branchDnsConnectionPipe.append('OUTLET')
 						self.processed_nwks.append(network[0])
 						dns = False
 					else:
@@ -268,7 +279,8 @@ class DownstreamConnectivity():
 						dsInv_prev = dsInv
 						network = self.dsLines[network[0]][0]
 				else:
-					self.branchDnsConnectionPipe.append([])
+					self.joiningOutlet.append(self.dsLines[network[0]][3])
+					self.branchDnsConnectionPipe.append('OUTLET')
 					self.processed_nwks.append(network[0])
 					dns = False
 			elif len(network) > 1:  # consider what happens if there are 2 downstream channels
@@ -336,9 +348,11 @@ class DownstreamConnectivity():
 						for f in features:
 							id = f.attributes()[0]
 							if nwk == id:
+								self.first_sel = False
 								self.branchExists = True
 								if network[0] in self.processed_nwks:
 									self.branchDnsConnectionPipe.append(network)
+									self.joiningOutlet.append('JOINING EXISTING BRANCH')
 									dns = False
 									break
 								typ = features[0].attributes()[1]
@@ -392,6 +406,7 @@ class DownstreamConnectivity():
 					self.bSharpAngle.append(sharpAngle)
 					if nwks[0] in self.dsLines.keys():
 						if len(self.dsLines[nwks][0]) == 0:
+							self.joiningOutlet.append(self.dsLines[nwks[0]][3])
 							self.branchDnsConnectionPipe.append([])
 							for nwk in nwks:
 								self.processed_nwks.append(nwk)
@@ -403,12 +418,15 @@ class DownstreamConnectivity():
 							dsInv_prev = min(dsInv)
 							network = self.dsLines[nwks[0]][0]
 					else:
+						self.joiningOutlet.append(self.dsLines[nwks[0]][3])
 						self.branchDnsConnectionPipe.append([])
 						for nwk in nwks:
 							self.processed_nwks.append(nwk)
 						dns = False
 				elif len(branches) > 1:
-					self.branchDnsConnectionPipe.append(nwks)
+					if not self.first_sel:
+						self.joiningOutlet.append('BRANCHED')
+						self.branchDnsConnectionPipe.append(nwks)
 					for nwk in nwks:
 						if nwk in self.processed_nwks:
 							nwks.remove(nwk)
@@ -480,3 +498,132 @@ class DownstreamConnectivity():
 				if self.sharpAngle[i][j]:
 					sharpA = ' -- Sharp Outflow Angle'
 				self.log += '{0}{1}{2}{3}\n'.format(name, advG, decA, sharpA)
+				
+	def getBranchConnectivity(self):
+		"""
+		Populates the upstream and downstream branch attribute type for each branch
+		
+		:return:
+		"""
+		
+		for i, branch in enumerate(self.branchName):
+			if self.branchDnsConnectionPipe[i] == 'OUTLET':
+				self.dnsBranches.append([None])
+			else:
+				branches = []
+				for branchDnsConnection in self.branchDnsConnectionPipe[i]:
+					for j, name in enumerate(self.name):
+						if branchDnsConnection in name:
+							branches.append(self.branchName[j])
+				self.dnsBranches.append(branches)
+			ups = True
+			branches = []
+			for j, branchDnsConnection in enumerate(self.branchDnsConnectionPipe):
+				if self.name[i][0] in branchDnsConnection:
+					branches.append(self.branchName[j])
+					ups = False
+			if ups:
+				self.upsBranches.append([None])
+			else:
+				self.upsBranches.append(branches)
+				
+	def getAllPathsByBranch(self):
+		"""
+		Gets all the path combinations by branch
+		
+		:return:
+		"""
+
+		upsBranches = []  # get a list of the most upstream branches
+		for i, branch in enumerate(self.branchName):
+			if self.upsBranches[i] == [None]:
+				upsBranches.append(branch)
+		
+		pathCounter = 0
+		todos = upsBranches  # todos are paths to be considered
+		todosPath = [None] * len(upsBranches)  # todosPaths are the path numbers where todos came from
+		todosSplit = [None] * len(upsBranches)  # todosSplits are where on the path the split occurred
+		while todos:
+			counter = 0
+			dns = False
+			todo = todos[0]
+			todoPath = todosPath[0]
+			todoSplit = todosSplit[0]
+			if todoPath is None:
+				path = []
+			else:
+				path = self.paths[todoPath][:todoSplit+1]
+			while not dns:
+				index = self.branchName.index(todo)
+				next = self.dnsBranches[index]
+				if len(next) > 1:
+					todos += next[1:]
+					todosPath.append(pathCounter)
+					todosSplit.append(counter)
+				next = next[0]
+				if next is None:
+					dns = True
+				path.append(todo)
+				todo = next
+				counter += 1
+			pathCounter += 1
+			self.paths.append(path)
+			todos = todos[1:]
+			todosPath = todosPath[1:]
+			todosSplit = todosSplit[1:]
+			
+	def getAllPathsByNwk(self):
+		"""
+		Get all paths listed by nwk name
+		
+		:return:
+		"""
+
+		for path in self.paths:
+			pathsNwks = []
+			pathsLen = []
+			for i, branch in enumerate(path):
+				if i + 1 < len(path):
+					dnsB = path[i+1]
+				else:
+					dnsB = None
+				connNwk = False  # Connection pipe - the pipe that the branch connects to in the downstream branch
+				if i == 0:
+					connNwkName = None
+					connNwk = True  # most upstream and therefore no connection pipe
+				bInd = self.branchName.index(branch)  # Branch index
+				for j, nwk in enumerate(self.name[bInd]):
+					if nwk == connNwkName:
+						connNwk = True
+					if connNwk:
+						pathsNwks.append(nwk)
+						pathsLen.append(self.length[bInd][j])
+					if j + 1 == len(self.name[bInd]):
+						connNwkNames = self.branchDnsConnectionPipe[bInd]
+						if dnsB is not None:
+							bdInd = self.branchName.index(dnsB)
+						if connNwkNames is not None:
+							for c in connNwkNames:
+								if c in self.name[bdInd]:
+									connNwkName = c
+									break
+			self.pathsNwks.append(pathsNwks)
+			self.pathsLen.append(sum(pathsLen))
+			
+	
+	def getPlotFormat(self):
+		"""
+		Arrays data into plottable format
+		
+		:return:
+		"""
+
+		self.getBranchConnectivity()
+		self.getAllPathsByBranch()
+		self.getAllPathsByNwk()
+		
+		
+		
+								
+		
+		
