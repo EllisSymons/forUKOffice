@@ -1,5 +1,6 @@
 # coding=utf-8
 import sys
+import numpy as np
 from tuflowqgis_library import *
 #sys.path.append(r'C:\Program Files\JetBrains\PyCharm 2018.1\debug-eggs')
 #sys.path.append(r'C:\Program Files\JetBrains\PyCharm 2018.1\helpers\pydev')
@@ -129,6 +130,7 @@ class DownstreamConnectivity():
 		self.angleLimit = angleLimit
 		self.processed_nwks = []
 		self.log = ''
+		self.type = []
 		self.name = []
 		self.branchName = []
 		self.usInvert = []
@@ -148,6 +150,11 @@ class DownstreamConnectivity():
 		self.paths = []
 		self.pathsNwks = []
 		self.pathsLen = []
+		self.pathsX = []
+		self.pathsInvert = []
+		self.pathsPipe = []
+		self.pathsGround = []
+		self.ground = []
 		self.adverseGradient = []
 		self.decreaseFlowArea = []
 		self.sharpAngle = []
@@ -173,6 +180,7 @@ class DownstreamConnectivity():
 		:return: void
 		"""
 		
+		self.bType = []
 		self.bName = []
 		self.bUsInvert = []
 		self.bDsInvert = []
@@ -255,6 +263,7 @@ class DownstreamConnectivity():
 					decreaseFlowArea = True
 				if angle < self.angleLimit and angle != 0:
 					sharpAngle = True
+				self.bType.append(typ)
 				self.bLength.append(length)
 				self.bName.append(name)
 				self.bNo.append(no)
@@ -392,6 +401,7 @@ class DownstreamConnectivity():
 								area.append(a)
 								angle.append(ang)
 								length.append(l)
+					self.bType.append(typ)
 					self.bLength.append(length)
 					self.bName.append(name)
 					self.bNo.append(no)
@@ -445,6 +455,7 @@ class DownstreamConnectivity():
 		if self.branchExists:
 			self.branchName.append('Branch {0}'.format(self.branchCounter))
 			self.branchCounter += 1
+			self.type.append(self.bType)
 			self.length.append(self.bLength)
 			self.name.append(self.bName)
 			self.no.append(self.bNo)
@@ -464,6 +475,7 @@ class DownstreamConnectivity():
 			if self.branchExists:
 				self.branchName.append('Branch {0}'.format(self.branchCounter))
 				self.branchCounter += 1
+				self.type.append(self.bType)
 				self.length.append(self.bLength)
 				self.name.append(self.bName)
 				self.no.append(self.bNo)
@@ -602,15 +614,137 @@ class DownstreamConnectivity():
 						connNwkNames = self.branchDnsConnectionPipe[bInd]
 						if dnsB is not None:
 							bdInd = self.branchName.index(dnsB)
-						if connNwkNames is not None:
+						if connNwkNames is not 'OUTLET':
 							for c in connNwkNames:
 								if c in self.name[bdInd]:
 									connNwkName = c
 									break
 			self.pathsNwks.append(pathsNwks)
 			self.pathsLen.append(sum(pathsLen))
-			
 	
+	def addX(self, ind, start):
+		"""
+		Create X values path for plotting.
+
+		:param ind: path index
+		:param start: start value for the path
+		:return: populates x plotting values
+		"""
+		
+		x = [start]
+		length = start
+		path = self.pathsNwks[ind]
+		
+		for i, nwk in enumerate(path):
+			found = False
+			for j, name in enumerate(self.name):
+				for k, nwk2 in enumerate(name):
+					if nwk == nwk2:
+						found = True
+						break
+				if found:
+					break
+			length += self.length[j][k]
+			if i + 1 == len(path):
+				x.append(length)
+			else:
+				x.append(length)
+				x.append(length)
+		self.pathsX.insert(ind, x)
+		
+	def addInv(self, ind):
+		"""
+		Create Y values for the nwk inverts
+		
+		:param ind: path index
+		:return: populates y invert plotting values
+		"""
+		
+		invert = []
+		path = self.pathsNwks[ind]
+		for i, nwk in enumerate(path):
+			found = False
+			for j, name in enumerate(self.name):
+				for k, nwk2 in enumerate(name):
+					if nwk == nwk2:
+						found = True
+						break
+				if found:
+					break
+			if self.usInvert[j][k] == -99999:
+				invert.append(np.nan)
+			else:
+				invert.append(self.usInvert[j][k])
+			if self.dsInvert[j][k] == -99999:
+				invert.append(np.nan)
+			else:
+				invert.append(self.dsInvert[j][k])
+		self.pathsInvert.insert(ind, invert)
+	
+	def addGround(self, ind):
+		"""
+		Create Y values for the ground levels
+
+		:param ind: path index
+		:return: populates y ground plotting values
+		"""
+		
+		ground = []
+		path = self.pathsNwks[ind]
+		for i, nwk in enumerate(path):
+			found = False
+			for j, name in enumerate(self.name):
+				for k, nwk2 in enumerate(name):
+					if nwk == nwk2:
+						found = True
+						break
+				if found:
+					break
+			ground.append(self.ground[j][k])
+			ground.append(self.ground[j][k])
+		self.pathsGround.insert(ind, ground)
+		
+	def addPipes(self, ind, xInd):
+		"""
+		Create patch object for pipes for plotting
+		
+		:param ind: path index
+		:param xInd: index of X values
+		:return: populates pipe plotting values
+		"""
+
+		pipes = []
+		path = self.pathsNwks[ind]
+		for i, nwk in enumerate(path):
+			pipe = False
+			found = False
+			for j, name in enumerate(self.name):
+				for k, nwk2 in enumerate(name):
+					if nwk == nwk2:
+						found = True
+						break
+				if found:
+					break
+			if self.type[j][k].lower() == 'c':
+				y = self.width[j][k]
+				pipe = True
+			elif self.type[j][k].lower() == 'r':
+				y = self.height[j][k]
+				pipe = True
+			if self.pathsInvert[xInd][i*2] == -99999 or self.pathsInvert[xInd][i*2+1] == -99999:
+				pipe = False
+			if pipe:
+				xStart = self.pathsX[xInd][i*2]
+				xEnd = self.pathsX[xInd][i*2+1]
+				yStartInv = self.pathsInvert[xInd][i*2]
+				yStartObv = yStartInv + y
+				yEndInv = self.pathsInvert[xInd][i*2+1]
+				yEndObv = yEndInv + y
+				xPatch = [xStart, xEnd, xEnd, xStart]
+				yPatch = [yStartInv, yEndInv, yEndObv, yStartObv]
+				pipes.append(zip(xPatch, yPatch))
+		self.pathsPipe.append(pipes)
+		
 	def getPlotFormat(self):
 		"""
 		Arrays data into plottable format
@@ -621,6 +755,18 @@ class DownstreamConnectivity():
 		self.getBranchConnectivity()
 		self.getAllPathsByBranch()
 		self.getAllPathsByNwk()
+		
+		maxPathLen = max(self.pathsLen)
+		maxPLInd = self.pathsLen.index(maxPathLen)
+		
+		self.addX(maxPLInd, 0)
+		self.addInv(maxPLInd)
+		if len(self.ground) > 0:
+			self.addGround(maxPLInd)
+		self.addPipes(maxPLInd, 0)
+
+		
+		
 		
 		
 		
