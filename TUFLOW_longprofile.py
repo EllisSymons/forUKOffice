@@ -6,172 +6,64 @@ from tuflowqgis_library import *
 #sys.path.append(r'C:\Program Files\JetBrains\PyCharm 2018.1\helpers\pydev')
 #import pydevd
 
-class LongProfile():
-	"""
-	Class to keep plot data for long profile in TUPLOT
-	
-	"""
-	
-	def __init__(self):
-		self.x = []
-		self.bed = []
-		self.pipes = []
-		self.ground = []
-		self.branches = []
-		self.dnsPipe = []
-		
-	def addX(self, x):
-		"""
-		Add X values for plot.
-		
-		:param x: list
-		:return: void
-		"""
-		
-		for item in x:
-			xAccum = []
-			for i, a in enumerate(item):
-				if i == 0:
-					xAccum.append(a)
-				elif i + 1 == len(item):
-					xAccum.append(xAccum[i - 1] + a)
-				else:
-					xAccum.append(xAccum[i - 1] + a)
-					xAccum.append(xAccum[i - 1] + a)
-			self.x.append(xAccum)
-		
-	def addBed(self, bed):
-		"""
-		Add Y axis values for bed
-		
-		:param bed: list
-		:return: void
-		"""
-		
-		for item in bed:
-			self.bed.append(item)
-	
-	def addPipes(self, pipes):
-		"""
-		Add pipe data
-		
-		:param pipes: list[list]
-		:return: void
-		"""
 
-		for i, branch in enumerate(pipes):
-			a = []
-			b = []
-			patch = []
-			for j, pipe in enumerate(branch):
-				index = j * 2
-				a.append(self.x[i][index])
-				a.append(self.x[i][index+1])
-				a.append(self.x[i][index + 1])
-				a.append(self.x[i][index])
-				b.append(self.bed[i][index])
-				b.append(self.bed[i][index+1])
-				b.append(self.bed[i][index + 1] + pipe)
-				b.append(self.bed[i][index] + pipe)
-				vert = list(zip(a, b))
-				patch.append(vert)
-			self.pipes.append(patch)
-		
-	def addGround(self, ground):
-		"""
-		Add ground data
-		
-		:param ground: list
-		:return: void
-		"""
-		
-		for item in ground:
-			self.ground.append(item)
-		
-	def addBranches(self, branches):
-		"""
-		Add branch names for long profile
-		
-		:param branches: list
-		:return: void
-		"""
-		
-		for item in branches:
-			self.branches.append(item)
-			
-	def addDnsPipe(self, dnsPipe):
-		"""
-		Add downstream pipe for the branch
-		
-		:param dnsPipe: list
-		:return: void
-		"""
-		
-		for item in dnsPipe:
-			self.dnsPipe.append(item)
-			
-	def organiseData(self):
-		"""
-		Organises the data so that they can be plotted relative to one another - Branches flow onto one another.
-		
-		:return:
-		"""
-		
-		
+
 class DownstreamConnectivity():
 	"""
 	Class for storing downstream connectivity information
 	"""
 	
 	def __init__(self, dsLines, startLines, inLyrs, angleLimit):
-		self.dsLines = dsLines
-		self.startLines = startLines
-		self.inLyrs = inLyrs
-		self.angleLimit = angleLimit
-		self.processed_nwks = []
-		self.log = ''
-		self.type = []
-		self.name = []
-		self.branchName = []
-		self.usInvert = []
-		self.dsInvert = []
-		self.angle = []
-		self.length = []
-		self.no = []
-		self.width = []
-		self.height = []
-		self.area = []
-		self.branchCounter = 1
-		self.branchExists = False
-		self.branchDnsConnectionPipe = []
-		self.joiningOutlet = []  # only necessary if another pipe is joining at the outlet
-		self.upsBranches = []
-		self.dnsBranches = []
-		self.paths = []
-		self.pathsNwks = []
-		self.pathsLen = []
-		self.pathsX = []
-		self.pathsInvert = []
-		self.pathsPipe = []
-		self.pathsGround = []
-		self.ground = []
-		self.adverseGradient = []
-		self.decreaseFlowArea = []
-		self.sharpAngle = []
-		self.network = []
-		self.bName = []
-		self.bUsInvert = []
-		self.bDsInvert = []
-		self.bAngle = []
-		self.bLength = []
-		self.bNo = []
-		self.bWidth = []
-		self.bHeight = []
-		self.bArea = []
-		self.bDnsConnectionPipe = []
-		self.bAdverseGradient = []
-		self.bDecreaseFlowArea = []
-		self.bSharpAngle = []
+		self.dsLines = dsLines  # dictionary {name: [[dns network channels], [us invert, ds invert], [other connecting channels]]}
+		self.startLines = startLines  # list of initial starting lines for plotting
+		self.inLyrs = inLyrs  # list of nwk line layers
+		self.angleLimit = angleLimit  # angle limit to for integrity checks
+		self.processed_nwks = []  # list of processed networks so there is no repetition
+		self.log = ''  # string for output log
+		self.type = []  # list of network types e.g. C R S
+		self.name = []  # list of network IDs
+		self.branchName = []  # list of branch names
+		self.usInvert = []  # list of network upstream inverts
+		self.dsInvert = []  # list of network downstream inverts
+		self.angle = []  # list of downstream network connection angle
+		self.length = []  # list of network lengths
+		self.no = []  # list of number of networks e.g. 2 pipes
+		self.width = []  # list of network width
+		self.height = []  # list of network heights
+		self.area = []  # list of calculated area
+		self.branchCounter = 1  # int used for generating branch names e.g. branch 1 branch2
+		self.branchExists = False  # bool to determine if branch has been considered already
+		self.branchDnsConnectionPipe = []  # list of a branch's downstream connection pipe name
+		self.joiningOutlet = []  # list of other networks joining at an outlet
+		self.upsBranches = []  # list of upstream branches (index from branch name)
+		self.dnsBranches = []  # list of downstream branches (index from branch name)
+		self.pathsName = []  # list of path names e.g. path 1 path 2
+		self.paths = []  # list of connecting branches from upstream to downstream by branch name
+		self.pathsNwks = []  # list of connecting networks from upstream to downstream by network name
+		self.pathsLen = []  # list of total path lengths (index by path names)
+		self.pathsNwksLen = []  # list of individual network lengths in the paths
+		self.pathsX = []  # list of X coordinates used for plotting the paths
+		self.pathsInvert = []  # list of Y coordinates for network inverts for plotting the paths
+		self.pathsPipe = []  # list of pipe data for plotting (matplotlib patch format)
+		self.pathsGround = []  # list of Y coordinates for ground levels for plooting the paths
+		self.ground = []  # list of ground elevations at pipe ends
+		self.adverseGradient = []  # list of flags for adverse gradients
+		self.decreaseFlowArea = []  # list of flags for decreased flow area
+		self.sharpAngle = []  # list of flags for sharp angles
+		self.network = []  # list of branched networks used for creating branches
+		self.bName = []  # list of network IDs used locally per branch within branch routine
+		self.bUsInvert = []  # list of network upstream inverts used locally per branch within branch routine
+		self.bDsInvert = []  # list of network downstream inverts used locally per branch within branch routine
+		self.bAngle = []  # list of downstream network connection angle used locally per branch within branch routine
+		self.bLength = []  # list of network lengths used locally per branch within branch routine
+		self.bNo = []  # list of number of networks used locally per branch within branch routine
+		self.bWidth = []  # list of network width used locally per branch within branch routine
+		self.bHeight = []  # list of network heights used locally per branch within branch routine
+		self.bArea = []  # list of calculated area used locally per branch within branch routine
+		self.bDnsConnectionPipe = []  # list of a branch's downstream connection pipe name used locally per branch within branch routine
+		self.bAdverseGradient = []  # list of flags for adverse gradients used locally per branch within branch routine
+		self.bDecreaseFlowArea = []  # list of flags for decreased flow area used locally per branch within branch routine
+		self.bSharpAngle = []  # list of flags for sharp angles used locally per branch within branch routine
 		
 	def getDownstreamConnectivity(self, network):
 		"""
@@ -555,6 +447,7 @@ class DownstreamConnectivity():
 		todos = upsBranches  # todos are paths to be considered
 		todosPath = [None] * len(upsBranches)  # todosPaths are the path numbers where todos came from
 		todosSplit = [None] * len(upsBranches)  # todosSplits are where on the path the split occurred
+		# loop through adding and removing todos until there are none left
 		while todos:
 			counter = 0
 			dns = False
@@ -566,6 +459,7 @@ class DownstreamConnectivity():
 			else:
 				path = self.paths[todoPath][:todoSplit+1]
 			while not dns:
+				# loop through until downtream is reached
 				index = self.branchName.index(todo)
 				next = self.dnsBranches[index]
 				if len(next) > 1:
@@ -580,6 +474,7 @@ class DownstreamConnectivity():
 				counter += 1
 			pathCounter += 1
 			self.paths.append(path)
+			self.pathsName.append('Path {0}'.format(pathCounter))
 			todos = todos[1:]
 			todosPath = todosPath[1:]
 			todosSplit = todosSplit[1:]
@@ -621,6 +516,7 @@ class DownstreamConnectivity():
 									break
 			self.pathsNwks.append(pathsNwks)
 			self.pathsLen.append(sum(pathsLen))
+			self.pathsNwksLen.append(pathsLen)
 	
 	def addX(self, ind, start):
 		"""
@@ -756,16 +652,49 @@ class DownstreamConnectivity():
 		self.getAllPathsByBranch()
 		self.getAllPathsByNwk()
 		
-		maxPathLen = max(self.pathsLen)
-		maxPLInd = self.pathsLen.index(maxPathLen)
-		
-		self.addX(maxPLInd, 0)
-		self.addInv(maxPLInd)
-		if len(self.ground) > 0:
-			self.addGround(maxPLInd)
-		self.addPipes(maxPLInd, 0)
+		pathsLen = self.pathsLen[:]
+		usedPathNwks = []
+		usedPathInds = []
 
+		while pathsLen:
+			found = False
+			commonNwk = None
+			maxPathLen = max(pathsLen)  # start at longest and then next longest and so on
+			pathInd = self.pathsLen.index(maxPathLen)  # index of longest path in class path list
+			pathInd2 = pathsLen.index(maxPathLen)  # index of longest path in local path list
+			# determine if path shares a common nwk with an existing path
+			for nwk in self.pathsNwks[pathInd]:
+				for i, usedPath in enumerate(usedPathNwks):
+					if nwk in usedPath:
+						commonNwk = nwk
+						found = True
+						break
+				if found:
+					break
+			if commonNwk is not None:
+				# find X value of processed path
+				comNwkInd = usedPathNwks[i].index(commonNwk)
+				existPathX = self.pathsX[i][comNwkInd*2]
+				# find X of new path
+				comNwkInd = self.pathsNwks[pathInd].index(commonNwk)
+				currentPathX = sum(self.pathsNwksLen[pathInd][:comNwkInd])
+				s = existPathX - currentPathX  # start path X value
+			else:
+				s = 0  # starting chainage if there is no common pipes
+			self.addX(pathInd, s)
+			usedPathInds.append(pathInd)
+			seq = sorted(usedPathInds)
+			pathInd3 = seq.index(pathInd)
+			self.addInv(pathInd)
+			if len(self.ground) > 0:
+				self.addGround(pathInd)
+			self.addPipes(pathInd, pathInd3)
+			del pathsLen[pathInd2]
+			usedPathNwks.insert(pathInd, self.pathsNwks[pathInd])
 		
+		
+		
+				
 		
 		
 		

@@ -2083,13 +2083,14 @@ class tuflowqgis_check_1d_integrity_dialog(QDialog, Ui_check1dIntegrity):
 				import matplotlib.pyplot as plt
 				import matplotlib.patches as patches
 				fig, ax = plt.subplots()
-				plt.plot(longProfile.pathsX[0], longProfile.pathsInvert[0])
 				ymax = max(longProfile.pathsInvert[0])
-				for poly in longProfile.pathsPipe[0]:
-					for v in poly:
-						ymax = max(ymax, v[1])
-					p = patches.Polygon(poly, facecolor='0.9', edgecolor='0.5')
-					ax.add_patch(p)
+				for i, path in enumerate(longProfile.pathsX):
+					plt.plot(longProfile.pathsX[i], longProfile.pathsInvert[i])
+					for poly in longProfile.pathsPipe[i]:
+						for v in poly:
+							ymax = max(ymax, v[1])
+						p = patches.Polygon(poly, facecolor='0.9', edgecolor='0.5')
+						ax.add_patch(p)
 				plt.ylim(ymax=ymax+1)
 				plt.title('Tool under development')
 				plt.show()
