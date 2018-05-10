@@ -21,7 +21,7 @@ import TUFLOW_1dTa
 import math
 from collections import OrderedDict
 from tuflowqgis_library import *
-from tuflowqgis_dialog import *
+
 
 # Debug using PyCharm
 #sys.path.append(r'C:\Program Files\JetBrains\PyCharm 2018.1\debug-eggs')
@@ -36,7 +36,7 @@ import tuflowqgis_styles
 
 class TuPlot(QDockWidget, Ui_tuflowqgis_TuPlot):
     
-	def __init__(self, iface):
+	def __init__(self, iface, **kwargs):
         
 		QDockWidget.__init__(self)
 		self.wdg = Ui_tuflowqgis_TuPlot.__init__(self)
@@ -68,6 +68,8 @@ class TuPlot(QDockWidget, Ui_tuflowqgis_TuPlot):
 		self.xs_list = []
 		self.labels = []
 		self.customAxis = None
+		self.profileIntTool = None
+		self.is_intTool = False
 		#self.setAttribute(Qt.WA_DeleteOnClose, True)
 		
 		#colour stuff
@@ -79,6 +81,12 @@ class TuPlot(QDockWidget, Ui_tuflowqgis_TuPlot):
 		
 		self.qgis_connect()
 		QObject.connect(self.cbDeactivate, SIGNAL("stateChanged(int)"), self.deactivate_changed) #this is seperate so multiple connections aren't created
+		
+		if 'profile_integerity_tool' in kwargs.keys():
+			if kwargs['profile_integerity_tool'] is not None:
+				self.profileIntTool = kwargs['profile_integerity_tool']
+				self.layerChanged()
+				self.select_changed()
 		
 	def __del__(self):
 		# Disconnect signals and slots
@@ -720,8 +728,22 @@ class TuPlot(QDockWidget, Ui_tuflowqgis_TuPlot):
 		
 		self.loc_changed()
 		
+		
+	def add_profileIntTool(self, profileIntTool):
+		"""
+		Open profile integrity tool in an existing tuplot.
+		
+		:param profileIntTool: longprofile class object
+		:return:
+		"""
+		
+		self.profileIntTool = profileIntTool
+		self.layerChanged()
+		self.select_changed()
+		
 
 	def layerChanged(self):
+		self.is_intTool = False
 		self.geom_type = None #store geometry type for later use
 		if self.cbForceXS.isChecked():
 			xs_format = True
@@ -766,7 +788,6 @@ class TuPlot(QDockWidget, Ui_tuflowqgis_TuPlot):
 			else:
 				#QMessageBox.information(self.iface.mainWindow(), "1D XS Viewer", "Message: "+message)
 				self.lwStatus.insertItem(0,'Message: '+message)
-		
 		if xs_format: # need to get sections
 			self.is_xs = True
 			self.locationDrop.clear()
@@ -786,7 +807,12 @@ class TuPlot(QDockWidget, Ui_tuflowqgis_TuPlot):
 				self.xsLoadedName.append(self.cLayer)
 				self.lwStatus.insertItem(0, 'Successfully loaded in XS data')
 			self.locationDrop.addItem("Tabular Data (Section)")
-
+		elif self.profileIntTool is not None and self.cLayer in self.profileIntTool.inLyrs:  # might be from the 1D integrity check
+			self.is_intTool = True
+			self.locationDrop.clear()
+			self.IDs = []
+			self.IDList.clear()
+			self.locationDrop.addItem('Check Downstream Integrity')
 		else: #it might be a result file
 			self.is_xs = False
 			self.locationDrop.clear()
@@ -909,6 +935,8 @@ class TuPlot(QDockWidget, Ui_tuflowqgis_TuPlot):
 						self.IDList.addItem(xs)
 				except:
 					self.lwStatus.insertItem(0, 'Error updating xs source list')
+		elif self.is_intTool:
+			pass
 		else: #dealing with results
 			if len(self.res) == 0:
 				self.lwStatus.insertItem(0,'No Results Open')
@@ -1222,6 +1250,9 @@ class TuPlot(QDockWidget, Ui_tuflowqgis_TuPlot):
 						if h.lower() != 'elevation':
 							self.ResTypeList.addItem(h)
 							self.ResTypeList_ax2.addItem(h)
+		elif loc == 'Check Downstream Integrity':
+			for path in self.profileIntTool.pathsName:
+				self.ResTypeList.addItem(path)
 		else:
 			self.ResTypeList.clear()
 			
@@ -1364,6 +1395,8 @@ class TuPlot(QDockWidget, Ui_tuflowqgis_TuPlot):
 				draw = True
 			else:
 				draw = False
+		elif self.is_intTool:
+			draw = True
 		else:
 			loc = self.locationDrop.currentText()
 			type = []
@@ -1646,6 +1679,7 @@ class TuPlot(QDockWidget, Ui_tuflowqgis_TuPlot):
 
 		:return: void
 		"""
+		from tuflowqgis_dialog import tuflowqgis_tuplotAxisEditor
 		
 		# Get Axis limits
 		xLim = self.subplot.get_xlim()
@@ -2071,21 +2105,73 @@ class TuPlot(QDockWidget, Ui_tuflowqgis_TuPlot):
 									self.axis2.hold(True)
 							except:
 								pass
-			if self.cbShowLegend.isChecked():
-				if self.cbLegendUR.isChecked():
-					self.subplot.legend(self.artists, self.labels, loc=1)
-				elif self.cbLegendUL.isChecked():
-					self.subplot.legend(self.artists, self.labels, loc=2)
-				elif self.cbLegendLL.isChecked():
-					self.subplot.legend(self.artists, self.labels, loc=3)
-				elif self.cbLegendLR.isChecked():
-					self.subplot.legend(self.artists, self.labels, loc=4)
-				else:
-					self.subplot.legend(self.artists, self.labels, bbox_to_anchor=(0, 0, 1, 1))
-			self.subplot.hold(False)
-			self.subplot.grid(True)
-			self.plotWdg.draw()
-		
+		elif self.is_intTool:
+			self.IDList.clear()
+			typeids = []
+			typenames = []
+			plot_current_time = False
+			for x in range(0, self.ResTypeList.count()):
+				list_item = self.ResTypeList.item(x)
+				if list_item.isSelected():
+					if list_item.text() == 'Current Time':
+						plot_current_time = True
+					else:
+						typeids.append(x)
+						typenames.append(list_item.text())
+			for typename in reversed(typenames):
+				pInd = self.profileIntTool.pathsName.index(typename)
+				if x > 0:
+					self.IDList.insertItem(0, "")
+				for nwk in reversed(self.profileIntTool.pathsNwks[pInd]):
+					nInd = self.profileIntTool.pathsNwks[pInd].index(nwk)
+					advG = ''
+					decA = ''
+					sharpA = ''
+					if self.profileIntTool.pathsAdverseGradient[pInd][nInd]:
+						advG = ' -- Adverse Gradient'
+					if self.profileIntTool.pathsDecreaseFlowArea[pInd][nInd]:
+						decA = ' -- Decrease in Area'
+					if self.profileIntTool.pathsSharpAngle[pInd][nInd]:
+						sharpA = ' -- Sharp Outflow Angle'
+					self.IDList.insertItem(0, '{0}{1}{2}{3}'.format(nwk, advG, decA, sharpA))
+				self.IDList.insertItem(0, "## {0} ##".format(typename))
+			for path in typenames:
+				pInd = self.profileIntTool.pathsName.index(path)  # path index
+				ymin = min(ymin, min(self.profileIntTool.pathsInvert[pInd]))
+				ymax = max(ymax, max(self.profileIntTool.pathsInvert[pInd]))
+				xmin = min(xmin, min(self.profileIntTool.pathsX[pInd]))
+				xmax = max(xmax, max(self.profileIntTool.pathsX[pInd]))
+				a, = self.subplot.plot(self.profileIntTool.pathsX[pInd], self.profileIntTool.pathsInvert[pInd])
+				for poly in self.profileIntTool.pathsPipe[pInd]:
+					for v in poly:
+						ymax = max(ymax, v[1])
+					p = Polygon(poly, facecolor='0.9', edgecolor='0.5')
+					self.subplot.add_patch(p)
+				self.artists.append(a)
+				label = "{0}".format(path)
+				self.labels.append(label)
+				self.subplot.hold(True)
+				for flag in self.profileIntTool.pathsPlotAdvG[pInd]:
+					a, = self.subplot.plot(flag[0], flag[1], marker='o', linestyle='None')
+					ymax = max(ymax, flag[1])
+					self.artists.append(a)
+					label = "{0} Adverse Gradient".format(path)
+					self.labels.append(label)
+					self.subplot.hold(True)
+				for flag in self.profileIntTool.pathsPlotDecA[pInd]:
+					a, = self.subplot.plot(flag[0], flag[1], marker='o', linestyle='None')
+					ymax = max(ymax, flag[1])
+					self.artists.append(a)
+					label = "{0} Decrease in Area".format(path)
+					self.labels.append(label)
+					self.subplot.hold(True)
+				for flag in self.profileIntTool.pathsPlotSharpA[pInd]:
+					a, = self.subplot.plot(flag[0], flag[1], marker='o', linestyle='None')
+					ymax = max(ymax, flag[1])
+					self.artists.append(a)
+					label = "{0} Sharp Outflow Angle".format(path)
+					self.labels.append(label)
+					self.subplot.hold(True)
 		else: #results
 			#self.lwStatus.insertItem(0,'drawing results')
 			loc = self.locationDrop.currentText()
@@ -2776,101 +2862,101 @@ class TuPlot(QDockWidget, Ui_tuflowqgis_TuPlot):
 								except:
 									self.lwStatus.insertItem(0, "can't find XS for channel")
 			
-			if self.cbShowLegend.isChecked():
-				if self.cbLegendUR.isChecked():
-					self.subplot.legend(self.artists, self.labels, loc=1)
-				elif self.cbLegendUL.isChecked():
-					self.subplot.legend(self.artists, self.labels, loc=2)
-				elif self.cbLegendLL.isChecked():
-					self.subplot.legend(self.artists, self.labels, loc=3)
-				elif self.cbLegendLR.isChecked():
-					self.subplot.legend(self.artists, self.labels, loc=4)
-				else:
-					self.subplot.legend(self.artists, self.labels, bbox_to_anchor=(0, 0, 1, 1))
-			
-			self.subplot.hold(False)
-			self.subplot.grid(True)
-			
-			if self.customAxis is not None and self.customAxis.xAxisCustom_rb.isChecked():
-				xmin = self.customAxis.xLim[0]
-				xmax = self.customAxis.xLim[1]
-				xinc = self.customAxis.xInc
-				self.subplot.set_xbound(lower=xmin, upper=xmax)
-				if (xmax * 1000 + xinc * 1000) % (xinc * 1000) != 0:
-					self.subplot.set_xticks(scipy.arange(xmin, xmax, xinc))
-				else:
-					self.subplot.set_xticks(scipy.arange(xmin, xmax + xinc, xinc))
+		if self.cbShowLegend.isChecked():
+			if self.cbLegendUR.isChecked():
+				self.subplot.legend(self.artists, self.labels, loc=1)
+			elif self.cbLegendUL.isChecked():
+				self.subplot.legend(self.artists, self.labels, loc=2)
+			elif self.cbLegendLL.isChecked():
+				self.subplot.legend(self.artists, self.labels, loc=3)
+			elif self.cbLegendLR.isChecked():
+				self.subplot.legend(self.artists, self.labels, loc=4)
 			else:
-				xmin = math.floor(xmin)
-				xmax = math.ceil(xmax)
-				self.subplot.set_xbound(lower=xmin, upper=xmax)
-			if self.customAxis is not None and self.customAxis.yAxisCustom_rb.isChecked():
-				ymin = self.customAxis.yLim[0]
-				ymax = self.customAxis.yLim[1]
-				yinc = self.customAxis.yInc
-				self.subplot.set_ybound(lower=ymin, upper=ymax)
-				if (ymax * 1000 + yinc * 1000) % (yinc * 1000) != 0:
-					self.subplot.set_yticks(scipy.arange(ymin, ymax, yinc))
-				else:
-					self.subplot.set_yticks(scipy.arange(ymin, ymax + yinc, yinc))
-			else:
-				ymin = math.floor(ymin)
-				
-				if ymax < 10:
-					yinc = 1
-				elif ymax < 30:
-					yinc = 5
-				elif ymax < 100:
-					yinc = 10
-				elif ymax < 300:
-					yinc = 50
-				elif ymax < 1000:
-					yinc = 100
-				elif ymax < 3000:
-					yinc = 500
-				elif ymax < 10000:
-					yinc = 1000
-				elif ymax < 30000:
-					yinc = 5000
-				elif ymax < 100000:
-					yinc = 10000
-				elif ymax < 300000:
-					yinc = 50000
-				elif ymax < 1000000:
-					yinc = 100000
-				elif ymax < 10000000:
-					yinc = 1000000
-				elif ymax < 100000000:
-					yinc = 10000000
-				elif ymax < 1000000000:
-					yinc = 100000000
-				elif ymax < 10000000000:
-					yinc = 1000000000
-				
-				ymax = math.ceil(ymax / yinc) * yinc  # round upper to nearest xinc
-				self.subplot.set_ybound(lower=ymin, upper=ymax)
-			# Secondary axis
-			if self.ax2_exists:
-				if self.axis2._sharey is not None:
-					if self.customAxis is not None and self.customAxis.xAxisCustom_rb_2.isChecked():
-						x2min = self.customAxis.x2Lim[0]
-						x2max = self.customAxis.x2Lim[1]
-						x2inc = self.customAxis.x2Inc
-						self.axis2.set_xbound(lower=x2min, upper=x2max)
-						if (x2max * 1000 + x2inc * 1000) % (x2inc * 1000) != 0:
-							self.axis2.set_xticks(scipy.arange(x2min, x2max, x2inc))
-						else:
-							self.axis2.set_xticks(scipy.arange(x2min, x2max + x2inc, x2inc))
-				elif self.axis2._sharex is not None:
-					if self.customAxis is not None and self.customAxis.yAxisCustom_rb_2.isChecked():
-						y2min = self.customAxis.y2Lim[0]
-						y2max = self.customAxis.y2Lim[1]
-						y2inc = self.customAxis.y2Inc
-						self.axis2.set_ybound(lower=y2min, upper=y2max)
-						if (y2max * 1000 + y2inc * 1000) % (y2inc * 1000) != 0:
-							self.axis2.set_yticks(scipy.arange(y2min, y2max, y2inc))
-						else:
-							self.axis2.set_yticks(scipy.arange(y2min, y2max + y2inc, y2inc))
+				self.subplot.legend(self.artists, self.labels, bbox_to_anchor=(0, 0, 1, 1))
+		
+		self.subplot.hold(False)
+		self.subplot.grid(True)
 			
-			self.plotWdg.draw()
+		if self.customAxis is not None and self.customAxis.xAxisCustom_rb.isChecked():
+			xmin = self.customAxis.xLim[0]
+			xmax = self.customAxis.xLim[1]
+			xinc = self.customAxis.xInc
+			self.subplot.set_xbound(lower=xmin, upper=xmax)
+			if (xmax * 1000 + xinc * 1000) % (xinc * 1000) != 0:
+				self.subplot.set_xticks(scipy.arange(xmin, xmax, xinc))
+			else:
+				self.subplot.set_xticks(scipy.arange(xmin, xmax + xinc, xinc))
+		else:
+			xmin = math.floor(xmin)
+			xmax = math.ceil(xmax)
+			self.subplot.set_xbound(lower=xmin, upper=xmax)
+		if self.customAxis is not None and self.customAxis.yAxisCustom_rb.isChecked():
+			ymin = self.customAxis.yLim[0]
+			ymax = self.customAxis.yLim[1]
+			yinc = self.customAxis.yInc
+			self.subplot.set_ybound(lower=ymin, upper=ymax)
+			if (ymax * 1000 + yinc * 1000) % (yinc * 1000) != 0:
+				self.subplot.set_yticks(scipy.arange(ymin, ymax, yinc))
+			else:
+				self.subplot.set_yticks(scipy.arange(ymin, ymax + yinc, yinc))
+		else:
+			ymin = math.floor(ymin)
+			
+			if ymax - ymin < 10:
+				yinc = 1
+			elif ymax - ymin < 30:
+				yinc = 5
+			elif ymax - ymin < 100:
+				yinc = 10
+			elif ymax - ymin < 300:
+				yinc = 50
+			elif ymax - ymin < 1000:
+				yinc = 100
+			elif ymax - ymin < 3000:
+				yinc = 500
+			elif ymax - ymin < 10000:
+				yinc = 1000
+			elif ymax - ymin < 30000:
+				yinc = 5000
+			elif ymax - ymin < 100000:
+				yinc = 10000
+			elif ymax - ymin < 300000:
+				yinc = 50000
+			elif ymax - ymin < 1000000:
+				yinc = 100000
+			elif ymax - ymin < 10000000:
+				yinc = 1000000
+			elif ymax - ymin < 100000000:
+				yinc = 10000000
+			elif ymax - ymin < 1000000000:
+				yinc = 100000000
+			elif ymax - ymin < 10000000000:
+				yinc = 1000000000
+			
+			ymax = math.ceil(ymax / yinc) * yinc  # round upper to nearest xinc
+			self.subplot.set_ybound(lower=ymin, upper=ymax)
+		# Secondary axis
+		if self.ax2_exists:
+			if self.axis2._sharey is not None:
+				if self.customAxis is not None and self.customAxis.xAxisCustom_rb_2.isChecked():
+					x2min = self.customAxis.x2Lim[0]
+					x2max = self.customAxis.x2Lim[1]
+					x2inc = self.customAxis.x2Inc
+					self.axis2.set_xbound(lower=x2min, upper=x2max)
+					if (x2max * 1000 + x2inc * 1000) % (x2inc * 1000) != 0:
+						self.axis2.set_xticks(scipy.arange(x2min, x2max, x2inc))
+					else:
+						self.axis2.set_xticks(scipy.arange(x2min, x2max + x2inc, x2inc))
+			elif self.axis2._sharex is not None:
+				if self.customAxis is not None and self.customAxis.yAxisCustom_rb_2.isChecked():
+					y2min = self.customAxis.y2Lim[0]
+					y2max = self.customAxis.y2Lim[1]
+					y2inc = self.customAxis.y2Inc
+					self.axis2.set_ybound(lower=y2min, upper=y2max)
+					if (y2max * 1000 + y2inc * 1000) % (y2inc * 1000) != 0:
+						self.axis2.set_yticks(scipy.arange(y2min, y2max, y2inc))
+					else:
+						self.axis2.set_yticks(scipy.arange(y2min, y2max + y2inc, y2inc))
+		
+		self.plotWdg.draw()
 

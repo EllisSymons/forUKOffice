@@ -2078,65 +2078,15 @@ class tuflowqgis_check_1d_integrity_dialog(QDialog, Ui_check1dIntegrity):
 			longProfile.reportLog()
 			if plotDnsConn:
 				longProfile.getPlotFormat()
-				import matplotlib as mpl
-				mpl.use('Qt4Agg')  # or mpl.use('agg')
-				import matplotlib.pyplot as plt
-				import matplotlib.patches as patches
-				fig, ax = plt.subplots()
-				ymax = max(longProfile.pathsInvert[0])
-				for i, path in enumerate(longProfile.pathsX):
-					plt.plot(longProfile.pathsX[i], longProfile.pathsInvert[i])
-					for poly in longProfile.pathsPipe[i]:
-						for v in poly:
-							ymax = max(ymax, v[1])
-						p = patches.Polygon(poly, facecolor='0.9', edgecolor='0.5')
-						ax.add_patch(p)
-				plt.ylim(ymax=ymax+1)
-				plt.title('Tool under development')
-				plt.show()
-			#used_nwks = []
-			#dnsLogs = []
-			#plot = {'x': [], 'bed': [], 'pipes': [], 'ground': [], 'branches': [], 'Downstream pipe': []}
-			#if not checkLine:  # hasn't yet been run
-			#	if not checkPoint:
-			#		if len(pointLyrs) > 0:
-			#			pointDict = getVertices(pointLyrs)
-			#	unsnappedLines, unsnappedLineNames, closestVLines, dsLines = checkSnapping(lines=lineDict, points=pointDict, dns_conn=getDnsConn)
-			#branch_counter = 1
-			#dnsLog, branches, used_nwks, plot, dnsPipe = checkDnsNwk(dsLines, startElem, lineLyrs, angleLimit, used_nwks, plot)
-			#plot['branches'].append(branch_counter)
-			#plot['Downstream pipe'].append(dnsPipe)
-			#dnsLogs.append(dnsLog)
-			#while len(branches) > 0:
-			#	for branch in branches:
-			#		dnsLog, dnsBranches, used_nwk, plot, dnsPipe = checkDnsNwk(dsLines, branch, lineLyrs, angleLimit, used_nwks, plot)
-			#		dnsLogs.append(dnsLog)
-			#		branches += dnsBranches
-			#		branches.remove(branch)
-			#		branch_counter += 1
-			#		plot['branches'].append(branch_counter)
-			#		plot['Downstream pipe'].append(dnsPipe)
-			#if plotDnsConn:
-				#plotter = TUFLOW_longprofile.LongProfile()
-				#plotter.addX(plot['x'])
-				#plotter.addBed(plot['bed'])
-				#plotter.addPipes(plot['pipes'])
-				#plotter.addGround(plot['ground'])
-				#plotter.addBranches(plot['branches'])
-				#plotter.addDnsPipe(plot['Downstream pipe'])
-				#plotter.organiseData()
-				
-				
-				
-				#if self.dockOpened:
-				#	self.resdock.qgis_connect()
-				#	self.resdock.show()
-				#	self.resdock.layerChanged()
-				#else:
-				#	self.dockOpened = True
-				#	self.resdock = TuPlot(self.iface)
-				#	self.iface.addDockWidget(Qt.RightDockWidgetArea, self.resdock)
-				
+				if self.dockOpened:
+					self.resdock.qgis_connect()
+					self.resdock.show()
+					self.resdock.layerChanged()
+					self.resdock.add_profileIntTool(longProfile)
+				else:
+					self.dockOpened = True
+					self.resdock = TuPlot(self.iface, profile_integerity_tool=longProfile)
+					self.iface.addDockWidget(Qt.RightDockWidgetArea, self.resdock)
 		# Output
 		if outMsg or outTxt:
 			if outMsg:

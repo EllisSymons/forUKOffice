@@ -31,6 +31,7 @@ class DownstreamConnectivity():
 		self.width = []  # list of network width
 		self.height = []  # list of network heights
 		self.area = []  # list of calculated area
+		self.ground = []  # list of ground elevations at pipe ends
 		self.branchCounter = 1  # int used for generating branch names e.g. branch 1 branch2
 		self.branchExists = False  # bool to determine if branch has been considered already
 		self.branchDnsConnectionPipe = []  # list of a branch's downstream connection pipe name
@@ -45,8 +46,13 @@ class DownstreamConnectivity():
 		self.pathsX = []  # list of X coordinates used for plotting the paths
 		self.pathsInvert = []  # list of Y coordinates for network inverts for plotting the paths
 		self.pathsPipe = []  # list of pipe data for plotting (matplotlib patch format)
-		self.pathsGround = []  # list of Y coordinates for ground levels for plooting the paths
-		self.ground = []  # list of ground elevations at pipe ends
+		self.pathsGround = []  # list of Y coordinates for ground levels for plotting the paths
+		self.pathsAdverseGradient = []  # list of flags for adverse gradients relative to the paths
+		self.pathsDecreaseFlowArea = []  # list of flags for decreased flow area relative to the paths
+		self.pathsSharpAngle = []  # list of flags for sharp angles relative to the paths
+		self.pathsPlotAdvG = []  # list of adverse gradient X, Y coords for plotting
+		self.pathsPlotDecA = []  # list of decreased area X, Y coords for plotting
+		self.pathsPlotSharpA = []  # list of sharp angle X, Y coords for plotting
 		self.adverseGradient = []  # list of flags for adverse gradients
 		self.decreaseFlowArea = []  # list of flags for decreased flow area
 		self.sharpAngle = []  # list of flags for sharp angles
@@ -489,6 +495,9 @@ class DownstreamConnectivity():
 		for path in self.paths:
 			pathsNwks = []
 			pathsLen = []
+			pathsAdvG = []
+			pathsDecA = []
+			pathsSharpA = []
 			for i, branch in enumerate(path):
 				if i + 1 < len(path):
 					dnsB = path[i+1]
@@ -505,6 +514,9 @@ class DownstreamConnectivity():
 					if connNwk:
 						pathsNwks.append(nwk)
 						pathsLen.append(self.length[bInd][j])
+						pathsAdvG.append(self.adverseGradient[bInd][j])
+						pathsDecA.append(self.decreaseFlowArea[bInd][j])
+						pathsSharpA.append(self.sharpAngle[bInd][j])
 					if j + 1 == len(self.name[bInd]):
 						connNwkNames = self.branchDnsConnectionPipe[bInd]
 						if dnsB is not None:
@@ -517,6 +529,9 @@ class DownstreamConnectivity():
 			self.pathsNwks.append(pathsNwks)
 			self.pathsLen.append(sum(pathsLen))
 			self.pathsNwksLen.append(pathsLen)
+			self.pathsAdverseGradient.append(pathsAdvG)
+			self.pathsDecreaseFlowArea.append(pathsDecA)
+			self.pathsSharpAngle.append(pathsSharpA)
 	
 	def addX(self, ind, start):
 		"""
@@ -639,7 +654,46 @@ class DownstreamConnectivity():
 				xPatch = [xStart, xEnd, xEnd, xStart]
 				yPatch = [yStartInv, yEndInv, yEndObv, yStartObv]
 				pipes.append(zip(xPatch, yPatch))
-		self.pathsPipe.append(pipes)
+		self.pathsPipe.insert(ind, pipes)
+		
+	def addFlags(self, ind, xInd):
+		"""
+		Create X and Y Coords for integrity flags
+		
+		:param ind: path index
+		:param xInd: index of X values
+		:return: populates integrity plotting values
+		"""
+
+		advG = []
+		decA = []
+		sharpA = []
+		path = self.pathsNwks[ind]
+		for i, nwk in enumerate(path):
+			count = 1  # use to stack the flags on top of one another
+			if self.pathsAdverseGradient[ind][i]:
+				xStart = self.pathsX[xInd][i * 2]
+				xEnd = self.pathsX[xInd][i * 2 + 1]
+				x = (xStart + xEnd) / 2
+				y = self.pathsPipe[xInd][i][2][1] + (0.1 * count)
+				coords = [x, y]
+				advG.append(coords)
+				count += 1
+			if self.pathsDecreaseFlowArea[ind][i]:
+				x = self.pathsX[xInd][i * 2]
+				y = self.pathsPipe[xInd][i][2][1] + (0.1 * count)
+				coords = [x, y]
+				decA.append(coords)
+				count += 1
+			if self.pathsSharpAngle[ind][i]:
+				x = self.pathsX[xInd][i * 2 + 1]
+				y = self.pathsPipe[xInd][i][2][1] + (0.1 * count)
+				coords = [x, y]
+				sharpA.append(coords)
+				count += 1
+		self.pathsPlotAdvG.insert(ind, advG)
+		self.pathsPlotDecA.insert(ind, decA)
+		self.pathsPlotSharpA.insert(ind, sharpA)
 		
 	def getPlotFormat(self):
 		"""
@@ -652,7 +706,7 @@ class DownstreamConnectivity():
 		self.getAllPathsByBranch()
 		self.getAllPathsByNwk()
 		
-		pathsLen = self.pathsLen[:]
+		pathsLen = self.pathsLen[:]  # create a copy of the variable for looping
 		usedPathNwks = []
 		usedPathInds = []
 
@@ -689,6 +743,7 @@ class DownstreamConnectivity():
 			if len(self.ground) > 0:
 				self.addGround(pathInd)
 			self.addPipes(pathInd, pathInd3)
+			self.addFlags(pathInd, pathInd3)
 			del pathsLen[pathInd2]
 			usedPathNwks.insert(pathInd, self.pathsNwks[pathInd])
 		
