@@ -2,9 +2,9 @@
 import sys
 import numpy as np
 from tuflowqgis_library import *
-#sys.path.append(r'C:\Program Files\JetBrains\PyCharm 2018.1\debug-eggs')
-#sys.path.append(r'C:\Program Files\JetBrains\PyCharm 2018.1\helpers\pydev')
-#import pydevd
+sys.path.append(r'C:\Program Files\JetBrains\PyCharm 2018.1\debug-eggs')
+sys.path.append(r'C:\Program Files\JetBrains\PyCharm 2018.1\helpers\pydev')
+
 
 
 
@@ -57,6 +57,7 @@ class DownstreamConnectivity():
 		self.decreaseFlowArea = []  # list of flags for decreased flow area
 		self.sharpAngle = []  # list of flags for sharp angles
 		self.network = []  # list of branched networks used for creating branches
+		self.bType = []
 		self.bName = []  # list of network IDs used locally per branch within branch routine
 		self.bUsInvert = []  # list of network upstream inverts used locally per branch within branch routine
 		self.bDsInvert = []  # list of network downstream inverts used locally per branch within branch routine
@@ -77,7 +78,7 @@ class DownstreamConnectivity():
 		
 		:return: void
 		"""
-		
+
 		self.bType = []
 		self.bName = []
 		self.bUsInvert = []
@@ -97,19 +98,22 @@ class DownstreamConnectivity():
 		dsInv_prev = 99999
 		bn = []
 		# Determine if there are pipes downstream of starting locations
-		if type(network) == list:
-			for nwk in network:
-				if len(self.dsLines[nwk]) > 0:
-					dns = True  # there are downstream pipes available
-					break
-				else:
-					dns = False
-		else:
-			if len(self.dsLines[network]) > 0:
-				network = [network]
-				dns = True  # there are downstream pipes available
-			else:
-				dns = False
+		dns = True
+		if type(network) != list:
+			network = [network]
+		#if type(network) == list:
+		#	for nwk in network:
+		#		if len(self.dsLines[nwk]) > 0:
+		#			dns = True  # there are downstream pipes available
+		#			break
+		#		else:
+		#			dns = True
+		#else:
+		#	if len(self.dsLines[network][0]) > 0:
+		#		network = [network]
+		#		dns = True  # there are downstream pipes available
+		#	else:
+		#		dns = True
 		while dns:
 			# Get QgsFeature layers for start lines
 			adverseGradient = False
@@ -128,6 +132,10 @@ class DownstreamConnectivity():
 				self.first_sel = False
 				self.branchExists = True
 				if network[0] in self.processed_nwks:
+					if len(self.bName) == 0:
+						self.branchExists = False
+						dns = False
+						break
 					self.branchDnsConnectionPipe.append([network[0]])
 					self.joiningOutlet.append('JOINING EXISTING BRANCH')
 					dns = False
@@ -409,13 +417,28 @@ class DownstreamConnectivity():
 					sharpA = ' -- Sharp Outflow Angle'
 				self.log += '{0}{1}{2}{3}\n'.format(name, advG, decA, sharpA)
 				
+	def checkDnsNwks(self):
+		"""
+		Check that all downstream network have been accounted for in branchDnsConnectionPipe
+		
+		:return: a completed branchDnsConnectionPipe
+		"""
+		
+		for i, branch in enumerate(self.name):
+			lastNwk = branch[-1]
+			dnsConns = self.dsLines[lastNwk][0]
+			for dnsNwk in dnsConns:
+				if dnsNwk not in self.branchDnsConnectionPipe[i]:
+					self.branchDnsConnectionPipe[i].append(dnsNwk)
+				
+	
 	def getBranchConnectivity(self):
 		"""
 		Populates the upstream and downstream branch attribute type for each branch
 		
 		:return:
 		"""
-		
+
 		for i, branch in enumerate(self.branchName):
 			if self.branchDnsConnectionPipe[i] == 'OUTLET':
 				self.dnsBranches.append([None])
@@ -532,6 +555,15 @@ class DownstreamConnectivity():
 			self.pathsAdverseGradient.append(pathsAdvG)
 			self.pathsDecreaseFlowArea.append(pathsDecA)
 			self.pathsSharpAngle.append(pathsSharpA)
+	
+	def checkAreaAndInv(self):
+		"""
+		Perform the check on Area and Inverts
+		
+		:return:
+		"""
+		
+		return
 	
 	def addX(self, ind, start):
 		"""
@@ -675,13 +707,15 @@ class DownstreamConnectivity():
 				xStart = self.pathsX[xInd][i * 2]
 				xEnd = self.pathsX[xInd][i * 2 + 1]
 				x = (xStart + xEnd) / 2
-				y = self.pathsPipe[xInd][i][2][1] + (0.1 * count)
+				yStart = self.pathsPipe[xInd][i][3][1] + (0.1 * count)
+				yEnd = self.pathsPipe[xInd][i][2][1] + (0.1 * count)
+				y = (yStart + yEnd) / 2
 				coords = [x, y]
 				advG.append(coords)
 				count += 1
 			if self.pathsDecreaseFlowArea[ind][i]:
 				x = self.pathsX[xInd][i * 2]
-				y = self.pathsPipe[xInd][i][2][1] + (0.1 * count)
+				y = self.pathsPipe[xInd][i][3][1] + (0.1 * count)
 				coords = [x, y]
 				decA.append(coords)
 				count += 1
@@ -701,10 +735,12 @@ class DownstreamConnectivity():
 		
 		:return:
 		"""
-
+		
+		self.checkDnsNwks()
 		self.getBranchConnectivity()
 		self.getAllPathsByBranch()
 		self.getAllPathsByNwk()
+		self.checkAreaAndInv()
 		
 		pathsLen = self.pathsLen[:]  # create a copy of the variable for looping
 		usedPathNwks = []

@@ -24,9 +24,8 @@ from tuflowqgis_library import *
 
 
 # Debug using PyCharm
-#sys.path.append(r'C:\Program Files\JetBrains\PyCharm 2018.1\debug-eggs')
-#sys.path.append(r'C:\Program Files\JetBrains\PyCharm 2018.1\helpers\pydev')
-#import pydevd
+sys.path.append(r'C:\Program Files\JetBrains\PyCharm 2018.1\debug-eggs')
+sys.path.append(r'C:\Program Files\JetBrains\PyCharm 2018.1\helpers\pydev')
 
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)) + "/forms")
@@ -104,7 +103,9 @@ class TuPlot(QDockWidget, Ui_tuflowqgis_TuPlot):
 	def qgis_connect(self): #2015-04-AA
 		if not self.connected:
 			self.plotWdg.setContextMenuPolicy(Qt.CustomContextMenu)
+			self.IDList.setContextMenuPolicy(Qt.CustomContextMenu)
 			self.plotWdg.customContextMenuRequested.connect(self.showMenu)
+			self.IDList.customContextMenuRequested.connect(self.showMenuSelElements)
 			self.lwStatus.insertItem(0,'Creating QGIS connections')
 			self.lwStatus.item(0).setTextColor(self.qgreen)
 			QObject.connect(self.iface, SIGNAL("currentLayerChanged(QgsMapLayer *)"), self.layerChanged)
@@ -154,6 +155,8 @@ class TuPlot(QDockWidget, Ui_tuflowqgis_TuPlot):
 		if self.connected:
 			self.lwStatus.insertItem(0,'Removing QGIS connections')
 			self.lwStatus.item(0).setTextColor(self.qgreen)
+			self.plotWdg.customContextMenuRequested.disconnect(self.showMenu)
+			self.IDList.customContextMenuRequested.disconnect(self.showMenuSelElements)
 			QObject.disconnect(self.iface, SIGNAL("currentLayerChanged(QgsMapLayer *)"), self.layerChanged)
 			QObject.disconnect(self.locationDrop, SIGNAL("currentIndexChanged(int)"), self.loc_changed)
 			#QObject.disconnect(self.ResTypeList, SIGNAL("currentRowChanged(int)"), self.res_type_changed)
@@ -1487,7 +1490,21 @@ class TuPlot(QDockWidget, Ui_tuflowqgis_TuPlot):
 		setAxis_action.triggered.connect(self.set_axis)
 		menu.addAction(exportCsv_action)
 		menu.addAction(setAxis_action)
+		if self.locationDrop.currentText() == 'Check Downstream Integrity':
+			selectPaths_action = QAction('Select Networks in Current Path(s) in Map Window', menu)
+			selectPaths_action.triggered.connect(self.selectPaths)
+			menu.addAction(selectPaths_action)
 		menu.popup(self.plotWdg.mapToGlobal(pos))
+		
+		
+	def showMenuSelElements(self, pos):
+		menu = QMenu(self)
+		if self.locationDrop.currentText() == 'Check Downstream Integrity':
+			selectPaths_action = QAction('Select Networks in Current Path(s) in Map Window', menu)
+			selectPaths_action.triggered.connect(self.selectPaths)
+			menu.addAction(selectPaths_action)
+		menu.popup(self.IDList.mapToGlobal(pos))
+		
 		
 	def export_csv(self):
 		#QMessageBox.information(self.iface.mainWindow(), "DEBUG", "Export csv!")
@@ -1737,7 +1754,36 @@ class TuPlot(QDockWidget, Ui_tuflowqgis_TuPlot):
 		                                              y2Lim, x2Inc, y2Inc, x2Auto, y2Auto)
 		self.customAxis.exec_()
 		self.start_draw()
-
+		
+		
+	def selectPaths(self):
+		"""
+		Select network layers in Map Window of current paths selected in tuplot
+		
+		:return: Qgs Selection
+		"""
+		
+		cPaths = []
+		for i in range(self.ResTypeList.count()):
+			path = self.ResTypeList.item(i).text()
+			if self.ResTypeList.item(i).isSelected():
+				cPaths.append(path)
+		selectionNwks = []
+		for path in cPaths:
+			pInd = self.profileIntTool.pathsName.index(path)
+			for nwk in self.profileIntTool.pathsNwks[pInd]:
+				selectionNwks.append(nwk)
+		for lyr in self.profileIntTool.inLyrs:
+			id = lyr.fields()[0].name()
+			filter = ''
+			for i, nwk in enumerate(selectionNwks):
+				if i == 0:
+					filter += '"{0}" = \'{1}\''.format(id, nwk)
+				else:
+					filter += 'OR "{0}" = \'{1}\''.format(id, nwk)
+			lyr.selectByExpression(filter)
+		
+		
 
 	def draw_figure(self):
 		self.clear_figure()
