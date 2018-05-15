@@ -773,7 +773,7 @@
     </property>
     <widget class="QCheckBox" name="checkFlowArea_cb">
      <property name="enabled">
-      <bool>false</bool>
+      <bool>true</bool>
      </property>
      <property name="geometry">
       <rect>
@@ -795,7 +795,7 @@
     </widget>
     <widget class="QCheckBox" name="checkGradients_cb">
      <property name="enabled">
-      <bool>false</bool>
+      <bool>true</bool>
      </property>
      <property name="geometry">
       <rect>
@@ -817,7 +817,7 @@
     </widget>
     <widget class="QCheckBox" name="checkAngle_cb">
      <property name="enabled">
-      <bool>false</bool>
+      <bool>true</bool>
      </property>
      <property name="geometry">
       <rect>
@@ -843,10 +843,10 @@
      </property>
      <property name="geometry">
       <rect>
-       <x>152</x>
-       <y>64</y>
-       <width>61</width>
-       <height>22</height>
+       <x>157</x>
+       <y>66</y>
+       <width>41</width>
+       <height>21</height>
       </rect>
      </property>
      <property name="font">
@@ -889,7 +889,7 @@
     </widget>
     <widget class="QCheckBox" name="checkCoverDepth_cb">
      <property name="enabled">
-      <bool>false</bool>
+      <bool>true</bool>
      </property>
      <property name="geometry">
       <rect>
@@ -979,9 +979,9 @@
      <property name="geometry">
       <rect>
        <x>129</x>
-       <y>104</y>
+       <y>105</y>
        <width>51</width>
-       <height>22</height>
+       <height>20</height>
       </rect>
      </property>
      <property name="font">
@@ -1031,7 +1031,7 @@
      </property>
      <property name="geometry">
       <rect>
-       <x>215</x>
+       <x>202</x>
        <y>65</y>
        <width>51</width>
        <height>20</height>

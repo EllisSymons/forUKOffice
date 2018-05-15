@@ -494,13 +494,16 @@ class DownstreamConnectivity():
 				advG = ''
 				decA = ''
 				sharpA = ''
+				insffC = ''
 				if self.adverseGradient[i][j]:
 					advG = ' -- Adverse Gradient'
 				if self.decreaseFlowArea[i][j]:
 					decA = ' -- Decrease in Area'
 				if self.sharpAngle[i][j]:
 					sharpA = ' -- Sharp Outflow Angle'
-				self.log += '{0}{1}{2}{3}\n'.format(name, advG, decA, sharpA)
+				if self.insffCover[i][j]:
+					insffC = ' -- Insufficient Cover Depth'
+				self.log += '{0}{1}{2}{3}\n'.format(name, advG, decA, sharpA, insffC)
 				
 	def checkDnsNwks(self):
 		"""

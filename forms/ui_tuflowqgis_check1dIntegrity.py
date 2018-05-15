@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'ui_tuflowqgis_check1dIntegrity.ui'
 #
-# Created: Tue May 15 11:47:20 2018
+# Created: Tue May 15 15:47:04 2018
 #      by: PyQt4 UI code generator 4.10.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -308,7 +308,7 @@ class Ui_check1dIntegrity(object):
         self.groupBox_7.setFont(font)
         self.groupBox_7.setObjectName(_fromUtf8("groupBox_7"))
         self.checkFlowArea_cb = QtGui.QCheckBox(self.groupBox_7)
-        self.checkFlowArea_cb.setEnabled(False)
+        self.checkFlowArea_cb.setEnabled(True)
         self.checkFlowArea_cb.setGeometry(QtCore.QRect(10, 20, 191, 20))
         font = QtGui.QFont()
         font.setBold(False)
@@ -316,7 +316,7 @@ class Ui_check1dIntegrity(object):
         self.checkFlowArea_cb.setFont(font)
         self.checkFlowArea_cb.setObjectName(_fromUtf8("checkFlowArea_cb"))
         self.checkGradients_cb = QtGui.QCheckBox(self.groupBox_7)
-        self.checkGradients_cb.setEnabled(False)
+        self.checkGradients_cb.setEnabled(True)
         self.checkGradients_cb.setGeometry(QtCore.QRect(10, 40, 181, 20))
         font = QtGui.QFont()
         font.setBold(False)
@@ -324,7 +324,7 @@ class Ui_check1dIntegrity(object):
         self.checkGradients_cb.setFont(font)
         self.checkGradients_cb.setObjectName(_fromUtf8("checkGradients_cb"))
         self.checkAngle_cb = QtGui.QCheckBox(self.groupBox_7)
-        self.checkAngle_cb.setEnabled(False)
+        self.checkAngle_cb.setEnabled(True)
         self.checkAngle_cb.setGeometry(QtCore.QRect(10, 60, 135, 20))
         font = QtGui.QFont()
         font.setBold(False)
@@ -333,7 +333,7 @@ class Ui_check1dIntegrity(object):
         self.checkAngle_cb.setObjectName(_fromUtf8("checkAngle_cb"))
         self.angle2_sb = QtGui.QSpinBox(self.groupBox_7)
         self.angle2_sb.setEnabled(False)
-        self.angle2_sb.setGeometry(QtCore.QRect(152, 64, 61, 22))
+        self.angle2_sb.setGeometry(QtCore.QRect(157, 66, 41, 21))
         font = QtGui.QFont()
         font.setBold(False)
         font.setWeight(50)
@@ -351,7 +351,7 @@ class Ui_check1dIntegrity(object):
         self.label_10.setFont(font)
         self.label_10.setObjectName(_fromUtf8("label_10"))
         self.checkCoverDepth_cb = QtGui.QCheckBox(self.groupBox_7)
-        self.checkCoverDepth_cb.setEnabled(False)
+        self.checkCoverDepth_cb.setEnabled(True)
         self.checkCoverDepth_cb.setGeometry(QtCore.QRect(10, 100, 111, 20))
         font = QtGui.QFont()
         font.setBold(False)
@@ -384,7 +384,7 @@ class Ui_check1dIntegrity(object):
         self.label_12.setObjectName(_fromUtf8("label_12"))
         self.coverDepth2_sb = QtGui.QDoubleSpinBox(self.groupBox_7)
         self.coverDepth2_sb.setEnabled(False)
-        self.coverDepth2_sb.setGeometry(QtCore.QRect(129, 104, 51, 22))
+        self.coverDepth2_sb.setGeometry(QtCore.QRect(129, 105, 51, 20))
         font = QtGui.QFont()
         font.setBold(False)
         font.setWeight(50)
@@ -404,7 +404,7 @@ class Ui_check1dIntegrity(object):
         self.label_13.setObjectName(_fromUtf8("label_13"))
         self.label_14 = QtGui.QLabel(self.groupBox_7)
         self.label_14.setEnabled(False)
-        self.label_14.setGeometry(QtCore.QRect(215, 65, 51, 20))
+        self.label_14.setGeometry(QtCore.QRect(202, 65, 51, 20))
         font = QtGui.QFont()
         font.setBold(False)
         font.setWeight(50)
