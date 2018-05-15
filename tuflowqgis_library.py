@@ -31,12 +31,12 @@ import matplotlib
 import glob # MJS 11/02
 import tuflowqgis_styles
 
-#sys.path.append(r'C:\Program Files\JetBrains\PyCharm 2018.1\debug-eggs')
-#sys.path.append(r'C:\Program Files\JetBrains\PyCharm 2018.1\helpers\pydev')
-#import pydevd
+sys.path.append(r'C:\Program Files\JetBrains\PyCharm 2018.1\debug-eggs')
+sys.path.append(r'C:\Program Files\JetBrains\PyCharm 2018.1\helpers\pydev')
 
-#sys.path.append(r'C:\Users\Ellis\.p2\pool\plugins\org.python.pydev.core_6.3.2.201803171248\pysrc')
-#import pydevd
+
+sys.path.append(r'C:\Users\Ellis\.p2\pool\plugins\org.python.pydev.core_6.3.2.201803171248\pysrc')
+
 
 # --------------------------------------------------------
 #    tuflowqgis Utility Functions
@@ -1021,17 +1021,75 @@ def getLength(feature):
 	return length
 
 
-def getVertices(lyrs):
+def getRasterValue(point, raster):
+	"""
+	Gets the elevation value from a raster at a given location. Assumes raster has only one band or that the first
+	band is elevation.
+
+	:param point: QgsPoint
+	:param raster: QgsRasterLayer
+	:return: float elevation value
+	"""
+	
+	return raster.dataProvider().identify(point, QgsRaster.IdentifyFormatValue).results()[1]
+
+
+def lineToPoints(feat, spacing):
+	"""
+	Takes a line and converts it to points with additional vertices inserted at the max spacing
+
+	:param feat: QgsFeature - Line to be converted to points
+	:param spacing: float - max spacing to use when converting line to points
+	:return: List - QgsPoint
+	"""
+	from math import sin, cos, asin
+	
+	geom = feat.geometry().asPolyline()
+	pPrev = None
+	points = []  # X, Y coordinates of point in line
+	chainage = 0
+	chainages = []  # list of chainages along the line that the points are located at
+	for i, p in enumerate(geom):
+		usedPoint = False  # point has been used and can move onto next point
+		while not usedPoint:
+			if i == 0:
+				points.append(p)
+				chainages.append(chainage)
+				pPrev = p
+				usedPoint = True
+			else:
+				length = ((p[1] - pPrev[1]) ** 2. + (p[0] - pPrev[0]) ** 2.) ** 0.5
+				if length < spacing:
+					points.append(p)
+					chainage += length
+					chainages.append(chainage)
+					pPrev = p
+					usedPoint = True
+				else:
+					angle = asin((p[1] - pPrev[1]) / length)
+					x = pPrev[0] + (spacing * cos(angle)) if p[0] - pPrev[0] >= 0 else pPrev[0] - (spacing * cos(angle))
+					y = pPrev[1] + (spacing * sin(angle))
+					points.append(QgsPoint(x, y))
+					chainage += spacing
+					chainages.append(chainage)
+					pPrev = QgsPoint(x, y)
+	return points, chainages
+
+
+def getVertices(lyrs, dem):
 	"""
 	Creates a dictionary from all layers. For line layers it will get both start and end, for points
 	it will get centroid.
 
 	:param lyrs: list of QgisVectorLayers
 	:return: compiled dictionary of all QgsVectorLayers in format of {name: [[vertices], feature id, origin lyr, [us invert, ds invert]}
+	:return: dict {name: {[QgsPoint], [Chainages], [Elevations]]}
 	"""
+	demCellSize = max(dem.rasterUnitsPerPixelX(), dem.rasterUnitsPerPixelY())
 	
 	nullCounter = 1
 	vectorDict = {}
+	lineDrape = {}
 	for line in lyrs:
 		for feature in line.dataProvider().getFeatures():
 			fid = feature.id()
@@ -1045,6 +1103,13 @@ def getVertices(lyrs):
 					vectorDict[feature.attributes()[0]] = [[geom], fid, line, [feature.attributes()[6], 
 					                                      feature.attributes()[7]]]
 			elif line.geometryType() == 1:
+				if dem is not None:  # drape the line on the dem
+					lineDrape[feature.attributes()[0]] = [[], [], []]
+					points, chainages = lineToPoints(feature, max(10, demCellSize))
+					lineDrape[feature.attributes()[0]][0] += points
+					lineDrape[feature.attributes()[0]][1] += chainages
+					for p in lineDrape[feature.attributes()[0]][0]:
+						lineDrape[feature.attributes()[0]][2].append(getRasterValue(p, dem))
 				geom = feature.geometry().asPolyline()
 				if feature.attributes()[0] == NULL:
 					name = '__connector {0}'.format(nullCounter)
@@ -1055,7 +1120,7 @@ def getVertices(lyrs):
 					vectorDict[feature.attributes()[0]] = [[geom[0], geom[-1]], fid, line, [feature.attributes()[6], 
 					                                      feature.attributes()[7]]]
 	
-	return vectorDict
+	return vectorDict, lineDrape
 
 
 def checkSnapping(**kwargs):
@@ -1077,7 +1142,7 @@ def checkSnapping(**kwargs):
 	dnsConn = False
 	lineDict = kwargs['lines']  # will need lines no matter what
 	lineDict_len = len(lineDict)
-	if 'dns_conn' in kwargs.keys():  
+	if 'dns_conn' in kwargs.keys():
 		if kwargs['dns_conn']:
 			dnsConn = True  # force script to loop through all pipes to get all dns connections
 			checkLine = True
@@ -1100,6 +1165,7 @@ def checkSnapping(**kwargs):
 	closestV = {}  # dict closest vertex results
 	unsnapped = []  # list of unsnapped vertices
 	unsnapped_names = []  # list of unsnapped vertices names (for lines)
+	lineDrape = {}  # Dict of vertices, chainages, dem elevations
 	
 	# Check to see if line is snapped to another line at both ends
 	if checkLine:
@@ -1282,7 +1348,7 @@ def findAllRasterLyrs():
 	rasterLyrs = []
 	for name, search_layer in QgsMapLayerRegistry.instance().mapLayers().iteritems():
 		if search_layer.type() == 1:
-			rasterLyrs.append(name)
+			rasterLyrs.append(search_layer.name())
 			
 	return rasterLyrs
 
@@ -1326,21 +1392,43 @@ def moveVertices(lyrs, vertices_dict, dist):
 						editedV.append(id)
 						editedV.append(id2)
 						if node is None:
-							if node2 == '0':
-								log += 'Connected {0} to {1} upstream ({2:.4f}, {3:.4f})\n'.format(name, name2, v[0], v[1])
-							else:
-								log += 'Connected {0} to {1} downstream ({2:.4f}, {3:.4f})\n'.format(name, name2, v[0], v[1])
+							log += 'Connected {0} to {1} {4} ({2:.4f}, {3:.4f})\n'.format(name, name2, v[0], v[1],
+							                                                              'upstream' if node2 == '0' else 'downstream')
 						elif node == '0':
-							if node2 == '0':
-								log += 'Connected {0} upstream to {1} upstream ({2:.4f}, {3:.4f})\n'.format(name, name2, v[0], v[1])
-							else:
-								log += 'Connected {0} upstream to {1} downstream ({2:.4f}, {3:.4f})\n'.format(name, name2, v[0], v[1])
+							log += 'Connected {0} upstream to {1} {4} ({2:.4f}, {3:.4f})\n'.format(name, name2, v[0],
+							                                                                       v[1],
+							                                                                       'upstream' if node2 == '0' else 'downstream')
 						else:
-							if node2 == '0':
-								log += 'Connected {0} downstream to {1} upstream ({2:.4f}, {3:.4f})\n'.format(name, name2, v[0], v[1])
-							else:
-								log += 'Connected {0} downstream to {1} downstream ({2:.4f}, {3:.4f})\n'.format(name, name2, v[0], v[1])
+							log += 'Connected {0} downstream to {1} {4} ({2:.4f}, {3:.4f})\n'.format(name, name2, v[0],
+							                                                                         v[1],
+							                                                                         'upstream' if node2 == '0' else 'downstream')
 		lyr.commitChanges()
 
 	return log
+
+
+def interpolateObvert(usInv, dsInv, size, xValues):
+	"""
+	Creates a list of obvert elevations for chainages along a pipe
 	
+	:param usInv: float - upstream invert
+	:param dsInv: float - downstream invert
+	:param xValues: list - chainage values to map obvert elevations to
+	:param size: float - pipe height
+	:return: list - obvert elevations
+	"""
+	
+	usObv = usInv + size
+	dsObv = dsInv + size
+	xStart = xValues[0]
+	xEnd = xValues[-1]
+	obvert = []
+	for i, x in enumerate(xValues):
+		if i == 0:
+			obvert.append(usObv)
+		elif i == len(xValues) - 1:
+			obvert.append(dsObv)
+		else:
+			interpolate = (dsObv - usObv) / (xEnd - xStart) * (x - xStart) + usObv
+			obvert.append(interpolate)
+	return obvert

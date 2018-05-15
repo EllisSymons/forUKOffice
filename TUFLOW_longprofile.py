@@ -13,11 +13,13 @@ class DownstreamConnectivity():
 	Class for storing downstream connectivity information
 	"""
 	
-	def __init__(self, dsLines, startLines, inLyrs, angleLimit):
+	def __init__(self, dsLines, startLines, inLyrs, angleLimit, lineDrape, coverLimit):
 		self.dsLines = dsLines  # dictionary {name: [[dns network channels], [us invert, ds invert], [other connecting channels]]}
 		self.startLines = startLines  # list of initial starting lines for plotting
 		self.inLyrs = inLyrs  # list of nwk line layers
 		self.angleLimit = angleLimit  # angle limit to for integrity checks
+		self.lineDrape = lineDrape  # dict {name: [[QgsPoint - line vertices], [vertex chainage], [elevations]]}
+		self.coverLimit = coverLimit  # pipe obvert to ground depth limit for integrity checks
 		self.processed_nwks = []  # list of processed networks so there is no repetition
 		self.log = ''  # string for output log
 		self.type = []  # list of network types e.g. C R S
@@ -31,7 +33,14 @@ class DownstreamConnectivity():
 		self.width = []  # list of network width
 		self.height = []  # list of network heights
 		self.area = []  # list of calculated area
-		self.ground = []  # list of ground elevations at pipe ends
+		self.groundCh = []  # list of chainages where ground elevations are in relation to
+		self.ground = []  # list of ground elevations along pipe
+		self.obvert = []  # list of pipe obverts along pipe at same locations as ground
+		self.coverDepth = []  # list of cover depths along pipe
+		self.adverseGradient = []  # list of flags for adverse gradients
+		self.decreaseFlowArea = []  # list of flags for decreased flow area
+		self.sharpAngle = []  # list of flags for sharp angles
+		self.insffCover = []  # list of flags for insufficient cover
 		self.branchCounter = 1  # int used for generating branch names e.g. branch 1 branch2
 		self.branchExists = False  # bool to determine if branch has been considered already
 		self.branchDnsConnectionPipe = []  # list of a branch's downstream connection pipe name
@@ -44,20 +53,27 @@ class DownstreamConnectivity():
 		self.pathsLen = []  # list of total path lengths (index by path names)
 		self.pathsNwksLen = []  # list of individual network lengths in the paths
 		self.pathsX = []  # list of X coordinates used for plotting the paths
+		self.pathsArea = []  # list of areas used for plotting the paths
+		self.pathsUsInvert = []  # list of upstream inverts for plotting the paths
+		self.pathsDsInvert = []  # list of downstream inverts for plotting the paths
 		self.pathsInvert = []  # list of Y coordinates for network inverts for plotting the paths
 		self.pathsPipe = []  # list of pipe data for plotting (matplotlib patch format)
-		self.pathsGround = []  # list of Y coordinates for ground levels for plotting the paths
+		self.pathsGroundCh = []  # list of X coordinates for ground levels for the paths
+		self.pathsGround = []  # list of Y coordinates for ground levels for the paths
+		self.pathsObvert = []  # list of Y coordinates for pipe obverts for the paths
+		self.pathsCover = []  # list of cover depths for plotting
+		self.pathsGroundX = []  # list of X coordinates for plotting relative to other paths (final plotting)
+		self.pathsGroundY = []  # list of Y coordinates for plotting relative to other paths (final plotting)
 		self.pathsAdverseGradient = []  # list of flags for adverse gradients relative to the paths
 		self.pathsDecreaseFlowArea = []  # list of flags for decreased flow area relative to the paths
 		self.pathsSharpAngle = []  # list of flags for sharp angles relative to the paths
+		self.pathsInsffCover = []  # list of flags for insufficient cover depth relative to the paths
 		self.pathsPlotAdvG = []  # list of adverse gradient X, Y coords for plotting
 		self.pathsPlotDecA = []  # list of decreased area X, Y coords for plotting
 		self.pathsPlotSharpA = []  # list of sharp angle X, Y coords for plotting
-		self.adverseGradient = []  # list of flags for adverse gradients
-		self.decreaseFlowArea = []  # list of flags for decreased flow area
-		self.sharpAngle = []  # list of flags for sharp angles
+		self.pathsPlotInCover = []  # list of insufficient cover X, Y coords for plotting
 		self.network = []  # list of branched networks used for creating branches
-		self.bType = []
+		self.bType = []  # list of network types used locally per branch within branch routine
 		self.bName = []  # list of network IDs used locally per branch within branch routine
 		self.bUsInvert = []  # list of network upstream inverts used locally per branch within branch routine
 		self.bDsInvert = []  # list of network downstream inverts used locally per branch within branch routine
@@ -67,10 +83,15 @@ class DownstreamConnectivity():
 		self.bWidth = []  # list of network width used locally per branch within branch routine
 		self.bHeight = []  # list of network heights used locally per branch within branch routine
 		self.bArea = []  # list of calculated area used locally per branch within branch routine
+		self.bGroundCh = []  # list of chainages where ground elevations are in relation to used locally per branch within branch routine
+		self.bGround = []  # list of ground elevations along pipe used locally per branch within branch routine
+		self.bObvert = []  # list of pipe obverts along pipe at same locations as ground used locally per branch within branch routine
+		self.bCoverDepth = []  # list of cover depths along pipe used locally per branch within branch routine
 		self.bDnsConnectionPipe = []  # list of a branch's downstream connection pipe name used locally per branch within branch routine
 		self.bAdverseGradient = []  # list of flags for adverse gradients used locally per branch within branch routine
 		self.bDecreaseFlowArea = []  # list of flags for decreased flow area used locally per branch within branch routine
 		self.bSharpAngle = []  # list of flags for sharp angles used locally per branch within branch routine
+		self.bInsffCover = []  # list of flags for insufficient cover used locally per branch within branch routine
 		
 	def getDownstreamConnectivity(self, network):
 		"""
@@ -89,10 +110,15 @@ class DownstreamConnectivity():
 		self.bWidth = []
 		self.bHeight = []
 		self.bArea = []
+		self.bGroundCh = []
+		self.bGround = []
+		self.bObvert = []
+		self.bCoverDepth = []
 		self.bDnsConnectionPipe = []
 		self.bAdverseGradient = []
 		self.bDecreaseFlowArea = []
 		self.bSharpAngle = []
+		self.bInsffCover = []
 		self.first_sel = True
 		area_prev = 0
 		dsInv_prev = 99999
@@ -101,24 +127,12 @@ class DownstreamConnectivity():
 		dns = True
 		if type(network) != list:
 			network = [network]
-		#if type(network) == list:
-		#	for nwk in network:
-		#		if len(self.dsLines[nwk]) > 0:
-		#			dns = True  # there are downstream pipes available
-		#			break
-		#		else:
-		#			dns = True
-		#else:
-		#	if len(self.dsLines[network][0]) > 0:
-		#		network = [network]
-		#		dns = True  # there are downstream pipes available
-		#	else:
-		#		dns = True
 		while dns:
 			# Get QgsFeature layers for start lines
 			adverseGradient = False
 			decreaseFlowArea = False
 			sharpAngle = False
+			insffCover = False
 			features = []
 			for lyr in self.inLyrs:
 				fld = lyr.fields()[0]
@@ -159,10 +173,32 @@ class DownstreamConnectivity():
 					angle = 0
 				if typ.lower() == 'r':
 					area = float(no) * width * height
+					groundCh = self.lineDrape[name][1]
+					ground = self.lineDrape[name][2]
+					obvert = interpolateObvert(usInv, dsInv, height, groundCh)
+					coverDepth = []
+					for i, g in enumerate(ground):
+						cover = g - obvert[i]
+						coverDepth.append(cover)
+						if cover < self.coverLimit:
+							insffCover = True
 				elif typ.lower() == 'c':
 					area = float(no) * (width / 2) ** 2 * 3.14
+					groundCh = self.lineDrape[name][1]
+					ground = self.lineDrape[name][2]
+					obvert = interpolateObvert(usInv, dsInv, height, groundCh)
+					coverDepth = []
+					for i, g in enumerate(ground):
+						cover = g - obvert[i]
+						coverDepth.append(cover)
+						if cover < self.coverLimit:
+							insffCover = True
 				else:
 					area = 0
+					groundCh = self.lineDrape[name][1]
+					ground = self.lineDrape[name][2]
+					obvert = []
+					coverDepth = []
 				if (dsInv > usInv and usInv != -99999.00) or (usInv > dsInv_prev and dsInv_prev != -99999.00):
 					adverseGradient = True
 				if area < area_prev and area != 0:
@@ -179,9 +215,14 @@ class DownstreamConnectivity():
 				self.bDsInvert.append(dsInv)
 				self.bAngle.append(angle)
 				self.bArea.append(area)
+				self.bGroundCh.append(groundCh)
+				self.bGround.append(ground)
+				self.bObvert.append(obvert)
+				self.bCoverDepth.append(coverDepth)
 				self.bAdverseGradient.append(adverseGradient)
 				self.bDecreaseFlowArea.append(decreaseFlowArea)
 				self.bSharpAngle.append(sharpAngle)
+				self.bInsffCover.append(insffCover)
 				if network[0] in self.dsLines.keys():
 					if len(self.dsLines[network[0]][0]) == 0:
 						self.joiningOutlet.append(self.dsLines[network[0]][3])
@@ -257,6 +298,10 @@ class DownstreamConnectivity():
 					usInv = []
 					dsInv = []
 					area = []
+					groundCh = []
+					ground = []
+					obvert = []
+					coverDepth = []
 					angle = []
 					length = []
 					for nwk in nwks:
@@ -285,12 +330,34 @@ class DownstreamConnectivity():
 										ang = min(self.dsLines[nwk][2])
 								else:
 									ang = 0
-								if t.lower() == 'r':
+								if typ.lower() == 'r':
 									a = float(no) * width * height
+									gc = self.lineDrape[name][1]
+									gr = self.lineDrape[name][2]
+									o = interpolateObvert(uI, dI, h, gc)
+									cd = []
+									for i, g in enumerate(gr):
+										c = g - o[i]
+										cd.append(c)
+										if c < self.coverLimit:
+											insffCover = True
 								elif typ.lower() == 'c':
 									a = float(n) * (w / 2) ** 2 * 3.14
+									gc = self.lineDrape[name][1]
+									gr = self.lineDrape[name][2]
+									o = interpolateObvert(uI, dI, h, gc)
+									cd = []
+									for i, g in enumerate(gr):
+										c = g - o[i]
+										cd.append(c)
+										if c < self.coverLimit:
+											insffCover = True
 								else:
 									a = 0
+									gc = self.lineDrape[name][1]
+									gr = self.lineDrape[name][2]
+									o = []
+									cd = []
 								if (dI > uI and uI != -99999.00) or (uI > dsInv_prev and dsInv_prev != -99999.00):
 									adG = True
 								if a < area_prev and a != 0:
@@ -305,6 +372,10 @@ class DownstreamConnectivity():
 								usInv.append(uI)
 								dsInv.append(dI)
 								area.append(a)
+								groundCh.append(gc)
+								ground.append(g)
+								obvert.append(o)
+								coverDepth.append(cd)
 								angle.append(ang)
 								length.append(l)
 					self.bType.append(typ)
@@ -317,9 +388,13 @@ class DownstreamConnectivity():
 					self.bDsInvert.append(dsInv)
 					self.bAngle.append(angle)
 					self.bArea.append(area)
+					self.bGroundCh.append(groundCh[0])
+					self.bObvert.append(obvert[0])
+					self.bCoverDepth.append(coverDepth[0])
 					self.bAdverseGradient.append(adverseGradient)
 					self.bDecreaseFlowArea.append(decreaseFlowArea)
 					self.bSharpAngle.append(sharpAngle)
+					self.bInsffCover.append(insffCover)
 					if nwks[0] in self.dsLines.keys():
 						if len(self.dsLines[nwks][0]) == 0:
 							self.joiningOutlet.append(self.dsLines[nwks[0]][3])
@@ -371,9 +446,14 @@ class DownstreamConnectivity():
 			self.dsInvert.append(self.bDsInvert)
 			self.angle.append(self.bAngle)
 			self.area.append(self.bArea)
+			self.groundCh.append(self.bGroundCh)
+			self.ground.append(self.bGround)
+			self.obvert.append(self.bObvert)
+			self.coverDepth.append(self.bCoverDepth)
 			self.adverseGradient.append(self.bAdverseGradient)
 			self.decreaseFlowArea.append(self.bDecreaseFlowArea)
 			self.sharpAngle.append(self.bSharpAngle)
+			self.insffCover.append(self.bInsffCover)
 		while len(self.network) > 0:
 			nwk = self.network[0]
 			self.branchExists = False
@@ -391,9 +471,14 @@ class DownstreamConnectivity():
 				self.dsInvert.append(self.bDsInvert)
 				self.angle.append(self.bAngle)
 				self.area.append(self.bArea)
+				self.groundCh.append(self.bGroundCh)
+				self.ground.append(self.bGround)
+				self.obvert.append(self.bObvert)
+				self.coverDepth.append(self.bCoverDepth)
 				self.adverseGradient.append(self.bAdverseGradient)
 				self.decreaseFlowArea.append(self.bDecreaseFlowArea)
 				self.sharpAngle.append(self.bSharpAngle)
+				self.insffCover.append(self.bInsffCover)
 			self.network.remove(nwk)
 			
 	def reportLog(self):
@@ -518,9 +603,12 @@ class DownstreamConnectivity():
 		for path in self.paths:
 			pathsNwks = []
 			pathsLen = []
+			pathsGroundCh = []
+			pathsGround = []
 			pathsAdvG = []
 			pathsDecA = []
 			pathsSharpA = []
+			pathsInsffCover = []
 			for i, branch in enumerate(path):
 				if i + 1 < len(path):
 					dnsB = path[i+1]
@@ -537,9 +625,12 @@ class DownstreamConnectivity():
 					if connNwk:
 						pathsNwks.append(nwk)
 						pathsLen.append(self.length[bInd][j])
+						pathsGroundCh.append(self.groundCh[bInd][j])
+						pathsGround.append(self.ground[bInd][j])
 						pathsAdvG.append(self.adverseGradient[bInd][j])
 						pathsDecA.append(self.decreaseFlowArea[bInd][j])
 						pathsSharpA.append(self.sharpAngle[bInd][j])
+						pathsInsffCover.append(self.insffCover[bInd][j])
 					if j + 1 == len(self.name[bInd]):
 						connNwkNames = self.branchDnsConnectionPipe[bInd]
 						if dnsB is not None:
@@ -552,18 +643,12 @@ class DownstreamConnectivity():
 			self.pathsNwks.append(pathsNwks)
 			self.pathsLen.append(sum(pathsLen))
 			self.pathsNwksLen.append(pathsLen)
+			self.pathsGroundCh.append(pathsGroundCh)
+			self.pathsGround.append(pathsGround)
 			self.pathsAdverseGradient.append(pathsAdvG)
 			self.pathsDecreaseFlowArea.append(pathsDecA)
 			self.pathsSharpAngle.append(pathsSharpA)
-	
-	def checkAreaAndInv(self):
-		"""
-		Perform the check on Area and Inverts
-		
-		:return:
-		"""
-		
-		return
+			self.pathsInsffCover.append(pathsInsffCover)
 	
 	def addX(self, ind, start):
 		"""
@@ -603,6 +688,8 @@ class DownstreamConnectivity():
 		:return: populates y invert plotting values
 		"""
 		
+		usInvert = []
+		dsInvert = []
 		invert = []
 		path = self.pathsNwks[ind]
 		for i, nwk in enumerate(path):
@@ -614,6 +701,8 @@ class DownstreamConnectivity():
 						break
 				if found:
 					break
+			usInvert.append(self.usInvert[j][k])
+			dsInvert.append(self.dsInvert[j][k])
 			if self.usInvert[j][k] == -99999:
 				invert.append(np.nan)
 			else:
@@ -623,29 +712,28 @@ class DownstreamConnectivity():
 			else:
 				invert.append(self.dsInvert[j][k])
 		self.pathsInvert.insert(ind, invert)
+		self.pathsUsInvert.insert(ind, usInvert)
+		self.pathsDsInvert.insert(ind, dsInvert)
 	
-	def addGround(self, ind):
+	def addGround(self, ind, xInd):
 		"""
 		Create Y values for the ground levels
 
 		:param ind: path index
 		:return: populates y ground plotting values
 		"""
-		
+
+		groundX = []
 		ground = []
-		path = self.pathsNwks[ind]
-		for i, nwk in enumerate(path):
-			found = False
-			for j, name in enumerate(self.name):
-				for k, nwk2 in enumerate(name):
-					if nwk == nwk2:
-						found = True
-						break
-				if found:
-					break
-			ground.append(self.ground[j][k])
-			ground.append(self.ground[j][k])
-		self.pathsGround.insert(ind, ground)
+		path = self.pathsGroundCh[ind]
+		x = self.pathsX[xInd][0]
+		for i, chainages in enumerate(path):
+			for j, ch in enumerate(chainages):
+				groundX.append(x + ch)
+				ground.append(self.pathsGround[ind][i][j])
+			x += ch
+		self.pathsGroundX.insert(ind, groundX)
+		self.pathsGroundY.insert(ind, ground)
 		
 	def addPipes(self, ind, xInd):
 		"""
@@ -657,10 +745,12 @@ class DownstreamConnectivity():
 		"""
 
 		pipes = []
+		areas = []
 		path = self.pathsNwks[ind]
 		for i, nwk in enumerate(path):
 			pipe = False
 			found = False
+			area = 0
 			for j, name in enumerate(self.name):
 				for k, nwk2 in enumerate(name):
 					if nwk == nwk2:
@@ -677,6 +767,7 @@ class DownstreamConnectivity():
 			if self.pathsInvert[xInd][i*2] == -99999 or self.pathsInvert[xInd][i*2+1] == -99999:
 				pipe = False
 			if pipe:
+				area = self.area[j][k]
 				xStart = self.pathsX[xInd][i*2]
 				xEnd = self.pathsX[xInd][i*2+1]
 				yStartInv = self.pathsInvert[xInd][i*2]
@@ -686,7 +777,9 @@ class DownstreamConnectivity():
 				xPatch = [xStart, xEnd, xEnd, xStart]
 				yPatch = [yStartInv, yEndInv, yEndObv, yStartObv]
 				pipes.append(zip(xPatch, yPatch))
+				areas.append(area)
 		self.pathsPipe.insert(ind, pipes)
+		self.pathsArea.insert(ind, areas)
 		
 	def addFlags(self, ind, xInd):
 		"""
@@ -700,6 +793,7 @@ class DownstreamConnectivity():
 		advG = []
 		decA = []
 		sharpA = []
+		insffC = []
 		path = self.pathsNwks[ind]
 		for i, nwk in enumerate(path):
 			count = 1  # use to stack the flags on top of one another
@@ -725,9 +819,20 @@ class DownstreamConnectivity():
 				coords = [x, y]
 				sharpA.append(coords)
 				count += 1
+			if self.pathsInsffCover[ind][i]:
+				xStart = self.pathsX[xInd][i * 2]
+				xEnd = self.pathsX[xInd][i * 2 + 1]
+				x = (xStart + xEnd) / 2
+				yStart = self.pathsPipe[xInd][i][3][1] + (0.1 * count)
+				yEnd = self.pathsPipe[xInd][i][2][1] + (0.1 * count)
+				y = (yStart + yEnd) / 2
+				coords = [x, y]
+				insffC.append(coords)
+				count += 1
 		self.pathsPlotAdvG.insert(ind, advG)
 		self.pathsPlotDecA.insert(ind, decA)
 		self.pathsPlotSharpA.insert(ind, sharpA)
+		self.pathsPlotInCover.insert(ind, insffC)
 		
 	def getPlotFormat(self):
 		"""
@@ -740,7 +845,6 @@ class DownstreamConnectivity():
 		self.getBranchConnectivity()
 		self.getAllPathsByBranch()
 		self.getAllPathsByNwk()
-		self.checkAreaAndInv()
 		
 		pathsLen = self.pathsLen[:]  # create a copy of the variable for looping
 		usedPathNwks = []
@@ -777,19 +881,8 @@ class DownstreamConnectivity():
 			pathInd3 = seq.index(pathInd)
 			self.addInv(pathInd)
 			if len(self.ground) > 0:
-				self.addGround(pathInd)
+				self.addGround(pathInd, pathInd3)
 			self.addPipes(pathInd, pathInd3)
 			self.addFlags(pathInd, pathInd3)
 			del pathsLen[pathInd2]
 			usedPathNwks.insert(pathInd, self.pathsNwks[pathInd])
-		
-		
-		
-				
-		
-		
-		
-		
-								
-		
-		
