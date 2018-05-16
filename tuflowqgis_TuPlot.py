@@ -2201,15 +2201,16 @@ class TuPlot(QDockWidget, Ui_tuflowqgis_TuPlot):
 				self.labels.append(label)
 				self.subplot.hold(True)
 				# Ground
-				ymin = min(ymin, min(self.profileIntTool.pathsGroundY[pInd]))
-				ymax = max(ymax, max(self.profileIntTool.pathsGroundY[pInd]))
-				xmin = min(xmin, min(self.profileIntTool.pathsGroundX[pInd]))
-				xmax = max(xmax, max(self.profileIntTool.pathsGroundX[pInd]))
-				a, = self.subplot.plot(self.profileIntTool.pathsGroundX[pInd], self.profileIntTool.pathsGroundY[pInd])
-				self.artists.append(a)
-				label = "{0} Ground".format(path)
-				self.labels.append(label)
-				self.subplot.hold(True)
+				if self.profileIntTool.coverLimit is not None:
+					ymin = min(ymin, min(self.profileIntTool.pathsGroundY[pInd]))
+					ymax = max(ymax, max(self.profileIntTool.pathsGroundY[pInd]))
+					xmin = min(xmin, min(self.profileIntTool.pathsGroundX[pInd]))
+					xmax = max(xmax, max(self.profileIntTool.pathsGroundX[pInd]))
+					a, = self.subplot.plot(self.profileIntTool.pathsGroundX[pInd], self.profileIntTool.pathsGroundY[pInd])
+					self.artists.append(a)
+					label = "{0} Ground".format(path)
+					self.labels.append(label)
+					self.subplot.hold(True)
 				# Adverse Gradient Flag
 				if len(self.profileIntTool.pathsPlotAdvG[pInd][1]) > 0:
 					a, = self.subplot.plot(self.profileIntTool.pathsPlotAdvG[pInd][0],

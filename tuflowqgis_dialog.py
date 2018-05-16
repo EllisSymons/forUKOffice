@@ -2008,6 +2008,7 @@ class tuflowqgis_check_1d_integrity_dialog(QDialog, Ui_check1dIntegrity):
 		outSel = False
 		outTxt = False
 		dem = None
+		plotCoverDepth = None
 		if self.check1dLine_cb.isChecked():
 			checkLine = True
 		if self.check1dPoint_cb.isChecked():

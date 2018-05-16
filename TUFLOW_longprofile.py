@@ -134,6 +134,10 @@ class DownstreamConnectivity():
 			sharpAngle = False
 			insffCover = False
 			features = []
+			ground = []
+			groundCh = []
+			obvert = []
+			coverDepth = []
 			for lyr in self.inLyrs:
 				fld = lyr.fields()[0]
 				for nwk in network:
@@ -173,32 +177,35 @@ class DownstreamConnectivity():
 					angle = 0
 				if typ.lower() == 'r':
 					area = float(no) * width * height
-					groundCh = self.lineDrape[name][1]
-					ground = self.lineDrape[name][2]
-					obvert = interpolateObvert(usInv, dsInv, height, groundCh)
-					coverDepth = []
-					for i, g in enumerate(ground):
-						cover = g - obvert[i]
-						coverDepth.append(cover)
-						if cover < self.coverLimit:
-							insffCover = True
+					if self.coverLimit is not None:
+						groundCh = self.lineDrape[name][1]
+						ground = self.lineDrape[name][2]
+						obvert = interpolateObvert(usInv, dsInv, height, groundCh)
+						coverDepth = []
+						for i, g in enumerate(ground):
+							cover = g - obvert[i]
+							coverDepth.append(cover)
+							if cover < self.coverLimit:
+								insffCover = True
 				elif typ.lower() == 'c':
 					area = float(no) * (width / 2) ** 2 * 3.14
-					groundCh = self.lineDrape[name][1]
-					ground = self.lineDrape[name][2]
-					obvert = interpolateObvert(usInv, dsInv, height, groundCh)
-					coverDepth = []
-					for i, g in enumerate(ground):
-						cover = g - obvert[i]
-						coverDepth.append(cover)
-						if cover < self.coverLimit:
-							insffCover = True
+					if self.coverLimit is not None:
+						groundCh = self.lineDrape[name][1]
+						ground = self.lineDrape[name][2]
+						obvert = interpolateObvert(usInv, dsInv, height, groundCh)
+						coverDepth = []
+						for i, g in enumerate(ground):
+							cover = g - obvert[i]
+							coverDepth.append(cover)
+							if cover < self.coverLimit:
+								insffCover = True
 				else:
 					area = 0
-					groundCh = self.lineDrape[name][1]
-					ground = self.lineDrape[name][2]
-					obvert = []
-					coverDepth = []
+					if self.coverLimit is not None:
+						groundCh = self.lineDrape[name][1]
+						ground = self.lineDrape[name][2]
+						obvert = []
+						coverDepth = []
 				if (dsInv > usInv and usInv != -99999.00) or (usInv > dsInv_prev and dsInv_prev != -99999.00):
 					adverseGradient = True
 				if area < area_prev and area != 0:
@@ -332,32 +339,35 @@ class DownstreamConnectivity():
 									ang = 0
 								if typ.lower() == 'r':
 									a = float(no) * width * height
-									gc = self.lineDrape[name][1]
-									gr = self.lineDrape[name][2]
-									o = interpolateObvert(uI, dI, h, gc)
-									cd = []
-									for i, g in enumerate(gr):
-										c = g - o[i]
-										cd.append(c)
-										if c < self.coverLimit:
-											insffCover = True
+									if self.coverLimit is not None:
+										gc = self.lineDrape[name][1]
+										gr = self.lineDrape[name][2]
+										o = interpolateObvert(uI, dI, h, gc)
+										cd = []
+										for i, g in enumerate(gr):
+											c = g - o[i]
+											cd.append(c)
+											if c < self.coverLimit:
+												insffCover = True
 								elif typ.lower() == 'c':
 									a = float(n) * (w / 2) ** 2 * 3.14
-									gc = self.lineDrape[name][1]
-									gr = self.lineDrape[name][2]
-									o = interpolateObvert(uI, dI, h, gc)
-									cd = []
-									for i, g in enumerate(gr):
-										c = g - o[i]
-										cd.append(c)
-										if c < self.coverLimit:
-											insffCover = True
+									if self.coverLimit is not None:
+										gc = self.lineDrape[name][1]
+										gr = self.lineDrape[name][2]
+										o = interpolateObvert(uI, dI, h, gc)
+										cd = []
+										for i, g in enumerate(gr):
+											c = g - o[i]
+											cd.append(c)
+											if c < self.coverLimit:
+												insffCover = True
 								else:
 									a = 0
-									gc = self.lineDrape[name][1]
-									gr = self.lineDrape[name][2]
-									o = []
-									cd = []
+									if self.coverLimit is not None:
+										gc = self.lineDrape[name][1]
+										gr = self.lineDrape[name][2]
+										o = []
+										cd = []
 								if (dI > uI and uI != -99999.00) or (uI > dsInv_prev and dsInv_prev != -99999.00):
 									adG = True
 								if a < area_prev and a != 0:
@@ -883,7 +893,7 @@ class DownstreamConnectivity():
 			seq = sorted(usedPathInds)
 			pathInd3 = seq.index(pathInd)
 			self.addInv(pathInd)
-			if len(self.ground) > 0:
+			if self.coverLimit is not None:
 				self.addGround(pathInd, pathInd3)
 			self.addPipes(pathInd, pathInd3)
 			self.addFlags(pathInd, pathInd3)
