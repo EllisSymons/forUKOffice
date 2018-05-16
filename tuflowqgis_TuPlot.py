@@ -2185,6 +2185,7 @@ class TuPlot(QDockWidget, Ui_tuflowqgis_TuPlot):
 				self.IDList.insertItem(0, "## {0} ##".format(typename))
 			for path in typenames:
 				pInd = self.profileIntTool.pathsName.index(path)  # path index
+				# pipes
 				ymin = min(ymin, min(self.profileIntTool.pathsInvert[pInd]))
 				ymax = max(ymax, max(self.profileIntTool.pathsInvert[pInd]))
 				xmin = min(xmin, min(self.profileIntTool.pathsX[pInd]))
@@ -2199,37 +2200,48 @@ class TuPlot(QDockWidget, Ui_tuflowqgis_TuPlot):
 				label = "{0}".format(path)
 				self.labels.append(label)
 				self.subplot.hold(True)
+				# Ground
 				ymin = min(ymin, min(self.profileIntTool.pathsGroundY[pInd]))
 				ymax = max(ymax, max(self.profileIntTool.pathsGroundY[pInd]))
+				xmin = min(xmin, min(self.profileIntTool.pathsGroundX[pInd]))
+				xmax = max(xmax, max(self.profileIntTool.pathsGroundX[pInd]))
 				a, = self.subplot.plot(self.profileIntTool.pathsGroundX[pInd], self.profileIntTool.pathsGroundY[pInd])
 				self.artists.append(a)
 				label = "{0} Ground".format(path)
 				self.labels.append(label)
 				self.subplot.hold(True)
-				for flag in self.profileIntTool.pathsPlotAdvG[pInd]:
-					a, = self.subplot.plot(flag[0], flag[1], marker='o', linestyle='None')
-					ymax = max(ymax, flag[1])
+				# Adverse Gradient Flag
+				if len(self.profileIntTool.pathsPlotAdvG[pInd][1]) > 0:
+					a, = self.subplot.plot(self.profileIntTool.pathsPlotAdvG[pInd][0],
+					                       self.profileIntTool.pathsPlotAdvG[pInd][1], marker='o', linestyle='None')
+					ymax = max(ymax, max(self.profileIntTool.pathsPlotAdvG[pInd][1]))
 					self.artists.append(a)
 					label = "{0} Adverse Gradient".format(path)
 					self.labels.append(label)
 					self.subplot.hold(True)
-				for flag in self.profileIntTool.pathsPlotDecA[pInd]:
-					a, = self.subplot.plot(flag[0], flag[1], marker='o', linestyle='None')
-					ymax = max(ymax, flag[1])
+				# Decrease in Area Flag
+				if len(self.profileIntTool.pathsPlotDecA[pInd][1]) > 0:
+					a, = self.subplot.plot(self.profileIntTool.pathsPlotDecA[pInd][0],
+					                       self.profileIntTool.pathsPlotDecA[pInd][1], marker='o', linestyle='None')
+					ymax = max(ymax, max(self.profileIntTool.pathsPlotDecA[pInd][1]))
 					self.artists.append(a)
 					label = "{0} Decrease in Area".format(path)
 					self.labels.append(label)
 					self.subplot.hold(True)
-				for flag in self.profileIntTool.pathsPlotSharpA[pInd]:
-					a, = self.subplot.plot(flag[0], flag[1], marker='o', linestyle='None')
-					ymax = max(ymax, flag[1])
+				# Sharp Angle Flag
+				if len(self.profileIntTool.pathsPlotSharpA[pInd][1]) > 0:
+					a, = self.subplot.plot(self.profileIntTool.pathsPlotSharpA[pInd][0],
+					                       self.profileIntTool.pathsPlotSharpA[pInd][1], marker='o', linestyle='None')
+					ymax = max(ymax, max(self.profileIntTool.pathsPlotSharpA[pInd][1]))
 					self.artists.append(a)
-					label = "{0} Sharp Outflow Angle".format(path)
+					label = "{0} Sharp Angle".format(path)
 					self.labels.append(label)
 					self.subplot.hold(True)
-				for flag in self.profileIntTool.pathsPlotInCover[pInd]:
-					a, = self.subplot.plot(flag[0], flag[1], marker='o', linestyle='None')
-					ymax = max(ymax, flag[1])
+				# Insufficient Cover Depth
+				if len(self.profileIntTool.pathsPlotInCover[pInd][1]) > 0:
+					a, = self.subplot.plot(self.profileIntTool.pathsPlotInCover[pInd][0],
+					                       self.profileIntTool.pathsPlotInCover[pInd][1], marker='o', linestyle='None')
+					ymax = max(ymax, max(self.profileIntTool.pathsPlotInCover[pInd][1]))
 					self.artists.append(a)
 					label = "{0} Insufficent Cover Depth".format(path)
 					self.labels.append(label)

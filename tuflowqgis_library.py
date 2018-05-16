@@ -1085,7 +1085,8 @@ def getVertices(lyrs, dem):
 	:return: compiled dictionary of all QgsVectorLayers in format of {name: [[vertices], feature id, origin lyr, [us invert, ds invert]}
 	:return: dict {name: {[QgsPoint], [Chainages], [Elevations]]}
 	"""
-	demCellSize = max(dem.rasterUnitsPerPixelX(), dem.rasterUnitsPerPixelY())
+	if dem is not None:
+		demCellSize = max(dem.rasterUnitsPerPixelX(), dem.rasterUnitsPerPixelY())
 	
 	nullCounter = 1
 	vectorDict = {}
@@ -1105,7 +1106,6 @@ def getVertices(lyrs, dem):
 			elif line.geometryType() == 1:
 				if dem is not None:  # drape the line on the dem
 					lineDrape[feature.attributes()[0]] = [[], [], []]
-					#points, chainages = lineToPoints(feature, max(10, demCellSize))
 					points, chainages = lineToPoints(feature, demCellSize)
 					lineDrape[feature.attributes()[0]][0] += points
 					lineDrape[feature.attributes()[0]][1] += chainages

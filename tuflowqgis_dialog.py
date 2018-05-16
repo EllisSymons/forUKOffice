@@ -2007,6 +2007,7 @@ class tuflowqgis_check_1d_integrity_dialog(QDialog, Ui_check1dIntegrity):
 		outMsg = False
 		outSel = False
 		outTxt = False
+		dem = None
 		if self.check1dLine_cb.isChecked():
 			checkLine = True
 		if self.check1dPoint_cb.isChecked():
@@ -2031,8 +2032,6 @@ class tuflowqgis_check_1d_integrity_dialog(QDialog, Ui_check1dIntegrity):
 				getDemElev = True
 				dem = tuflowqgis_find_layer(self.dem_combo.currentText())
 				plotCoverDepth = self.coverDepth_sb.value()
-			else:
-				dem = None
 		if self.outMessBox_cb.isChecked():
 			outMsg = True
 		if self.outSel_cb.isChecked():

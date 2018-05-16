@@ -793,10 +793,10 @@ class DownstreamConnectivity():
 		:return: populates integrity plotting values
 		"""
 
-		advG = []
-		decA = []
-		sharpA = []
-		insffC = []
+		advG = [[], []]  # X list, Y List
+		decA = [[], []]  # X list, Y List
+		sharpA = [[], []]  # X list, Y List
+		insffC = [[], []]  # X list, Y List
 		path = self.pathsNwks[ind]
 		for i, nwk in enumerate(path):
 			count = 1  # use to stack the flags on top of one another
@@ -807,20 +807,20 @@ class DownstreamConnectivity():
 				yStart = self.pathsPipe[xInd][i][3][1] + (0.1 * count)
 				yEnd = self.pathsPipe[xInd][i][2][1] + (0.1 * count)
 				y = (yStart + yEnd) / 2
-				coords = [x, y]
-				advG.append(coords)
+				advG[0].append(x)
+				advG[1].append(y)
 				count += 1
 			if self.pathsDecreaseFlowArea[ind][i]:
 				x = self.pathsX[xInd][i * 2]
 				y = self.pathsPipe[xInd][i][3][1] + (0.1 * count)
-				coords = [x, y]
-				decA.append(coords)
+				decA[0].append(x)
+				decA[1].append(y)
 				count += 1
 			if self.pathsSharpAngle[ind][i]:
 				x = self.pathsX[xInd][i * 2 + 1]
 				y = self.pathsPipe[xInd][i][2][1] + (0.1 * count)
-				coords = [x, y]
-				sharpA.append(coords)
+				sharpA[0].append(x)
+				sharpA[1].append(y)
 				count += 1
 			if self.pathsInsffCover[ind][i]:
 				xStart = self.pathsX[xInd][i * 2]
@@ -829,8 +829,8 @@ class DownstreamConnectivity():
 				yStart = self.pathsPipe[xInd][i][3][1] + (0.1 * count)
 				yEnd = self.pathsPipe[xInd][i][2][1] + (0.1 * count)
 				y = (yStart + yEnd) / 2
-				coords = [x, y]
-				insffC.append(coords)
+				insffC[0].append(x)
+				insffC[1].append(y)
 				count += 1
 		self.pathsPlotAdvG.insert(ind, advG)
 		self.pathsPlotDecA.insert(ind, decA)
