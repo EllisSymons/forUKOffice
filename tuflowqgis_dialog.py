@@ -2099,7 +2099,7 @@ class tuflowqgis_check_1d_integrity_dialog(QDialog, Ui_check1dIntegrity):
 			                                                                           points=pointDict,
 			                                                                           dns_conn=getDnsConn)
 			longProfile = TUFLOW_longprofile.DownstreamConnectivity(dsLines, startElem, lineLyrs, angleLimit,
-			                                                        lineDrape, plotCoverDepth)
+			                                                        lineDrape, plotCoverDepth, lineDict)
 			longProfile.getBranches()
 			longProfile.reportLog()
 			if plotDnsConn:

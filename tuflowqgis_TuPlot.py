@@ -1762,7 +1762,7 @@ class TuPlot(QDockWidget, Ui_tuflowqgis_TuPlot):
 		
 		:return: Qgs Selection
 		"""
-		
+
 		cPaths = []
 		for i in range(self.ResTypeList.count()):
 			path = self.ResTypeList.item(i).text()
@@ -1772,7 +1772,11 @@ class TuPlot(QDockWidget, Ui_tuflowqgis_TuPlot):
 		for path in cPaths:
 			pInd = self.profileIntTool.pathsName.index(path)
 			for nwk in self.profileIntTool.pathsNwks[pInd]:
-				selectionNwks.append(nwk)
+				if type(nwk) == list:
+					for n in nwk:
+						selectionNwks.append(n)
+				else:
+					selectionNwks.append(nwk)
 		for lyr in self.profileIntTool.inLyrs:
 			id = lyr.fields()[0].name()
 			filter = ''

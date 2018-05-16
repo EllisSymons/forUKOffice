@@ -13,13 +13,14 @@ class DownstreamConnectivity():
 	Class for storing downstream connectivity information
 	"""
 	
-	def __init__(self, dsLines, startLines, inLyrs, angleLimit, lineDrape, coverLimit):
+	def __init__(self, dsLines, startLines, inLyrs, angleLimit, lineDrape, coverLimit, lineDict):
 		self.dsLines = dsLines  # dictionary {name: [[dns network channels], [us invert, ds invert], [other connecting channels]]}
 		self.startLines = startLines  # list of initial starting lines for plotting
 		self.inLyrs = inLyrs  # list of nwk line layers
 		self.angleLimit = angleLimit  # angle limit to for integrity checks
 		self.lineDrape = lineDrape  # dict {name: [[QgsPoint - line vertices], [vertex chainage], [elevations]]}
 		self.coverLimit = coverLimit  # pipe obvert to ground depth limit for integrity checks
+		self.lineDict = lineDict
 		self.processed_nwks = []  # list of processed networks so there is no repetition
 		self.log = ''  # string for output log
 		self.type = []  # list of network types e.g. C R S
@@ -140,11 +141,21 @@ class DownstreamConnectivity():
 			coverDepth = []
 			for lyr in self.inLyrs:
 				fld = lyr.fields()[0]
+				typFld = lyr.fields()[1]
 				for nwk in network:
-					filter = '"{0}" = \'{1}\''.format(fld.name(), nwk)
+					if '__connector' in nwk:
+						filter = '"{0}" = \'{1}\' OR "{0}" = \'{2}\''.format(typFld.name(), 'X', 'x')
+					else:
+						filter = '"{0}" = \'{1}\''.format(fld.name(), nwk)
 					request = QgsFeatureRequest().setFilterExpression(filter)
 					for f in lyr.getFeatures(request):
-						features.append(f)
+						if '__connector' in nwk:
+							if nwk in self.lineDict.keys():
+								if lyr == self.lineDict[nwk][2]:
+									if f.id()== self.lineDict[nwk][1]:
+										features.append(f)
+						else:
+							features.append(f)
 			# Get data for starting lines
 			if len(network) == 1:  # dealing with one channel
 				self.first_sel = False
@@ -250,7 +261,7 @@ class DownstreamConnectivity():
 				# get channels accounting for X connectors
 				nwks = []
 				for nwk in network:
-					if 'connector' in network:
+					if 'connector' in nwk:
 						nwk = self.dsLines[nwk][0][0]
 					nwks.append(nwk)
 				# get next downstream channels accounting for X connectors
@@ -322,8 +333,8 @@ class DownstreamConnectivity():
 									self.joiningOutlet.append('JOINING EXISTING BRANCH')
 									dns = False
 									break
-								typ = features[0].attributes()[1]
-								length = features[0].attributes()[4]
+								t = features[0].attributes()[1]
+								l = features[0].attributes()[4]
 								if l <= 0:
 									l = getLength(features[0])
 								na = id
@@ -331,13 +342,17 @@ class DownstreamConnectivity():
 								w = features[0].attributes()[13]
 								h = features[0].attributes()[14]
 								uI = self.dsLines[nwk][1][0]
-								dI = self.dsLines[nwk[0]][1][1]
+								dI = self.dsLines[nwk][1][1]
 								if nwk in self.dsLines.keys():
 									if len(self.dsLines[nwk][2]) > 0:
 										ang = min(self.dsLines[nwk][2])
 								else:
 									ang = 0
-								if typ.lower() == 'r':
+								gc = []
+								gr = []
+								o = []
+								cd = []
+								if t.lower() == 'r':
 									a = float(no) * width * height
 									if self.coverLimit is not None:
 										gc = self.lineDrape[name][1]
@@ -349,7 +364,7 @@ class DownstreamConnectivity():
 											cd.append(c)
 											if c < self.coverLimit:
 												insffCover = True
-								elif typ.lower() == 'c':
+								elif t.lower() == 'c':
 									a = float(n) * (w / 2) ** 2 * 3.14
 									if self.coverLimit is not None:
 										gc = self.lineDrape[name][1]
@@ -383,21 +398,21 @@ class DownstreamConnectivity():
 								dsInv.append(dI)
 								area.append(a)
 								groundCh.append(gc)
-								ground.append(g)
+								ground.append(gr)
 								obvert.append(o)
 								coverDepth.append(cd)
 								angle.append(ang)
 								length.append(l)
 					self.bType.append(typ)
-					self.bLength.append(length)
+					self.bLength.append(max(length))
 					self.bName.append(name)
 					self.bNo.append(no)
-					self.bWidth.append(width)
-					self.bHeight.append(height)
-					self.bUsInvert.append(usInv)
-					self.bDsInvert.append(dsInv)
-					self.bAngle.append(angle)
-					self.bArea.append(area)
+					self.bWidth.append(max(width))
+					self.bHeight.append(max(height))
+					self.bUsInvert.append(min(usInv))
+					self.bDsInvert.append(min(dsInv))
+					self.bAngle.append(max(angle))
+					self.bArea.append(sum(area))
 					self.bGroundCh.append(groundCh[0])
 					self.bObvert.append(obvert[0])
 					self.bCoverDepth.append(coverDepth[0])
@@ -406,7 +421,7 @@ class DownstreamConnectivity():
 					self.bSharpAngle.append(sharpAngle)
 					self.bInsffCover.append(insffCover)
 					if nwks[0] in self.dsLines.keys():
-						if len(self.dsLines[nwks][0]) == 0:
+						if len(self.dsLines[nwks[0]][0]) == 0:
 							self.joiningOutlet.append(self.dsLines[nwks[0]][3])
 							self.branchDnsConnectionPipe.append([])
 							for nwk in nwks:
@@ -638,12 +653,13 @@ class DownstreamConnectivity():
 					if connNwk:
 						pathsNwks.append(nwk)
 						pathsLen.append(self.length[bInd][j])
-						pathsGroundCh.append(self.groundCh[bInd][j])
-						pathsGround.append(self.ground[bInd][j])
 						pathsAdvG.append(self.adverseGradient[bInd][j])
 						pathsDecA.append(self.decreaseFlowArea[bInd][j])
 						pathsSharpA.append(self.sharpAngle[bInd][j])
 						pathsInsffCover.append(self.insffCover[bInd][j])
+						if self.coverLimit is not None:
+							pathsGroundCh.append(self.groundCh[bInd][j])
+							pathsGround.append(self.ground[bInd][j])
 					if j + 1 == len(self.name[bInd]):
 						connNwkNames = self.branchDnsConnectionPipe[bInd]
 						if dnsB is not None:
@@ -771,12 +787,20 @@ class DownstreamConnectivity():
 						break
 				if found:
 					break
-			if self.type[j][k].lower() == 'c':
-				y = self.width[j][k]
-				pipe = True
-			elif self.type[j][k].lower() == 'r':
-				y = self.height[j][k]
-				pipe = True
+			if type(self.type[j][k]) == list:  # unbranched dual channel
+				if 'c' in self.type[j][k] or 'C' in self.type[j][k]:
+					y = self.width[j][k]
+					pipe = True
+				if 'r' in self.type[j][k] or 'R' in self.type[j][k]:
+					y = self.height[j][k]
+					pipe = True
+			else:  # single channel
+				if self.type[j][k].lower() == 'c':
+					y = self.width[j][k]
+					pipe = True
+				elif self.type[j][k].lower() == 'r':
+					y = self.height[j][k]
+					pipe = True
 			if self.pathsInvert[xInd][i*2] == -99999 or self.pathsInvert[xInd][i*2+1] == -99999:
 				pipe = False
 			if pipe:
