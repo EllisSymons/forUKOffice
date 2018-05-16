@@ -2049,70 +2049,70 @@ class tuflowqgis_check_1d_integrity_dialog(QDialog, Ui_check1dIntegrity):
 		for i in range(self.pointLyrs_lw.count()):
 			pointLyrs.append(tuflowqgis_find_layer(self.pointLyrs_lw.item(i).text()))
 			
-			# Start Line Check section
-			lineDict, lineDrape = getVertices(lineLyrs,
-			                                  dem)  # create dictionary of line objects {name: [start vertice, end vertice]}
-			if checkLine:
-				if getDnsConn:
-					if not checkPoint:
-						if len(pointLyrs) > 0:
-							pointDict, pointDrape = getVertices(pointLyrs, dem)
-				unsnappedLines, unsnappedLineNames, closestVLines, dsLines = checkSnapping(assessment='lines',
-				                                                                           lines=lineDict,
-				                                                                           points=pointDict,
-				                                                                           dns_conn=getDnsConn)  # Get unsnapped line vertices
-				if autoSnap:
-					returnLogL = moveVertices(lineLyrs, closestVLines, searchRadius)  # perform auto snap routine
-					lineDict2, lineDrape = getVertices(lineLyrs, dem)  # reassess snapping
-					unsnappedLines2, unsnappedLineNames2, closestVLines2, dsLines2 = checkSnapping(assessment='lines',
-					                                                                               lines=lineDict2,
-					                                                                               points=pointDict,
-					                                                                               dns_conn=getDnsConn)  # reassess snapping
-			
-			# Start Point Check Section
-			if checkPoint:
-				pointDict, pointDrape = getVertices(pointLyrs,
-				                                    dem)  # create dictionary of point objects {name: [vertex]}
-				if checkLine and autoSnap:  # Check if line layer has been edited
-					unsnappedPoints, closestVPoints = checkSnapping(assessment='points', lines=lineDict2,
-					                                                points=pointDict)  # Get unsnapped points
-				else:
-					unsnappedPoints, closestVPoints = checkSnapping(assessment='points', lines=lineDict,
-					                                                points=pointDict)  # Get unsnapped points
-				if autoSnap:
-					returnLogP = moveVertices(pointLyrs, closestVPoints, searchRadius)
-					pointDict2, pointDrape = getVertices(pointLyrs, dem)  # reassess snapping
-					if checkLine and autoSnap:  # Check if line layer has been edited
-						unsnappedPoints2, closestVPoints2 = checkSnapping(assessment='points', lines=lineDict2,
-						                                                  points=pointDict2)  # Get unsnapped points
-					else:
-						unsnappedPoints2, closestVPoints2 = checkSnapping(assessment='points', lines=lineDict,
-						                                                  points=pointDict2)  # Get unsnapped points
-			
-			# Start check downstream connections
+		# Start Line Check section
+		lineDict, lineDrape = getVertices(lineLyrs,
+		                                  dem)  # create dictionary of line objects {name: [start vertice, end vertice]}
+		if checkLine:
 			if getDnsConn:
-				if not checkLine:  # hasn't yet been run
-					if not checkPoint:
-						if len(pointLyrs) > 0:
-							pointDict, pointDrape = getVertices(pointLyrs, dem)
-				unsnappedLines, unsnappedLineNames, closestVLines, dsLines = checkSnapping(lines=lineDict,
-				                                                                           points=pointDict,
-				                                                                           dns_conn=getDnsConn)
-				longProfile = TUFLOW_longprofile.DownstreamConnectivity(dsLines, startElem, lineLyrs, angleLimit,
-				                                                        lineDrape, plotCoverDepth)
-				longProfile.getBranches()
-				longProfile.reportLog()
-				if plotDnsConn:
-					longProfile.getPlotFormat()
-					if self.dockOpened:
-						self.resdock.qgis_connect()
-						self.resdock.show()
-						self.resdock.layerChanged()
-						self.resdock.add_profileIntTool(longProfile)
-					else:
-						self.dockOpened = True
-						self.resdock = TuPlot(self.iface, profile_integerity_tool=longProfile)
-						self.iface.addDockWidget(Qt.RightDockWidgetArea, self.resdock)
+				if not checkPoint:
+					if len(pointLyrs) > 0:
+						pointDict, pointDrape = getVertices(pointLyrs, dem)
+			unsnappedLines, unsnappedLineNames, closestVLines, dsLines = checkSnapping(assessment='lines',
+			                                                                           lines=lineDict,
+			                                                                           points=pointDict,
+			                                                                           dns_conn=getDnsConn)  # Get unsnapped line vertices
+			if autoSnap:
+				returnLogL = moveVertices(lineLyrs, closestVLines, searchRadius)  # perform auto snap routine
+				lineDict2, lineDrape = getVertices(lineLyrs, dem)  # reassess snapping
+				unsnappedLines2, unsnappedLineNames2, closestVLines2, dsLines2 = checkSnapping(assessment='lines',
+				                                                                               lines=lineDict2,
+				                                                                               points=pointDict,
+				                                                                               dns_conn=getDnsConn)  # reassess snapping
+		
+		# Start Point Check Section
+		if checkPoint:
+			pointDict, pointDrape = getVertices(pointLyrs,
+			                                    dem)  # create dictionary of point objects {name: [vertex]}
+			if checkLine and autoSnap:  # Check if line layer has been edited
+				unsnappedPoints, closestVPoints = checkSnapping(assessment='points', lines=lineDict2,
+				                                                points=pointDict)  # Get unsnapped points
+			else:
+				unsnappedPoints, closestVPoints = checkSnapping(assessment='points', lines=lineDict,
+				                                                points=pointDict)  # Get unsnapped points
+			if autoSnap:
+				returnLogP = moveVertices(pointLyrs, closestVPoints, searchRadius)
+				pointDict2, pointDrape = getVertices(pointLyrs, dem)  # reassess snapping
+				if checkLine and autoSnap:  # Check if line layer has been edited
+					unsnappedPoints2, closestVPoints2 = checkSnapping(assessment='points', lines=lineDict2,
+					                                                  points=pointDict2)  # Get unsnapped points
+				else:
+					unsnappedPoints2, closestVPoints2 = checkSnapping(assessment='points', lines=lineDict,
+					                                                  points=pointDict2)  # Get unsnapped points
+		
+		# Start check downstream connections
+		if getDnsConn:
+			if not checkLine:  # hasn't yet been run
+				if not checkPoint:
+					if len(pointLyrs) > 0:
+						pointDict, pointDrape = getVertices(pointLyrs, dem)
+			unsnappedLines, unsnappedLineNames, closestVLines, dsLines = checkSnapping(lines=lineDict,
+			                                                                           points=pointDict,
+			                                                                           dns_conn=getDnsConn)
+			longProfile = TUFLOW_longprofile.DownstreamConnectivity(dsLines, startElem, lineLyrs, angleLimit,
+			                                                        lineDrape, plotCoverDepth)
+			longProfile.getBranches()
+			longProfile.reportLog()
+			if plotDnsConn:
+				longProfile.getPlotFormat()
+				if self.dockOpened:
+					self.resdock.qgis_connect()
+					self.resdock.show()
+					self.resdock.layerChanged()
+					self.resdock.add_profileIntTool(longProfile)
+				else:
+					self.dockOpened = True
+					self.resdock = TuPlot(self.iface, profile_integerity_tool=longProfile)
+					self.iface.addDockWidget(Qt.RightDockWidgetArea, self.resdock)
 		
 		# Output
 		if outMsg or outTxt:

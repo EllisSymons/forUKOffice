@@ -1105,7 +1105,8 @@ def getVertices(lyrs, dem):
 			elif line.geometryType() == 1:
 				if dem is not None:  # drape the line on the dem
 					lineDrape[feature.attributes()[0]] = [[], [], []]
-					points, chainages = lineToPoints(feature, max(10, demCellSize))
+					#points, chainages = lineToPoints(feature, max(10, demCellSize))
+					points, chainages = lineToPoints(feature, demCellSize)
 					lineDrape[feature.attributes()[0]][0] += points
 					lineDrape[feature.attributes()[0]][1] += chainages
 					for p in lineDrape[feature.attributes()[0]][0]:
@@ -1165,7 +1166,6 @@ def checkSnapping(**kwargs):
 	closestV = {}  # dict closest vertex results
 	unsnapped = []  # list of unsnapped vertices
 	unsnapped_names = []  # list of unsnapped vertices names (for lines)
-	lineDrape = {}  # Dict of vertices, chainages, dem elevations
 	
 	# Check to see if line is snapped to another line at both ends
 	if checkLine:
@@ -1183,11 +1183,11 @@ def checkSnapping(**kwargs):
 				for i, (lName2, lParam2) in enumerate(sorted(lineDict.items())):  # sort dict so x connectors are assessed first
 					lLoc2 = lParam2[0]
 					lFid2 = lParam2[1]
-					if lName == lName2:
-						continue
 					if found and not dnsConn:
 						break
 					for j2, v2 in enumerate(lLoc2):
+						if lName == lName2:
+							continue
 						if v == v2:
 							found = True
 							if lName not in dsNwk.keys():
