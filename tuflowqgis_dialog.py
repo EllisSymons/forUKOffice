@@ -1797,12 +1797,15 @@ class tuflowqgis_check_1d_integrity_dialog(QDialog, Ui_check1dIntegrity):
 					self.addPoint_combo.addItem(layer.name())
 				elif layer.geometryType() == 1:
 					self.addLine_combo.addItem(layer.name())
+					self.addTa_combo.addItem(layer.name())
 		
 		# signals
-		self.addLine_button.clicked.connect(lambda: self.addLyr('line'))
-		self.addPoint_button.clicked.connect(lambda: self.addLyr('point'))
-		self.removeLine_button.clicked.connect(lambda: self.removeLyr('line'))
-		self.removePoint_button.clicked.connect(lambda: self.removeLyr('point'))
+		self.addLine_button.clicked.connect(lambda: self.addLyr(self.addLine_combo, self.lineLyrs_lw))
+		self.addPoint_button.clicked.connect(lambda: self.addLyr(self.addPoint_combo, self.pointLyrs_lw))
+		self.addTa_button.clicked.connect(lambda: self.addLyr(self.addTa_combo, self.taLyrs_lw))
+		self.removeLine_button.clicked.connect(lambda: self.removeLyr(self.lineLyrs_lw))
+		self.removePoint_button.clicked.connect(lambda: self.removeLyr(self.pointLyrs_lw))
+		self.removeTa_button.clicked.connect(lambda: self.removeLyr(self.taLyrs_lw))
 		self.addStartNwk_button.clicked.connect(self.addFeature)
 		self.removeStartNwk_button.clicked.connect(self.removeFeature)
 		self.addLine_button.clicked.connect(self.toggleStartElement)
@@ -1812,48 +1815,38 @@ class tuflowqgis_check_1d_integrity_dialog(QDialog, Ui_check1dIntegrity):
 		self.correctPipeDir_cb.clicked.connect(self.toggleInvertFields)
 		self.lineLyrs_lw.currentItemChanged.connect(self.toggleInvertFields)
 		self.addLine_button.clicked.connect(self.toggleInvertFields)
-		self.getDsConnection_cb.clicked.connect(self.toggleStartElement)
+		self.groupBox_3.clicked.connect(self.toggleStartElement)
+		self.groupBox_3.clicked.connect(
+			lambda: self.toggleGroupBox(self.groupBox_3, self.groupBox_4, self.groupBox_6, self.groupBox_7))
+		self.groupBox_4.clicked.connect(
+			lambda: self.toggleGroupBox(self.groupBox_4, self.groupBox_3, self.groupBox_6, self.groupBox_7))
+		self.groupBox_6.clicked.connect(
+			lambda: self.toggleGroupBox(self.groupBox_6, self.groupBox_4, self.groupBox_3, self.groupBox_7))
+		self.groupBox_7.clicked.connect(
+			lambda: self.toggleGroupBox(self.groupBox_7, self.groupBox_4, self.groupBox_6, self.groupBox_3))
 		self.addLine_button.clicked.connect(self.toggleStartElement)
 		self.getGroundElev_cb.clicked.connect(self.toggleDemSel)
 		self.buttonBox.accepted.connect(self.run)
 	
-	def addLyr(self, type):
-		if type == 'point':
-			inLyrs = []
-			for i in range(self.pointLyrs_lw.count()):
-				a = self.pointLyrs_lw.item(i).text()
-				inLyrs.append(a)
-			inLyr = self.addPoint_combo.currentText()
+	def addLyr(self, combo, lw):
+		inLyrs = []
+		for i in range(lw.count()):
+			a = lw.item(i).text()
+			inLyrs.append(a)
+		inLyr = combo.currentText()
+		if inLyr is not None and len(inLyr) > 0:
 			if inLyr not in inLyrs:
-				self.pointLyrs_lw.insertItem(0, inLyr)
-				item = self.pointLyrs_lw.item(0)
-				self.pointLyrs_lw.setItemSelected(item, True)
-		elif type == 'line':
-			inLyrs = []
-			for i in range(self.pointLyrs_lw.count()):
-				a = self.pointLyrs_lw.item(i).text()
-				inLyrs.append(a)
-			inLyr = self.addLine_combo.currentText()
-			if inLyr not in inLyrs:
-				self.lineLyrs_lw.insertItem(0, inLyr)
-				item = self.lineLyrs_lw.item(0)
-				self.lineLyrs_lw.setItemSelected(item, True)
+				lw.insertItem(0, inLyr)
+				item = lw.item(0)
+				lw.setItemSelected(item, True)
 	
-	def removeLyr(self, type):
-		if type == 'point':
-			removeIndex = []
-			for i in range(self.pointLyrs_lw.count()):
-				if self.pointLyrs_lw.item(i).isSelected():
-					removeIndex.append(i)
-			for i in reversed(removeIndex):
-				self.pointLyrs_lw.takeItem(i)
-		elif type == 'line':
-			removeIndex = []
-			for i in range(self.lineLyrs_lw.count()):
-				if self.lineLyrs_lw.item(i).isSelected():
-					removeIndex.append(i)
-			for i in reversed(removeIndex):
-				self.lineLyrs_lw.takeItem(i)
+	def removeLyr(self, lw):
+		removeIndex = []
+		for i in range(lw.count()):
+			if lw.item(i).isSelected():
+				removeIndex.append(i)
+		for i in reversed(removeIndex):
+			lw.takeItem(i)
 				
 	def addFeature(self):
 		inFeatures = []
@@ -1923,7 +1916,7 @@ class tuflowqgis_check_1d_integrity_dialog(QDialog, Ui_check1dIntegrity):
 			self.dsInvField_combo.setEnabled(False)
 			
 	def toggleStartElement(self):
-		if self.getDsConnection_cb.isChecked():
+		if self.groupBox_3.isChecked():
 			self.name1d_combo.setEnabled(True)
 			self.addStartNwk_button.setEnabled(True)
 			self.removeStartNwk_button.setEnabled(True)
@@ -1994,6 +1987,11 @@ class tuflowqgis_check_1d_integrity_dialog(QDialog, Ui_check1dIntegrity):
 			self.label_16.setEnabled(False)
 			self.coverDepth_sb.setEnabled(False)
 			self.label_17.setEnabled(False)
+			
+	def toggleGroupBox(self, clickedGB, *args):
+		if clickedGB.isChecked():
+			for gb in args:
+				gb.setChecked(False)
 	
 	def run(self):
 		# Get inputs
@@ -2020,7 +2018,7 @@ class tuflowqgis_check_1d_integrity_dialog(QDialog, Ui_check1dIntegrity):
 			correctPipeDir = True
 			usInvField = self.usInvField_combo.currentText()
 			dsInvField = self.dsInvField_combo.currentText()
-		if self.getDsConnection_cb.isChecked():
+		if self.groupBox_3.isChecked():
 			getDnsConn = True
 			angleLimit = self.angle_sb.value()
 			startElem = []
@@ -2039,24 +2037,22 @@ class tuflowqgis_check_1d_integrity_dialog(QDialog, Ui_check1dIntegrity):
 			outSel = True
 		if self.outTxtFile_cb.isChecked():
 			outTxt = True
-		
 		lineLyrs = []
+		lineDict = {}
 		for i in range(self.lineLyrs_lw.count()):
 			lineLyrs.append(tuflowqgis_find_layer(self.lineLyrs_lw.item(i).text()))
-		
 		pointLyrs = []
 		pointDict = {}
 		for i in range(self.pointLyrs_lw.count()):
 			pointLyrs.append(tuflowqgis_find_layer(self.pointLyrs_lw.item(i).text()))
-			
+		taLyrs = []
+		for i in range(self.taLyrs_lw.count()):
+			taLyrs.append(tuflowqgis_find_layer(self.taLyrs_lw.item(i).text()))
 		# Start Line Check section
-		lineDict, lineDrape = getVertices(lineLyrs,
-		                                  dem)  # create dictionary of line objects {name: [start vertice, end vertice]}
 		if checkLine:
-			if getDnsConn:
-				if not checkPoint:
-					if len(pointLyrs) > 0:
-						pointDict, pointDrape = getVertices(pointLyrs, dem)
+			lineDict, lineDrape = getVertices(lineLyrs, dem)
+			if len(pointLyrs) > 0:
+				pointDict, pointDrape = getVertices(pointLyrs, dem)
 			unsnappedLines, unsnappedLineNames, closestVLines, dsLines = checkSnapping(assessment='lines',
 			                                                                           lines=lineDict,
 			                                                                           points=pointDict,
@@ -2068,11 +2064,15 @@ class tuflowqgis_check_1d_integrity_dialog(QDialog, Ui_check1dIntegrity):
 				                                                                               lines=lineDict2,
 				                                                                               points=pointDict,
 				                                                                               dns_conn=getDnsConn)  # reassess snapping
-		
 		# Start Point Check Section
 		if checkPoint:
-			pointDict, pointDrape = getVertices(pointLyrs,
-			                                    dem)  # create dictionary of point objects {name: [vertex]}
+			if len(lineDict) == 0:
+				lineDict, lineDrape = getVertices(lineLyrs, dem)
+				unsnappedLines, unsnappedLineNames, closestVLines, dsLines = checkSnapping(assessment='lines',
+				                                                                           lines=lineDict,
+				                                                                           points=pointDict,
+				                                                                           dns_conn=getDnsConn)
+			pointDict, pointDrape = getVertices(pointLyrs, dem)
 			if checkLine and autoSnap:  # Check if line layer has been edited
 				unsnappedPoints, closestVPoints = checkSnapping(assessment='points', lines=lineDict2,
 				                                                points=pointDict)  # Get unsnapped points
@@ -2088,16 +2088,17 @@ class tuflowqgis_check_1d_integrity_dialog(QDialog, Ui_check1dIntegrity):
 				else:
 					unsnappedPoints2, closestVPoints2 = checkSnapping(assessment='points', lines=lineDict,
 					                                                  points=pointDict2)  # Get unsnapped points
-		
 		# Start check downstream connections
 		if getDnsConn:
-			if not checkLine:  # hasn't yet been run
-				if not checkPoint:
-					if len(pointLyrs) > 0:
-						pointDict, pointDrape = getVertices(pointLyrs, dem)
+			if len(startElem) == 0:
+				return
+			lineDict, lineDrape = getVertices(lineLyrs, dem)
+			pointDict, pointDrape = getVertices(pointLyrs, dem)
 			unsnappedLines, unsnappedLineNames, closestVLines, dsLines = checkSnapping(lines=lineDict,
 			                                                                           points=pointDict,
 			                                                                           dns_conn=getDnsConn)
+			if len(taLyrs) > 0:
+				dsLines = getElevFromTa(lineDict, dsLines, lineLyrs, taLyrs)
 			longProfile = TUFLOW_longprofile.DownstreamConnectivity(dsLines, startElem, lineLyrs, angleLimit,
 			                                                        lineDrape, plotCoverDepth, lineDict)
 			longProfile.getBranches()

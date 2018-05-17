@@ -355,8 +355,8 @@ class DownstreamConnectivity():
 								if t.lower() == 'r':
 									a = float(no) * width * height
 									if self.coverLimit is not None:
-										gc = self.lineDrape[name][1]
-										gr = self.lineDrape[name][2]
+										gc = self.lineDrape[na][1]
+										gr = self.lineDrape[na][2]
 										o = interpolateObvert(uI, dI, h, gc)
 										cd = []
 										for i, g in enumerate(gr):
@@ -367,8 +367,8 @@ class DownstreamConnectivity():
 								elif t.lower() == 'c':
 									a = float(n) * (w / 2) ** 2 * 3.14
 									if self.coverLimit is not None:
-										gc = self.lineDrape[name][1]
-										gr = self.lineDrape[name][2]
+										gc = self.lineDrape[na][1]
+										gr = self.lineDrape[na][2]
 										o = interpolateObvert(uI, dI, h, gc)
 										cd = []
 										for i, g in enumerate(gr):
@@ -379,8 +379,8 @@ class DownstreamConnectivity():
 								else:
 									a = 0
 									if self.coverLimit is not None:
-										gc = self.lineDrape[name][1]
-										gr = self.lineDrape[name][2]
+										gc = self.lineDrape[na][1]
+										gr = self.lineDrape[na][2]
 										o = []
 										cd = []
 								if (dI > uI and uI != -99999.00) or (uI > dsInv_prev and dsInv_prev != -99999.00):
@@ -414,6 +414,7 @@ class DownstreamConnectivity():
 					self.bAngle.append(max(angle))
 					self.bArea.append(sum(area))
 					self.bGroundCh.append(groundCh[0])
+					self.bGround.append(ground[0])
 					self.bObvert.append(obvert[0])
 					self.bCoverDepth.append(coverDepth[0])
 					self.bAdverseGradient.append(adverseGradient)
@@ -659,7 +660,16 @@ class DownstreamConnectivity():
 						pathsInsffCover.append(self.insffCover[bInd][j])
 						if self.coverLimit is not None:
 							pathsGroundCh.append(self.groundCh[bInd][j])
-							pathsGround.append(self.ground[bInd][j])
+							if None not in self.ground[bInd][j]:
+								pathsGround.append(self.ground[bInd][j])
+							else:
+								ground = []
+								for x in self.ground[bInd][j]:
+									if x is not None:
+										ground.append(x)
+									else:
+										ground.append(np.nan)
+								pathsGround.append(ground)
 					if j + 1 == len(self.name[bInd]):
 						connNwkNames = self.branchDnsConnectionPipe[bInd]
 						if dnsB is not None:
@@ -815,6 +825,8 @@ class DownstreamConnectivity():
 				yPatch = [yStartInv, yEndInv, yEndObv, yStartObv]
 				pipes.append(zip(xPatch, yPatch))
 				areas.append(area)
+			else:
+				pipes.append([])
 		self.pathsPipe.insert(ind, pipes)
 		self.pathsArea.insert(ind, areas)
 		
@@ -838,21 +850,31 @@ class DownstreamConnectivity():
 				xStart = self.pathsX[xInd][i * 2]
 				xEnd = self.pathsX[xInd][i * 2 + 1]
 				x = (xStart + xEnd) / 2
-				yStart = self.pathsPipe[xInd][i][3][1] + (0.1 * count)
-				yEnd = self.pathsPipe[xInd][i][2][1] + (0.1 * count)
+				if len(self.pathsPipe[xInd][i]) > 0:
+					yStart = self.pathsPipe[xInd][i][3][1] + (0.1 * count)
+					yEnd = self.pathsPipe[xInd][i][2][1] + (0.1 * count)
+				else:
+					yStart = self.pathsInvert[xInd][i * 2] + (0.1 * count)
+					yEnd = self.pathsInvert[xInd][i * 2 + 1] + (0.1 * count)
 				y = (yStart + yEnd) / 2
 				advG[0].append(x)
 				advG[1].append(y)
 				count += 1
 			if self.pathsDecreaseFlowArea[ind][i]:
 				x = self.pathsX[xInd][i * 2]
-				y = self.pathsPipe[xInd][i][3][1] + (0.1 * count)
+				if len(self.pathsPipe[xInd][i]) > 0:
+					y = self.pathsPipe[xInd][i][3][1] + (0.1 * count)
+				else:
+					y = self.pathsInvert[xInd][i * 2] + (0.1 * count)
 				decA[0].append(x)
 				decA[1].append(y)
 				count += 1
 			if self.pathsSharpAngle[ind][i]:
 				x = self.pathsX[xInd][i * 2 + 1]
-				y = self.pathsPipe[xInd][i][2][1] + (0.1 * count)
+				if len(self.pathsPipe[xInd][i]) > 0:
+					y = self.pathsPipe[xInd][i][2][1] + (0.1 * count)
+				else:
+					y = self.pathsInvert[xInd][i * 2 + 1] + (0.1 * count)
 				sharpA[0].append(x)
 				sharpA[1].append(y)
 				count += 1
@@ -860,8 +882,12 @@ class DownstreamConnectivity():
 				xStart = self.pathsX[xInd][i * 2]
 				xEnd = self.pathsX[xInd][i * 2 + 1]
 				x = (xStart + xEnd) / 2
-				yStart = self.pathsPipe[xInd][i][3][1] + (0.1 * count)
-				yEnd = self.pathsPipe[xInd][i][2][1] + (0.1 * count)
+				if len(self.pathsPipe[xInd][i]) > 0:
+					yStart = self.pathsPipe[xInd][i][3][1] + (0.1 * count)
+					yEnd = self.pathsPipe[xInd][i][2][1] + (0.1 * count)
+				else:
+					yStart = self.pathsInvert[xInd][i * 2] + (0.1 * count)
+					yEnd = self.pathsInvert[xInd][i * 2 + 1] + (0.1 * count)
 				y = (yStart + yEnd) / 2
 				insffC[0].append(x)
 				insffC[1].append(y)

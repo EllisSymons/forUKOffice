@@ -1082,7 +1082,7 @@ def getVertices(lyrs, dem):
 	it will get centroid.
 
 	:param lyrs: list of QgisVectorLayers
-	:return: compiled dictionary of all QgsVectorLayers in format of {name: [[vertices], feature id, origin lyr, [us invert, ds invert]}
+	:return: compiled dictionary of all QgsVectorLayers in format of {name: [[vertices], feature id, origin lyr, [us invert, ds invert], type}
 	:return: dict {name: {[QgsPoint], [Chainages], [Elevations]]}
 	"""
 	if dem is not None:
@@ -1099,10 +1099,11 @@ def getVertices(lyrs, dem):
 				if feature.attributes()[0] == NULL:
 					name = '{0} {1}'.format(feature.attributes()[1], nullCounter)
 					nullCounter += 1
-					vectorDict[name] = [[geom], fid, line, [feature.attributes()[6], feature.attributes()[7]]]
+					vectorDict[name] = [[geom], fid, line, [feature.attributes()[6], feature.attributes()[7]],
+					                    feature.attributes()[1]]
 				else:
 					vectorDict[feature.attributes()[0]] = [[geom], fid, line, [feature.attributes()[6], 
-					                                      feature.attributes()[7]]]
+					                                      feature.attributes()[7]], feature.attributes()[1]]
 			elif line.geometryType() == 1:
 				if dem is not None:  # drape the line on the dem
 					lineDrape[feature.attributes()[0]] = [[], [], []]
@@ -1116,11 +1117,10 @@ def getVertices(lyrs, dem):
 					name = '__connector {0}'.format(nullCounter)
 					nullCounter += 1
 					vectorDict[name] = [[geom[0], geom[-1]], fid, line, [feature.attributes()[6], 
-					                   feature.attributes()[7]]]
+					                   feature.attributes()[7]], feature.attributes()[1]]
 				else:
 					vectorDict[feature.attributes()[0]] = [[geom[0], geom[-1]], fid, line, [feature.attributes()[6], 
-					                                      feature.attributes()[7]]]
-	
+					                                      feature.attributes()[7]], feature.attributes()[1]]
 	return vectorDict, lineDrape
 
 
@@ -1432,3 +1432,118 @@ def interpolateObvert(usInv, dsInv, size, xValues):
 			interpolate = (dsObv - usObv) / (xEnd - xStart) * (x - xStart) + usObv
 			obvert.append(interpolate)
 	return obvert
+
+
+def readInvFromCsv(source, type):
+	"""
+	Reads Table CSV file and returns the invert
+	
+	:param source: string - csv source file
+	:param type: string - table type
+	:return: float - invert
+	"""
+
+	header = False
+	firstCol = []
+	secondCol = []
+	with open(source, 'r') as fo:
+		for f in fo:
+			line = f.split(',')
+			if not header:
+				try:
+					float(line[0].strip('\n').strip())
+					header = True
+				except:
+					pass
+			if header:
+				firstCol.append(float(line[0].strip('\n').strip()))
+				secondCol.append(float(line[1].strip('\n').strip()))
+	if type.lower() == 'xz' or type.lower()[0] == 'w':
+		return min(secondCol)
+	else:
+		return min(firstCol)
+	
+def findIntersectFromVertex(vert, lyrs):
+	"""
+	Find an intersecting layer from a vertex
+	
+	:param vert: list - [float X, float Y]
+	:param taLyrs: list - [QgsVectorLayer]
+	:return: QgsFeature, QgsVectorLayer
+	"""
+	
+	for lyr in lyrs:
+		for f in lyr.getFeatures():
+			geom = f.geometry().asPolyline()
+			for v in geom:
+				if v == vert:
+					return f, lyr
+	return None, None
+
+
+def getElevFromTa(lineDict, dsLines, lineLyrs, taLyrs):
+	"""
+	Use 1d_ta layers to populate elevations of network
+	
+	:param lineDict: dict {name: [[vertices], feature id, origin lyr, [us invert, ds invert], type}
+	:param dsLines: dict {name: [[dns network channels], [us invert, ds invert], [other connecting channels]]}
+	:param taLyrs: list QgsVectorLayer
+	:return: updated dsLines dict with updated us and ds inverts
+	"""
+	
+	for name, param in lineDict.items():
+		type = param[4]
+		usInv = dsLines[name][1][0]
+		dsInv = dsLines[name][1][1]
+		usVert = param[0][0]
+		dsVert = param[0][1]
+		lyr = param[2]
+		fid = param[1]
+		fld = lyr.fields()
+		usFound = False
+		dsFound = False
+		filter = '"{0}" = \'{1}\''.format(fld[0].name(), name)
+		request = QgsFeatureRequest().setFilterExpression(filter)
+		for f in lyr.getFeatures(request):
+			if f.id() == fid:
+				feature = f
+		if type.lower() != 'r' and type.lower() != 'c':
+			if usInv == -99999:
+				taFeat, taLyr = findIntersectFromVertex(usVert, taLyrs)
+				if taFeat is not None:
+					taType = taFeat.attributes()[1]
+					source = taFeat.attributes()[0]
+					lyrSource = taLyr.dataProvider().dataSourceUri().split('|')[0]
+					lyrDirPath = os.path.dirname(lyrSource)
+					taSource = os.path.join(lyrDirPath, source)
+					usInv = readInvFromCsv(taSource, taType)
+					usFound = True
+			if dsInv == -99999:
+				taFeat, taLyr = findIntersectFromVertex(dsVert, taLyrs)
+				if taFeat is not None:
+					taType = taFeat.attributes()[1]
+					source = taFeat.attributes()[0]
+					lyrSource = taLyr.dataProvider().dataSourceUri().split('|')[0]
+					lyrDirPath = os.path.dirname(lyrSource)
+					taSource = os.path.join(lyrDirPath, source)
+					dsInv = readInvFromCsv(taSource, taType)
+					dsFound = True
+			if (usInv == -99999 and dsInv == -99999) or type.lower()[0] == 'w':
+				geom = feature.geometry()
+				for taLyr in taLyrs:
+					for taFeat in taLyr.getFeatures():
+						geom2 = taFeat.geometry()
+						if geom.intersects(geom2):
+							taType = taFeat.attributes()[1]
+							source = taFeat.attributes()[0]
+							lyrSource = taLyr.dataProvider().dataSourceUri().split('|')[0]
+							lyrDirPath = os.path.dirname(lyrSource)
+							taSource = os.path.join(lyrDirPath, source)
+							usInv = dsInv = readInvFromCsv(taSource, taType)
+							usFound = True
+							dsFound = True
+			if usFound:
+				dsLines[name][1][0] = usInv
+			if dsFound:
+				dsLines[name][1][1] = dsInv
+	return dsLines

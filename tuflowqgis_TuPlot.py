@@ -2196,10 +2196,11 @@ class TuPlot(QDockWidget, Ui_tuflowqgis_TuPlot):
 				xmax = max(xmax, max(self.profileIntTool.pathsX[pInd]))
 				a, = self.subplot.plot(self.profileIntTool.pathsX[pInd], self.profileIntTool.pathsInvert[pInd])
 				for poly in self.profileIntTool.pathsPipe[pInd]:
-					for v in poly:
-						ymax = max(ymax, v[1])
-					p = Polygon(poly, facecolor='0.9', edgecolor='0.5')
-					self.subplot.add_patch(p)
+					if len(poly) > 0:
+						for v in poly:
+							ymax = max(ymax, v[1])
+						p = Polygon(poly, facecolor='0.9', edgecolor='0.5')
+						self.subplot.add_patch(p)
 				self.artists.append(a)
 				label = "{0}".format(path)
 				self.labels.append(label)
