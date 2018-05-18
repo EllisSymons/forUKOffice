@@ -2217,7 +2217,8 @@ class TuPlot(QDockWidget, Ui_tuflowqgis_TuPlot):
 							ymax = max(ymax, max(self.profileIntTool.pathsGroundY[pInd]))
 							xmin = min(xmin, min(self.profileIntTool.pathsGroundX[pInd]))
 							xmax = max(xmax, max(self.profileIntTool.pathsGroundX[pInd]))
-							a, = self.subplot.plot(self.profileIntTool.pathsGroundX[pInd], self.profileIntTool.pathsGroundY[pInd])
+							a, = self.subplot.plot(self.profileIntTool.pathsGroundX[pInd],
+							                       self.profileIntTool.pathsGroundY[pInd])
 							self.artists.append(a)
 							label = "{0} Ground".format(path)
 							self.labels.append(label)
@@ -2226,7 +2227,8 @@ class TuPlot(QDockWidget, Ui_tuflowqgis_TuPlot):
 					if 'Flags' in typenames:
 						if len(self.profileIntTool.pathsPlotAdvG[pInd][1]) > 0:
 							a, = self.subplot.plot(self.profileIntTool.pathsPlotAdvG[pInd][0],
-							                       self.profileIntTool.pathsPlotAdvG[pInd][1], marker='o', linestyle='None')
+							                       self.profileIntTool.pathsPlotAdvG[pInd][1], marker='o',
+							                       linestyle='None')
 							ymax = max(ymax, max(self.profileIntTool.pathsPlotAdvG[pInd][1]))
 							self.artists.append(a)
 							label = "{0} Adverse Gradient".format(path)
@@ -2235,7 +2237,8 @@ class TuPlot(QDockWidget, Ui_tuflowqgis_TuPlot):
 						# Decrease in Area Flag
 						if len(self.profileIntTool.pathsPlotDecA[pInd][1]) > 0:
 							a, = self.subplot.plot(self.profileIntTool.pathsPlotDecA[pInd][0],
-							                       self.profileIntTool.pathsPlotDecA[pInd][1], marker='o', linestyle='None')
+							                       self.profileIntTool.pathsPlotDecA[pInd][1], marker='o',
+							                       linestyle='None')
 							ymax = max(ymax, max(self.profileIntTool.pathsPlotDecA[pInd][1]))
 							self.artists.append(a)
 							label = "{0} Decrease in Area".format(path)
@@ -2244,7 +2247,8 @@ class TuPlot(QDockWidget, Ui_tuflowqgis_TuPlot):
 						# Sharp Angle Flag
 						if len(self.profileIntTool.pathsPlotSharpA[pInd][1]) > 0:
 							a, = self.subplot.plot(self.profileIntTool.pathsPlotSharpA[pInd][0],
-							                       self.profileIntTool.pathsPlotSharpA[pInd][1], marker='o', linestyle='None')
+							                       self.profileIntTool.pathsPlotSharpA[pInd][1], marker='o',
+							                       linestyle='None')
 							ymax = max(ymax, max(self.profileIntTool.pathsPlotSharpA[pInd][1]))
 							self.artists.append(a)
 							label = "{0} Sharp Angle".format(path)
@@ -2253,7 +2257,8 @@ class TuPlot(QDockWidget, Ui_tuflowqgis_TuPlot):
 						# Insufficient Cover Depth
 						if len(self.profileIntTool.pathsPlotInCover[pInd][1]) > 0:
 							a, = self.subplot.plot(self.profileIntTool.pathsPlotInCover[pInd][0],
-							                       self.profileIntTool.pathsPlotInCover[pInd][1], marker='o', linestyle='None')
+							                       self.profileIntTool.pathsPlotInCover[pInd][1], marker='o',
+							                       linestyle='None')
 							ymax = max(ymax, max(self.profileIntTool.pathsPlotInCover[pInd][1]))
 							self.artists.append(a)
 							label = "{0} Insufficent Cover Depth".format(path)

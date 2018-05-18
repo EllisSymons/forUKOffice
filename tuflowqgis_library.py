@@ -1547,3 +1547,222 @@ def getElevFromTa(lineDict, dsLines, lineLyrs, taLyrs):
 			if dsFound:
 				dsLines[name][1][1] = dsInv
 	return dsLines
+
+
+def getPathFromRel(dir, relPath):
+	"""
+	return the full path from a relative reference
+	
+	:param dir: string - directory
+	:param relPath: string - relative path
+	:return: string - full path
+	"""
+	
+	components = relPath.split('\\')
+	path = dir
+	for c in components:
+		if c == '..':
+			path = os.path.dirname(path)
+		else:
+			path = os.path.join(path, c)
+	return path
+
+
+def removeLayer(lyr):
+	"""
+	Removes the layer from the TOC once only. This is for when it the same layer features twice in the TOC.
+	
+	:param lyr: QgsVectorLayer
+	:return: void
+	"""
+	import pydevd
+	pydevd.settrace('localhost', port=53100, stdoutToServer=True, stderrToServer=True)
+	if lyr is not None:
+		root = QgsProject.instance().layerTreeRoot()
+		for i, child in enumerate(root.children()):
+			lyrName = lyr.name()
+			childName = child.name()
+			if child.name() == lyr.name() or child.name() == '{0} Point'.format(lyr.name()) or child.name() == '{0} LineString'.format(lyr.name()) or child.name() == '{0} Polygon'.format(lyr.name()):
+				root.removeChildNode(child)
+
+
+def loadGisFromControlFile(controlFile, iface, processed_paths, processed_layers):
+	"""
+	Opens all vector layers from the specified tuflow control file
+	
+	:param controlFile: string - file location
+	:param iface: QgisInterface
+	:return: bool, string
+	"""
+
+	error = False
+	log = ''
+	dir = os.path.dirname(controlFile)
+	root = QgsProject.instance().layerTreeRoot()
+	group = root.addGroup(os.path.basename(controlFile))
+	with open(controlFile, 'r') as fo:
+		for f in fo:
+			if 'read' in f.lower():
+				ind = f.lower().find('read')
+				if '!' not in f[:ind]:
+					if 'read materials file' not in f.lower() and 'read file' not in f.lower() and 'read operating controls file' not in f.lower():
+						command, relPath = f.split('==')
+						command = command.strip()
+						relPath = relPath.split('!')[0]
+						relPath = relPath.strip()
+						path = getPathFromRel(dir, relPath)
+						if path in processed_paths:
+							continue
+						ext = os.path.splitext(path)[1]
+						if ext.lower() == '.mid':
+							path = '{0}.mif'.format(os.path.splitext(path)[0])
+							ext = '.mif'
+						if ext.lower() == '.shp' or ext.lower() == '.mif':
+							try:
+								if os.path.exists(path):
+									lyr = iface.addVectorLayer(path, os.path.basename(os.path.splitext(path)[0]), 'ogr')
+									group.addLayer(lyr)
+									processed_paths.append(path)
+									processed_layers.append(lyr)
+								else:
+									error = True
+									log += '{0}\n'.format(path)
+							except:
+								error = True
+								log += '{0}\n'.format(path)
+						elif ext.lower() == '.asc' or ext.lower() == '.flt':
+							try:
+								if os.path.exists(path):
+									lyr = iface.addRasterLayer(path, os.path.basename(os.path.splitext(path)[0]), 'gdal')
+									group.addLayer(lyr)
+									processed_paths.append(path)
+									processed_layers.append(lyr)
+								else:
+									error = True
+									log += '{0}\n'.format(path)
+							except:
+								error = True
+								log += '{0}\n'.format(path)
+						else:
+							error = True
+							log += '{0}\n'.format(path)
+	lyrs = [c.layer() for c in group.children()]
+	lyrs_sorted = sorted(lyrs, key=lambda x: x.name())
+	for i, lyr in enumerate(lyrs_sorted):
+		treeLyr = group.insertLayer(i, lyr)
+	group.removeChildren(len(lyrs), len(lyrs))
+	return error, log, processed_paths, processed_layers
+
+
+def openGisFromTcf(tcf, iface):
+	"""
+	Opens all vector layers from the tuflow model from the TCF
+	
+	:param tcf: string - TCF location
+	:param iface: QgisInterface
+	:return: void - opens all files in qgis window
+	"""
+	
+	dir = os.path.dirname(tcf)
+	processed_paths = []
+	processed_layers = []
+	couldNotReadFile = False
+	message = 'Could not open file:\n'
+	error, log, pPaths, pLayers = loadGisFromControlFile(tcf, iface, processed_paths, processed_layers)
+	processed_paths += pPaths
+	processed_layers += pLayers
+	if error:
+		couldNotReadFile = True
+		message += log
+	with open(tcf, 'r') as fo:
+		for f in fo:
+			if 'estry control file' in f.lower():
+				ind = f.lower().find('estry control file')
+				if '!' not in f[:ind]:
+					command, relPath = f.split('==')
+					command = command.strip()
+					relPath = relPath.split('!')[0]
+					relPath = relPath.strip()
+					path = getPathFromRel(dir, relPath)
+					error, log, pPaths, pLayers = loadGisFromControlFile(path, iface, processed_paths, processed_layers)
+					processed_paths += pPaths
+					processed_layers += pLayers
+					if error:
+						couldNotReadFile = True
+						message += log
+			if 'geometry control file' in f.lower():
+				ind = f.lower().find('geometry control file')
+				if '!' not in f[:ind]:
+					command, relPath = f.split('==')
+					command = command.strip()
+					relPath = relPath.split('!')[0]
+					relPath = relPath.strip()
+					path = getPathFromRel(dir, relPath)
+					error, log, pPaths, pLayers = loadGisFromControlFile(path, iface, processed_paths, processed_layers)
+					processed_paths += pPaths
+					processed_layers += pLayers
+					if error:
+						couldNotReadFile = True
+						message += log
+			if 'bc control file' in f.lower():
+				ind = f.lower().find('bc control file')
+				if '!' not in f[:ind]:
+					command, relPath = f.split('==')
+					command = command.strip()
+					relPath = relPath.split('!')[0]
+					relPath = relPath.strip()
+					path = getPathFromRel(dir, relPath)
+					error, log, pPaths, pLayers = loadGisFromControlFile(path, iface, processed_paths, processed_layers)
+					processed_paths += pPaths
+					processed_layers += pLayers
+					if error:
+						couldNotReadFile = True
+						message += log
+			if 'event control file' in f.lower():
+				ind = f.lower().find('event control file')
+				if '!' not in f[:ind]:
+					command, relPath = f.split('==')
+					command = command.strip()
+					relPath = relPath.split('!')[0]
+					relPath = relPath.strip()
+					path = getPathFromRel(dir, relPath)
+					error, log, pPaths, pLayers = loadGisFromControlFile(path, iface, processed_paths, processed_layers)
+					processed_paths += pPaths
+					processed_layers += pLayers
+					if error:
+						couldNotReadFile = True
+						message += log
+			if 'read file' in f.lower():
+				ind = f.lower().find('read file')
+				if '!' not in f[:ind]:
+					command, relPath = f.split('==')
+					command = command.strip()
+					relPath = relPath.split('!')[0]
+					relPath = relPath.strip()
+					path = getPathFromRel(dir, relPath)
+					error, log, pPaths, pLayers = loadGisFromControlFile(path, iface, processed_paths, processed_layers)
+					processed_paths += pPaths
+					processed_layers += pLayers
+					if error:
+						couldNotReadFile = True
+						message += log
+			if 'read operating controls file' in f.lower():
+				ind = f.lower().find('read operating controls file')
+				if '!' not in f[:ind]:
+					command, relPath = f.split('==')
+					command = command.strip()
+					relPath = relPath.split('!')[0]
+					relPath = relPath.strip()
+					path = getPathFromRel(dir, relPath)
+					error, log, pPaths, pLayers = loadGisFromControlFile(path, iface, processed_paths, processed_layers)
+					processed_paths += pPaths
+					processed_layers += pLayers
+					if error:
+						couldNotReadFile = True
+						message += log
+	for layer in processed_layers:
+		removeLayer(layer)
+	if couldNotReadFile:
+		QMessageBox.information(iface.mainWindow(), "Message", message)
+	else:
+		QMessageBox.information(iface.mainWindow(), "Message", "Successfully Loaded All TUFLOW Layers")

@@ -48,6 +48,7 @@ class tuflowqgis_menu:
 		self.cLayer = None
 		self.tpExternal = None
 		self.defaultPath = 'C:\\'
+		self.resdock = None
 
 	def initGui(self):
 		# About Submenu
@@ -183,12 +184,19 @@ class tuflowqgis_menu:
 		self.iface.addToolBarIcon(self.apply_auto_label_action)
 		self.iface.addPluginToMenu("&TUFLOW", self.apply_auto_label_action)
 		
-		#ES 2018/01 ARR2016 Beta
+		# ES 2018/01 ARR2016 Beta
 		icon = QIcon(os.path.dirname(__file__) + "/icons/arr2016.PNG")
 		self.extract_arr2016_action = QAction(icon, "Extract ARR2016 for TUFLOW (beta)", self.iface.mainWindow())
 		QObject.connect(self.extract_arr2016_action, SIGNAL("triggered()"), self.extract_arr2016)
 		self.iface.addPluginToMenu("&TUFLOW", self.extract_arr2016_action)
 		self.iface.addToolBarIcon(self.extract_arr2016_action)
+		
+		# ES 2018/05 Load input files from TCF
+		#icon = QIcon(os.path.dirname(__file__) + "/icons/arr2016.PNG")
+		self.load_tuflowFiles_from_TCF_action = QAction("Load TUFLOW Layers from TCF", self.iface.mainWindow())
+		QObject.connect(self.load_tuflowFiles_from_TCF_action, SIGNAL("triggered()"), self.loadTuflowLayers)
+		self.iface.addPluginToMenu("&TUFLOW", self.load_tuflowFiles_from_TCF_action)
+		#self.iface.addToolBarIcon(self.extract_arr2016_action)
 		
 		# Check 1D network integrity
 		self.check_1d_integrity_action = QAction("Check 1D Network Integrity", self.iface.mainWindow())
@@ -384,5 +392,36 @@ class tuflowqgis_menu:
 			QMessageBox.critical(self.iface.mainWindow(), "Error", message)
 	
 	def check_1d_integrity(self):
-		dialog = tuflowqgis_check_1d_integrity_dialog(self.iface)
-		dialog.exec_()
+		self.dialog = tuflowqgis_check_1d_integrity_dialog(self.iface, self.dockOpened, self.resdock)
+		self.dialog.exec_()
+		self.dockOpened = self.dialog.dockOpened
+		self.resdock = self.dialog.resdock
+		
+	def loadTuflowLayers(self):
+		settings = QSettings()
+		lastFolder = str(settings.value("TUFLOW/TCF_last_folder", os.sep))
+		if (len(lastFolder) > 0):  # use last folder if stored
+			fpath = lastFolder
+		else:
+			cLayer = self.iface.mapCanvas.currentLayer()
+			if cLayer:  # if layer selected use the path to this
+				dp = cLayer.dataProvider()
+				ds = dp.dataSourceUri()
+				fpath = os.path.dirname(unicode(ds))
+			else:  # final resort to current working directory
+				fpath = os.getcwd()
+		
+		inFileNames = QFileDialog.getOpenFileNames(self.iface.mainWindow(), 'Open TUFLOW TCF', fpath,
+		                                           "TCF (*.tcf)")
+		for inFileName in inFileNames:
+			if not inFileName or len(inFileName) < 1:  # empty list
+				return
+			else:
+				fpath, fname = os.path.split(inFileName)
+				if fpath != os.sep and fpath.lower() != 'c:\\' and fpath != '':
+					settings.setValue("TUFLOW/TCF_last_folder", fpath)
+				if os.path.splitext(inFileName)[1].lower() != '.tcf':
+					QMessageBox.information(self.iface.mainWindow(), "Message", 'Must select TCF')
+					return
+				else:
+					openGisFromTcf(inFileName, self.iface)
