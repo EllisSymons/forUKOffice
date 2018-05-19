@@ -1609,58 +1609,61 @@ def loadGisFromControlFile(controlFile, iface, processed_paths, processed_layers
 						command = command.strip()
 						relPath = relPath.split('!')[0]
 						relPath = relPath.strip()
-						path = getPathFromRel(dir, relPath)
-						if path in processed_paths:
-							continue
-						ext = os.path.splitext(path)[1]
-						if ext.lower() == '.mid':
-							path = '{0}.mif'.format(os.path.splitext(path)[0])
-							ext = '.mif'
-						if ext.lower() == '.shp':
-							try:
-								if os.path.exists(path):
-									lyr = iface.addVectorLayer(path, os.path.basename(os.path.splitext(path)[0]), 'ogr')
-									group.addLayer(lyr)
-									processed_paths.append(path)
-									processed_layers.append(lyr)
-								else:
+						relPaths = relPath.split("|")
+						for relPath in relPaths:
+							relPath = relPath.strip()
+							path = getPathFromRel(dir, relPath)
+							if path in processed_paths:
+								continue
+							ext = os.path.splitext(path)[1]
+							if ext.lower() == '.mid':
+								path = '{0}.mif'.format(os.path.splitext(path)[0])
+								ext = '.mif'
+							if ext.lower() == '.shp':
+								try:
+									if os.path.exists(path):
+										lyr = iface.addVectorLayer(path, os.path.basename(os.path.splitext(path)[0]), 'ogr')
+										group.addLayer(lyr)
+										processed_paths.append(path)
+										processed_layers.append(lyr)
+									else:
+										error = True
+										log += '{0}\n'.format(path)
+								except:
 									error = True
 									log += '{0}\n'.format(path)
-							except:
-								error = True
-								log += '{0}\n'.format(path)
-						elif ext.lower() == '.mif':
-							try:
-								if os.path.exists(path):
-									lyr = iface.addVectorLayer(path, os.path.basename(os.path.splitext(path)[0]), 'ogr')
-									lyrName = os.path.basename(os.path.splitext(path)[0])
-									for name, layer in QgsMapLayerRegistry.instance().mapLayers().items():
-										if lyrName in layer.name():
-											group.addLayer(layer)
-											processed_paths.append(path)
-											processed_layers.append(layer)
-								else:
+							elif ext.lower() == '.mif':
+								try:
+									if os.path.exists(path):
+										lyr = iface.addVectorLayer(path, os.path.basename(os.path.splitext(path)[0]), 'ogr')
+										lyrName = os.path.basename(os.path.splitext(path)[0])
+										for name, layer in QgsMapLayerRegistry.instance().mapLayers().items():
+											if lyrName in layer.name():
+												group.addLayer(layer)
+												processed_paths.append(path)
+												processed_layers.append(layer)
+									else:
+										error = True
+										log += '{0}\n'.format(path)
+								except:
 									error = True
 									log += '{0}\n'.format(path)
-							except:
-								error = True
-								log += '{0}\n'.format(path)
-						elif ext.lower() == '.asc' or ext.lower() == '.flt':
-							try:
-								if os.path.exists(path):
-									lyr = iface.addRasterLayer(path, os.path.basename(os.path.splitext(path)[0]), 'gdal')
-									group.addLayer(lyr)
-									processed_paths.append(path)
-									processed_layers.append(lyr)
-								else:
+							elif ext.lower() == '.asc' or ext.lower() == '.flt':
+								try:
+									if os.path.exists(path):
+										lyr = iface.addRasterLayer(path, os.path.basename(os.path.splitext(path)[0]), 'gdal')
+										group.addLayer(lyr)
+										processed_paths.append(path)
+										processed_layers.append(lyr)
+									else:
+										error = True
+										log += '{0}\n'.format(path)
+								except:
 									error = True
 									log += '{0}\n'.format(path)
-							except:
+							else:
 								error = True
 								log += '{0}\n'.format(path)
-						else:
-							error = True
-							log += '{0}\n'.format(path)
 	lyrs = [c.layer() for c in group.children()]
 	lyrs_sorted = sorted(lyrs, key=lambda x: x.name())
 	for i, lyr in enumerate(lyrs_sorted):
