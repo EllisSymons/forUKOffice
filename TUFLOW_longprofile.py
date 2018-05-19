@@ -4,7 +4,7 @@ import numpy as np
 from tuflowqgis_library import *
 sys.path.append(r'C:\Program Files\JetBrains\PyCharm 2018.1\debug-eggs')
 sys.path.append(r'C:\Program Files\JetBrains\PyCharm 2018.1\helpers\pydev')
-
+sys.path.append(r'C:\Users\Ellis\.p2\pool\plugins\org.python.pydev.core_6.3.2.201803171248\pysrc')
 
 
 
@@ -100,7 +100,8 @@ class DownstreamConnectivity():
 		
 		:return: void
 		"""
-
+		
+		# Clear branch variables
 		self.bType = []
 		self.bName = []
 		self.bUsInvert = []
@@ -285,9 +286,13 @@ class DownstreamConnectivity():
 					for i2, dns_nwk2 in enumerate(dns_nwks):
 						already = False
 						if i != i2:
-							for b in branches:
+							for j, b in enumerate(branches):
 								if i in b:
 									already = True
+								elif i2 in b:
+									if dns_nwk == dns_nwk2:
+										branches[j].append(i)
+										already = True
 							if not already:
 								if dns_nwk == dns_nwk2:
 									branches.append([i, i2])
@@ -322,25 +327,27 @@ class DownstreamConnectivity():
 					coverDepth = []
 					angle = []
 					length = []
+					inProcessedNwks = False
 					for nwk in nwks:
 						for f in features:
 							id = f.attributes()[0]
 							if nwk == id:
 								self.first_sel = False
 								self.branchExists = True
-								if network[0] in self.processed_nwks:
-									self.branchDnsConnectionPipe.append(network)
+								if nwk in self.processed_nwks:	
+									self.branchDnsConnectionPipe.append([nwk])
 									self.joiningOutlet.append('JOINING EXISTING BRANCH')
 									dns = False
+									inProcessedNwks = True
 									break
-								t = features[0].attributes()[1]
-								l = features[0].attributes()[4]
+								t = f.attributes()[1]
+								l = f.attributes()[4]
 								if l <= 0:
-									l = getLength(features[0])
+									l = getLength(f)
 								na = id
-								n = features[0].attributes()[15]
-								w = features[0].attributes()[13]
-								h = features[0].attributes()[14]
+								n = f.attributes()[15]
+								w = f.attributes()[13]
+								h = f.attributes()[14]
 								uI = self.dsLines[nwk][1][0]
 								dI = self.dsLines[nwk][1][1]
 								if nwk in self.dsLines.keys():
@@ -353,7 +360,7 @@ class DownstreamConnectivity():
 								o = []
 								cd = []
 								if t.lower() == 'r':
-									a = float(no) * width * height
+									a = float(n) * w * h
 									if self.coverLimit is not None:
 										gc = self.lineDrape[na][1]
 										gr = self.lineDrape[na][2]
@@ -384,11 +391,11 @@ class DownstreamConnectivity():
 										o = []
 										cd = []
 								if (dI > uI and uI != -99999.00) or (uI > dsInv_prev and dsInv_prev != -99999.00):
-									adG = True
+									adverseGradient = True
 								if a < area_prev and a != 0:
-									decFA = True
+									decFlowArea = True
 								if ang < self.angleLimit and ang != 0:
-									sA = True
+									sharpAngle = True
 								name.append(na)
 								typ.append(t)
 								no.append(n)
@@ -403,6 +410,10 @@ class DownstreamConnectivity():
 								coverDepth.append(cd)
 								angle.append(ang)
 								length.append(l)
+						if inProcessedNwks:
+							break
+					if inProcessedNwks:
+							break
 					self.bType.append(typ)
 					self.bLength.append(max(length))
 					self.bName.append(name)
@@ -424,7 +435,7 @@ class DownstreamConnectivity():
 					if nwks[0] in self.dsLines.keys():
 						if len(self.dsLines[nwks[0]][0]) == 0:
 							self.joiningOutlet.append(self.dsLines[nwks[0]][3])
-							self.branchDnsConnectionPipe.append([])
+							self.branchDnsConnectionPipe.append('OUTLET')
 							for nwk in nwks:
 								self.processed_nwks.append(nwk)
 							dns = False
@@ -436,7 +447,7 @@ class DownstreamConnectivity():
 							network = self.dsLines[nwks[0]][0]
 					else:
 						self.joiningOutlet.append(self.dsLines[nwks[0]][3])
-						self.branchDnsConnectionPipe.append([])
+						self.branchDnsConnectionPipe.append('OUTLET')
 						for nwk in nwks:
 							self.processed_nwks.append(nwk)
 						dns = False
@@ -537,7 +548,7 @@ class DownstreamConnectivity():
 		
 		:return: a completed branchDnsConnectionPipe
 		"""
-		
+	
 		for i, branch in enumerate(self.name):
 			lastNwk = branch[-1]
 			dnsConns = self.dsLines[lastNwk][0]
@@ -558,15 +569,29 @@ class DownstreamConnectivity():
 				self.dnsBranches.append([None])
 			else:
 				branches = []
-				for branchDnsConnection in self.branchDnsConnectionPipe[i]:
-					for j, name in enumerate(self.name):
-						if branchDnsConnection in name:
-							branches.append(self.branchName[j])
+				for j, name in enumerate(self.name):
+					if type(name) == list:
+						for n in name:
+							if type(n) == list:
+								for na in n:
+									if na in self.branchDnsConnectionPipe[i]:
+										branches.append(self.branchName[j])
+										break
+							if n in self.branchDnsConnectionPipe[i]:
+								branches.append(self.branchName[j])
+					elif name in self.branchDnsConnectionPipe[i]:
+						branches.append(self.branchName[j])
 				self.dnsBranches.append(branches)
 			ups = True
 			branches = []
 			for j, branchDnsConnection in enumerate(self.branchDnsConnectionPipe):
-				if self.name[i][0] in branchDnsConnection:
+				if type(self.name[i][0]) == list:
+					for name in self.name[i][0]:
+						if name in branchDnsConnection:
+							branches.append(self.branchName[j])
+							ups = False
+							break
+				elif self.name[i][0] in branchDnsConnection:
 					branches.append(self.branchName[j])
 					ups = False
 			if ups:
@@ -675,10 +700,13 @@ class DownstreamConnectivity():
 						if dnsB is not None:
 							bdInd = self.branchName.index(dnsB)
 						if connNwkNames is not 'OUTLET':
-							for c in connNwkNames:
-								if c in self.name[bdInd]:
-									connNwkName = c
-									break
+							if connNwkNames in self.name[bdInd]:
+								connNwkName = connNwkNames
+							else:
+								for c in connNwkNames:
+									if c in self.name[bdInd]:
+										connNwkName = c
+										break
 			self.pathsNwks.append(pathsNwks)
 			self.pathsLen.append(sum(pathsLen))
 			self.pathsNwksLen.append(pathsLen)

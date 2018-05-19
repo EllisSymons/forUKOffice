@@ -192,11 +192,11 @@ class tuflowqgis_menu:
 		self.iface.addToolBarIcon(self.extract_arr2016_action)
 		
 		# ES 2018/05 Load input files from TCF
-		#icon = QIcon(os.path.dirname(__file__) + "/icons/arr2016.PNG")
-		self.load_tuflowFiles_from_TCF_action = QAction("Load TUFLOW Layers from TCF", self.iface.mainWindow())
+		icon = QIcon(os.path.dirname(__file__) + "/icons/load_from_TCF.PNG")
+		self.load_tuflowFiles_from_TCF_action = QAction(icon, "Load TUFLOW Layers from TCF", self.iface.mainWindow())
 		QObject.connect(self.load_tuflowFiles_from_TCF_action, SIGNAL("triggered()"), self.loadTuflowLayers)
 		self.iface.addPluginToMenu("&TUFLOW", self.load_tuflowFiles_from_TCF_action)
-		#self.iface.addToolBarIcon(self.extract_arr2016_action)
+		self.iface.addToolBarIcon(self.load_tuflowFiles_from_TCF_action)
 		
 		# Check 1D network integrity
 		self.check_1d_integrity_action = QAction("Check 1D Network Integrity", self.iface.mainWindow())
