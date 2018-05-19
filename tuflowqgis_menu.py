@@ -424,4 +424,11 @@ class tuflowqgis_menu:
 					QMessageBox.information(self.iface.mainWindow(), "Message", 'Must select TCF')
 					return
 				else:
-					openGisFromTcf(inFileName, self.iface)
+					error, message, scenarios = getScenariosFromTcf(inFileName, self.iface)
+					if error:
+						QMessageBox.information(self.iface.mainWindow(), "Message", message)
+					if len(scenarios) > 0:
+						self.dialog = tuflowqgis_scenarioSelection_dialog(self.iface, inFileName, scenarios)
+						self.dialog.exec_()
+					else:
+						openGisFromTcf(inFileName, self.iface)

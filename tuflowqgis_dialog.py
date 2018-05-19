@@ -2197,3 +2197,42 @@ class tuflowqgis_check_1d_integrity_dialog(QDialog, Ui_check1dIntegrity):
 							if f.attributes()[0] in unsnappedLineNames:
 								fid = f.id()
 								layer.select(fid)
+
+
+# ----------------------------------------------------------
+#    tuflowqgis scenario selection
+# ----------------------------------------------------------
+from ui_tuflowqgis_scenarioSelection import *
+
+
+class tuflowqgis_scenarioSelection_dialog(QDialog, Ui_scenarioSelection):
+	def __init__(self, iface, tcf, scenarios):
+		QDialog.__init__(self)
+		self.iface = iface
+		self.tcf = tcf
+		self.scenarios = scenarios
+		self.setupUi(self)
+		
+		for scenario in self.scenarios:
+			self.scenario_lw.addItem(scenario)
+			
+		self.ok_button.clicked.connect(self.run)
+		self.cancel_button.clicked.connect(self.cancel)
+		self.selectAll_button.clicked.connect(self.selectAll)
+		
+	def cancel(self):
+		return
+	
+	def selectAll(self):
+		for i in range(self.scenario_lw.count()):
+			item = self.scenario_lw.item(i)
+			self.scenario_lw.setItemSelected(item, True)
+			
+	def run(self):
+		scenarios = []
+		for i in range(self.scenario_lw.count()):
+			item = self.scenario_lw.item(i)
+			if item.isSelected():
+				scenarios.append(item.text())
+		openGisFromTcf(self.tcf, self.iface, scenarios)
+		

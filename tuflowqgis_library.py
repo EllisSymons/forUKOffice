@@ -30,6 +30,7 @@ import numpy
 import matplotlib
 import glob # MJS 11/02
 import tuflowqgis_styles
+from __builtin__ import True
 
 sys.path.append(r'C:\Program Files\JetBrains\PyCharm 2018.1\debug-eggs')
 sys.path.append(r'C:\Program Files\JetBrains\PyCharm 2018.1\helpers\pydev')
@@ -1585,7 +1586,7 @@ def removeLayer(lyr):
 				root.removeChildNode(child)
 
 
-def loadGisFromControlFile(controlFile, iface, processed_paths, processed_layers):
+def loadGisFromControlFile(controlFile, iface, processed_paths, processed_layers, scenarios):
 	"""
 	Opens all vector layers from the specified tuflow control file
 	
@@ -1599,9 +1600,33 @@ def loadGisFromControlFile(controlFile, iface, processed_paths, processed_layers
 	dir = os.path.dirname(controlFile)
 	root = QgsProject.instance().layerTreeRoot()
 	group = root.addGroup(os.path.basename(controlFile))
+	read = True
 	with open(controlFile, 'r') as fo:
 		for f in fo:
-			if 'read' in f.lower():
+			if 'if scenario' in f.lower():
+				ind = f.lower().find('if scenario')
+				if '!' not in f[:ind]:
+					command, scenario = f.split('==')
+					command = command.strip()
+					scenario = scenario.split('!')[0]
+					scenario = scenario.strip()
+					scenarios_ = scenario.split('|')
+					found = False
+					for scenario in scenarios_:
+						scenario = scenario.strip()
+						if scenario in scenarios:
+							found = True
+					if found:
+						read = True
+					else:
+						read = False
+			elif 'end if' in f.lower():
+				ind = f.lower().find('end if')
+				if '!' not in f[:ind]:
+					read = True
+			elif not read:
+				continue
+			elif 'read' in f.lower():
 				ind = f.lower().find('read')
 				if '!' not in f[:ind]:
 					if 'read materials file' not in f.lower() and 'read file' not in f.lower() and 'read operating controls file' not in f.lower():
@@ -1672,7 +1697,7 @@ def loadGisFromControlFile(controlFile, iface, processed_paths, processed_layers
 	return error, log, processed_paths, processed_layers
 
 
-def openGisFromTcf(tcf, iface):
+def openGisFromTcf(tcf, iface, *args):
 	"""
 	Opens all vector layers from the tuflow model from the TCF
 	
@@ -1681,12 +1706,16 @@ def openGisFromTcf(tcf, iface):
 	:return: void - opens all files in qgis window
 	"""
 	
+	scenarios = []
+	for arg in args:
+		scenarios = arg
+	
 	dir = os.path.dirname(tcf)
 	processed_paths = []
 	processed_layers = []
 	couldNotReadFile = False
 	message = 'Could not open file:\n'
-	error, log, pPaths, pLayers = loadGisFromControlFile(tcf, iface, processed_paths, processed_layers)
+	error, log, pPaths, pLayers = loadGisFromControlFile(tcf, iface, processed_paths, processed_layers, scenarios)
 	processed_paths += pPaths
 	processed_layers += pLayers
 	if error:
@@ -1702,7 +1731,7 @@ def openGisFromTcf(tcf, iface):
 					relPath = relPath.split('!')[0]
 					relPath = relPath.strip()
 					path = getPathFromRel(dir, relPath)
-					error, log, pPaths, pLayers = loadGisFromControlFile(path, iface, processed_paths, processed_layers)
+					error, log, pPaths, pLayers = loadGisFromControlFile(path, iface, processed_paths, processed_layers, scenarios)
 					processed_paths += pPaths
 					processed_layers += pLayers
 					if error:
@@ -1716,7 +1745,7 @@ def openGisFromTcf(tcf, iface):
 					relPath = relPath.split('!')[0]
 					relPath = relPath.strip()
 					path = getPathFromRel(dir, relPath)
-					error, log, pPaths, pLayers = loadGisFromControlFile(path, iface, processed_paths, processed_layers)
+					error, log, pPaths, pLayers = loadGisFromControlFile(path, iface, processed_paths, processed_layers, scenarios)
 					processed_paths += pPaths
 					processed_layers += pLayers
 					if error:
@@ -1730,7 +1759,7 @@ def openGisFromTcf(tcf, iface):
 					relPath = relPath.split('!')[0]
 					relPath = relPath.strip()
 					path = getPathFromRel(dir, relPath)
-					error, log, pPaths, pLayers = loadGisFromControlFile(path, iface, processed_paths, processed_layers)
+					error, log, pPaths, pLayers = loadGisFromControlFile(path, iface, processed_paths, processed_layers, scenarios)
 					processed_paths += pPaths
 					processed_layers += pLayers
 					if error:
@@ -1744,7 +1773,7 @@ def openGisFromTcf(tcf, iface):
 					relPath = relPath.split('!')[0]
 					relPath = relPath.strip()
 					path = getPathFromRel(dir, relPath)
-					error, log, pPaths, pLayers = loadGisFromControlFile(path, iface, processed_paths, processed_layers)
+					error, log, pPaths, pLayers = loadGisFromControlFile(path, iface, processed_paths, processed_layers, scenarios)
 					processed_paths += pPaths
 					processed_layers += pLayers
 					if error:
@@ -1758,7 +1787,7 @@ def openGisFromTcf(tcf, iface):
 					relPath = relPath.split('!')[0]
 					relPath = relPath.strip()
 					path = getPathFromRel(dir, relPath)
-					error, log, pPaths, pLayers = loadGisFromControlFile(path, iface, processed_paths, processed_layers)
+					error, log, pPaths, pLayers = loadGisFromControlFile(path, iface, processed_paths, processed_layers, scenarios)
 					processed_paths += pPaths
 					processed_layers += pLayers
 					if error:
@@ -1772,7 +1801,7 @@ def openGisFromTcf(tcf, iface):
 					relPath = relPath.split('!')[0]
 					relPath = relPath.strip()
 					path = getPathFromRel(dir, relPath)
-					error, log, pPaths, pLayers = loadGisFromControlFile(path, iface, processed_paths, processed_layers)
+					error, log, pPaths, pLayers = loadGisFromControlFile(path, iface, processed_paths, processed_layers, scenarios)
 					processed_paths += pPaths
 					processed_layers += pLayers
 					if error:
@@ -1784,3 +1813,126 @@ def openGisFromTcf(tcf, iface):
 		QMessageBox.information(iface.mainWindow(), "Message", message)
 	else:
 		QMessageBox.information(iface.mainWindow(), "Message", "Successfully Loaded All TUFLOW Layers")
+		
+		
+def getScenariosFromControlFile(controlFile, processedScenarios):
+	"""
+	
+	:param controlFile: string - control file location
+	:param processedScenarios: list - list of already processed scenarios
+	:return: list - processed and added scenarios
+	"""
+	
+	with open(controlFile, 'r') as fo:
+		for f in fo:
+			if 'if scenario' in f.lower():
+				ind = f.lower().find('if scenario')
+				if '!' not in f[:ind]:
+					command, scenario = f.split('==')
+					command = command.strip()
+					scenario = scenario.split('!')[0]
+					scenario = scenario.strip()
+					scenarios = scenario.split('|')
+					for scenario in scenarios:
+						scenario = scenario.strip()
+						if scenario not in processedScenarios:
+							processedScenarios.append(scenario)
+	return processedScenarios
+
+
+def getScenariosFromTcf(tcf, iface):
+	"""
+	
+	:param tcf: string - tcf location
+	:param iface: QgisInterface
+	:return: bool error
+	:return: string message
+	:return: list scenarios
+	"""
+	
+	message = 'Could not find the following files:\n'
+	error = False
+	dir = os.path.dirname(tcf)
+	scenarios = []
+	scenarios = getScenariosFromControlFile(tcf, scenarios)
+	with open(tcf, 'r') as fo:
+		for f in fo:
+			if 'estry control file' in f.lower():
+				ind = f.lower().find('estry control file')
+				if '!' not in f[:ind]:
+					command, relPath = f.split('==')
+					command = command.strip()
+					relPath = relPath.split('!')[0]
+					relPath = relPath.strip()
+					path = getPathFromRel(dir, relPath)
+					if os.path.exists(path):
+						scenarios = getScenariosFromControlFile(path, scenarios)
+					else:
+						error = True
+						message += '{0}\n'.format(path)
+			if 'geometry control file' in f.lower():
+				ind = f.lower().find('geometry control file')
+				if '!' not in f[:ind]:
+					command, relPath = f.split('==')
+					command = command.strip()
+					relPath = relPath.split('!')[0]
+					relPath = relPath.strip()
+					path = getPathFromRel(dir, relPath)
+					if os.path.exists(path):
+						scenarios = getScenariosFromControlFile(path, scenarios)
+					else:
+						error = True
+						message += '{0}\n'.format(path)
+			if 'bc control file' in f.lower():
+				ind = f.lower().find('bc control file')
+				if '!' not in f[:ind]:
+					command, relPath = f.split('==')
+					command = command.strip()
+					relPath = relPath.split('!')[0]
+					relPath = relPath.strip()
+					path = getPathFromRel(dir, relPath)
+					if os.path.exists(path):
+						scenarios = getScenariosFromControlFile(path, scenarios)
+					else:
+						error = True
+						message += '{0}\n'.format(path)
+			if 'event control file' in f.lower():
+				ind = f.lower().find('event control file')
+				if '!' not in f[:ind]:
+					command, relPath = f.split('==')
+					command = command.strip()
+					relPath = relPath.split('!')[0]
+					relPath = relPath.strip()
+					path = getPathFromRel(dir, relPath)
+					if os.path.exists(path):
+						scenarios = getScenariosFromControlFile(path, scenarios)
+					else:
+						error = True
+						message += '{0}\n'.format(path)
+			if 'read file' in f.lower():
+				ind = f.lower().find('read file')
+				if '!' not in f[:ind]:
+					command, relPath = f.split('==')
+					command = command.strip()
+					relPath = relPath.split('!')[0]
+					relPath = relPath.strip()
+					path = getPathFromRel(dir, relPath)
+					if os.path.exists(path):
+						scenarios = getScenariosFromControlFile(path, scenarios)
+					else:
+						error = True
+						message += '{0}\n'.format(path)
+			if 'read operating controls file' in f.lower():
+				ind = f.lower().find('read operating controls file')
+				if '!' not in f[:ind]:
+					command, relPath = f.split('==')
+					command = command.strip()
+					relPath = relPath.split('!')[0]
+					relPath = relPath.strip()
+					path = getPathFromRel(dir, relPath)
+					if os.path.exists(path):
+						scenarios = getScenariosFromControlFile(path, scenarios)
+					else:
+						error = True
+						message += '{0}\n'.format(path)
+	return error, message, scenarios
