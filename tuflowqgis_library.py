@@ -1575,8 +1575,7 @@ def removeLayer(lyr):
 	:param lyr: QgsVectorLayer
 	:return: void
 	"""
-	import pydevd
-	pydevd.settrace('localhost', port=53100, stdoutToServer=True, stderrToServer=True)
+
 	if lyr is not None:
 		root = QgsProject.instance().layerTreeRoot()
 		for i, child in enumerate(root.children()):
@@ -1617,13 +1616,29 @@ def loadGisFromControlFile(controlFile, iface, processed_paths, processed_layers
 						if ext.lower() == '.mid':
 							path = '{0}.mif'.format(os.path.splitext(path)[0])
 							ext = '.mif'
-						if ext.lower() == '.shp' or ext.lower() == '.mif':
+						if ext.lower() == '.shp':
 							try:
 								if os.path.exists(path):
 									lyr = iface.addVectorLayer(path, os.path.basename(os.path.splitext(path)[0]), 'ogr')
 									group.addLayer(lyr)
 									processed_paths.append(path)
 									processed_layers.append(lyr)
+								else:
+									error = True
+									log += '{0}\n'.format(path)
+							except:
+								error = True
+								log += '{0}\n'.format(path)
+						elif ext.lower() == '.mif':
+							try:
+								if os.path.exists(path):
+									lyr = iface.addVectorLayer(path, os.path.basename(os.path.splitext(path)[0]), 'ogr')
+									lyrName = os.path.basename(os.path.splitext(path)[0])
+									for name, layer in QgsMapLayerRegistry.instance().mapLayers().items():
+										if lyrName in layer.name():
+											group.addLayer(layer)
+											processed_paths.append(path)
+											processed_layers.append(layer)
 								else:
 									error = True
 									log += '{0}\n'.format(path)
