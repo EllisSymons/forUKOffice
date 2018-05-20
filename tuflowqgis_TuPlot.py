@@ -1769,8 +1769,9 @@ class TuPlot(QDockWidget, Ui_tuflowqgis_TuPlot):
 		cPaths = []
 		for i in range(self.ResTypeList.count()):
 			path = self.ResTypeList.item(i).text()
-			if self.ResTypeList.item(i).isSelected():
-				cPaths.append(path)
+			if 'path' in path.lower():
+				if self.ResTypeList.item(i).isSelected():
+					cPaths.append(path)
 		selectionNwks = []
 		for path in cPaths:
 			pInd = self.profileIntTool.pathsName.index(path)
