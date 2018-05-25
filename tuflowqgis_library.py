@@ -1394,15 +1394,21 @@ def moveVertices(lyrs, vertices_dict, dist):
 						editedV.append(id2)
 						if node is None:
 							log += 'Connected {0} to {1} {4} ({2:.4f}, {3:.4f})\n'.format(name, name2, v[0], v[1],
-							                                                              'upstream' if node2 == '0' else 'downstream')
+							                                                              'upstream' if node2 == '0'
+							                                                              else 'downstream')
 						elif node == '0':
 							log += 'Connected {0} upstream to {1} {4} ({2:.4f}, {3:.4f})\n'.format(name, name2, v[0],
 							                                                                       v[1],
-							                                                                       'upstream' if node2 == '0' else 'downstream')
+							                                                                       'upstream' if node2
+							                                                                                     ==
+							                                                                                     '0'
+							                                                                       else 'downstream')
 						else:
 							log += 'Connected {0} downstream to {1} {4} ({2:.4f}, {3:.4f})\n'.format(name, name2, v[0],
 							                                                                         v[1],
-							                                                                         'upstream' if node2 == '0' else 'downstream')
+							                                                                         'upstream' if
+							                                                                         node2 == '0' else
+							                                                                         'downstream')
 		lyr.commitChanges()
 
 	return log

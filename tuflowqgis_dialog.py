@@ -2005,6 +2005,7 @@ class tuflowqgis_check_1d_integrity_dialog(QDialog, Ui_check1dIntegrity):
 		outMsg = False
 		outSel = False
 		outTxt = False
+		outLyr = False
 		dem = None
 		plotCoverDepth = None
 		if self.check1dLine_cb.isChecked():
@@ -2037,6 +2038,8 @@ class tuflowqgis_check_1d_integrity_dialog(QDialog, Ui_check1dIntegrity):
 			outSel = True
 		if self.outTxtFile_cb.isChecked():
 			outTxt = True
+		if self.outPLayer_cb.isChecked():
+			outLyr = True
 		lineLyrs = []
 		lineDict = {}
 		for i in range(self.lineLyrs_lw.count()):
@@ -2197,6 +2200,15 @@ class tuflowqgis_check_1d_integrity_dialog(QDialog, Ui_check1dIntegrity):
 							if f.attributes()[0] in unsnappedLineNames:
 								fid = f.id()
 								layer.select(fid)
+		if outLyr:
+			messageLyr = []
+			# lines
+			import pydevd
+			pydevd.settrace('localhost', port=53100, stdoutToServer=True, stderrToServer=True)
+			if checkLine:
+				for layer in unsnappedLines:
+					return
+				
 
 
 # ----------------------------------------------------------
