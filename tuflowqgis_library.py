@@ -1354,7 +1354,7 @@ def findAllRasterLyrs():
 	return rasterLyrs
 
 
-def moveVertices(lyrs, vertices_dict, dist):
+def moveVertices(lyrs, vertices_dict, dist, units):
 	"""
 	Edits the vertices within the layer to the snap location if within the distance
 	
@@ -1365,7 +1365,8 @@ def moveVertices(lyrs, vertices_dict, dist):
 	:return: string of logged moves
 	"""
 	
-	editedV = []
+	editedV = []  # for processing
+	movedV = []  # for logging
 	node = None
 	log = ''
 	for lyr in lyrs:
@@ -1392,26 +1393,36 @@ def moveVertices(lyrs, vertices_dict, dist):
 							lyr.moveVertex(v[0], v[1], fid, lastVertex)
 						editedV.append(id)
 						editedV.append(id2)
+						movedV.append(id)
 						if node is None:
-							log += 'Connected {0} to {1} {4} ({2:.4f}, {3:.4f})\n'.format(name, name2, v[0], v[1],
-							                                                              'upstream' if node2 == '0'
-							                                                              else 'downstream')
+							log += 'Moved {0} {5:.4f}{6} to {1} {4} ({2:.4f}, {3:.4f})\n'.format(name, name2, v[0],
+																								  v[1],
+																								  'upstream' if node2
+																												== '0'
+																								  else 'downstream',
+																								  param[4], units)
 						elif node == '0':
-							log += 'Connected {0} upstream to {1} {4} ({2:.4f}, {3:.4f})\n'.format(name, name2, v[0],
-							                                                                       v[1],
-							                                                                       'upstream' if node2
-							                                                                                     ==
-							                                                                                     '0'
-							                                                                       else 'downstream')
+							log += 'Moved {0} upstream {5:.4f}{6} to {1} {4} ({2:.4f}, {3:.4f})\n'.format(name, name2,
+																										   v[0],
+																										   v[1],
+																										   'upstream'
+																										   if node2 == '0'
+																										   else
+																										   'downstream',
+																										   param[4], units)
 						else:
-							log += 'Connected {0} downstream to {1} {4} ({2:.4f}, {3:.4f})\n'.format(name, name2, v[0],
-							                                                                         v[1],
-							                                                                         'upstream' if
-							                                                                         node2 == '0' else
-							                                                                         'downstream')
+							log += 'Moved {0} downstream {5:.4f}{6} to {1} {4} ({2:.4f}, {3:.4f})\n'.format(name,
+																											 name2,
+																											 v[0],
+																											 v[1],
+																											 'upstream' if
+																											 node2 ==
+																											 '0' else
+																											 'downstream',
+																											 param[4], units)
 		lyr.commitChanges()
 
-	return log
+	return movedV, log
 
 
 def interpolateObvert(usInv, dsInv, size, xValues):

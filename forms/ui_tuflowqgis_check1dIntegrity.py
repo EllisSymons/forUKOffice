@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'ui_tuflowqgis_check1dIntegrity.ui'
 #
-# Created: Thu May 17 11:03:43 2018
+# Created: Sat May 26 15:30:42 2018
 #      by: PyQt4 UI code generator 4.10.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -184,6 +184,7 @@ class Ui_check1dIntegrity(object):
         self.label_18.setFont(font)
         self.label_18.setObjectName(_fromUtf8("label_18"))
         self.groupBox_4 = QtGui.QGroupBox(self.groupBox)
+        self.groupBox_4.setEnabled(True)
         self.groupBox_4.setGeometry(QtCore.QRect(5, 9, 391, 71))
         font = QtGui.QFont()
         font.setBold(True)
@@ -192,14 +193,6 @@ class Ui_check1dIntegrity(object):
         self.groupBox_4.setCheckable(True)
         self.groupBox_4.setChecked(False)
         self.groupBox_4.setObjectName(_fromUtf8("groupBox_4"))
-        self.autoSnap_cb = QtGui.QCheckBox(self.groupBox_4)
-        self.autoSnap_cb.setEnabled(False)
-        self.autoSnap_cb.setGeometry(QtCore.QRect(10, 40, 71, 20))
-        font = QtGui.QFont()
-        font.setBold(False)
-        font.setWeight(50)
-        self.autoSnap_cb.setFont(font)
-        self.autoSnap_cb.setObjectName(_fromUtf8("autoSnap_cb"))
         self.label_4 = QtGui.QLabel(self.groupBox_4)
         self.label_4.setEnabled(False)
         self.label_4.setGeometry(QtCore.QRect(164, 43, 131, 16))
@@ -232,6 +225,13 @@ class Ui_check1dIntegrity(object):
         font.setWeight(50)
         self.check1dLine_cb.setFont(font)
         self.check1dLine_cb.setObjectName(_fromUtf8("check1dLine_cb"))
+        self.autoSnap_cb = QtGui.QCheckBox(self.groupBox_4)
+        self.autoSnap_cb.setGeometry(QtCore.QRect(10, 40, 181, 20))
+        font = QtGui.QFont()
+        font.setBold(False)
+        font.setWeight(50)
+        self.autoSnap_cb.setFont(font)
+        self.autoSnap_cb.setObjectName(_fromUtf8("autoSnap_cb"))
         self.groupBox_6 = QtGui.QGroupBox(self.groupBox)
         self.groupBox_6.setGeometry(QtCore.QRect(410, 9, 261, 121))
         font = QtGui.QFont()
@@ -503,10 +503,10 @@ class Ui_check1dIntegrity(object):
         self.label_17.setText(_translate("check1dIntegrity", "map units", None))
         self.label_18.setText(_translate("check1dIntegrity", "degrees", None))
         self.groupBox_4.setTitle(_translate("check1dIntegrity", "Snapping", None))
-        self.autoSnap_cb.setText(_translate("check1dIntegrity", "Auto snap ", None))
         self.label_4.setText(_translate("check1dIntegrity", "Search radius (map units)", None))
         self.check1dPoint_cb.setText(_translate("check1dIntegrity", "Check 1D Point-Line snapping", None))
         self.check1dLine_cb.setText(_translate("check1dIntegrity", "Check 1D Line-Line snapping", None))
+        self.autoSnap_cb.setText(_translate("check1dIntegrity", "Auto Snap", None))
         self.groupBox_6.setTitle(_translate("check1dIntegrity", "Check Pipe Direction", None))
         self.correctPipeDir_cb.setText(_translate("check1dIntegrity", "Auto correct pipe direction", None))
         self.label_5.setText(_translate("check1dIntegrity", "Upstream Invert field", None))

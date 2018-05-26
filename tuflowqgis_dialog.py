@@ -1995,6 +1995,14 @@ class tuflowqgis_check_1d_integrity_dialog(QDialog, Ui_check1dIntegrity):
 	
 	def run(self):
 		# Get inputs
+		if self.iface.mapCanvas().mapUnits() == 0:
+			units = 'm'
+		elif self.iface.mapCanvas().mapUnits() == 1:
+			units = 'ft'
+		else:
+			QMessageBox.information(self.iface.mainWindow(), 'Warning',
+									'Map projection may not be cartesian, this may cause an error in the tool')
+			units = ''
 		checkLine = False
 		checkPoint = False
 		autoSnap = False
@@ -2054,14 +2062,12 @@ class tuflowqgis_check_1d_integrity_dialog(QDialog, Ui_check1dIntegrity):
 		# Start Line Check section
 		if checkLine:
 			lineDict, lineDrape = getVertices(lineLyrs, dem)
-			if len(pointLyrs) > 0:
-				pointDict, pointDrape = getVertices(pointLyrs, dem)
 			unsnappedLines, unsnappedLineNames, closestVLines, dsLines = checkSnapping(assessment='lines',
 			                                                                           lines=lineDict,
 			                                                                           points=pointDict,
 			                                                                           dns_conn=getDnsConn)  # Get unsnapped line vertices
 			if autoSnap:
-				returnLogL = moveVertices(lineLyrs, closestVLines, searchRadius)  # perform auto snap routine
+				editedLines, returnLogL = moveVertices(lineLyrs, closestVLines, searchRadius, units)  # perform auto snap routine
 				lineDict2, lineDrape = getVertices(lineLyrs, dem)  # reassess snapping
 				unsnappedLines2, unsnappedLineNames2, closestVLines2, dsLines2 = checkSnapping(assessment='lines',
 				                                                                               lines=lineDict2,
@@ -2083,7 +2089,7 @@ class tuflowqgis_check_1d_integrity_dialog(QDialog, Ui_check1dIntegrity):
 				unsnappedPoints, closestVPoints = checkSnapping(assessment='points', lines=lineDict,
 				                                                points=pointDict)  # Get unsnapped points
 			if autoSnap:
-				returnLogP = moveVertices(pointLyrs, closestVPoints, searchRadius)
+				editedPoints, returnLogP = moveVertices(pointLyrs, closestVPoints, searchRadius, units)
 				pointDict2, pointDrape = getVertices(pointLyrs, dem)  # reassess snapping
 				if checkLine and autoSnap:  # Check if line layer has been edited
 					unsnappedPoints2, closestVPoints2 = checkSnapping(assessment='points', lines=lineDict2,
@@ -2201,13 +2207,66 @@ class tuflowqgis_check_1d_integrity_dialog(QDialog, Ui_check1dIntegrity):
 								fid = f.id()
 								layer.select(fid)
 		if outLyr:
-			messageLyr = []
+			crs = lineLyrs[0].crs()
+			crsId = crs.authid()
+			outName = '1D_integrity_check'
+			outPath = os.path.join(os.path.dirname(lineLyrs[0].source()), '{0}.shp'.format(outName))
+			messageLyr = QgsVectorLayer("Point?crs={0}".format(crsId), 'temp_points', 'memory')
+			dp = messageLyr.dataProvider()
+			dp.addAttributes([QgsField('message', QVariant.String)])
+			messageLyr.updateFields()
+			messageFeats = []  # list of QgsFeature objects
 			# lines
-			import pydevd
-			pydevd.settrace('localhost', port=53100, stdoutToServer=True, stderrToServer=True)
+			if autoSnap:
+				if checkLine:
+					unsnappedLines = unsnappedLines2
+					lineDict = lineDict2
+					loggedEdits = returnLogL.split('\n')
+					for i, line in enumerate(editedLines):
+						id, node = line.split('==')
+						node = int(node)
+						vertex = lineDict[id][0][node]
+						feat = QgsFeature()
+						feat.setGeometry(QgsGeometry.fromPoint(vertex))
+						feat.setAttributes(['Moved Line Vertex: {0}'.format(loggedEdits[i])])
+						messageFeats.append(feat)
+				if checkPoint:
+					unsnappedPoints = unsnappedPoints2
+					pointDict = pointDict2
+					loggedEdits = returnLogP.split('\n')
+					for i, point in enumerate(editedPoints):
+						vertex = pointDict[point][0][0]
+						feat = QgsFeature()
+						feat.setGeometry(QgsGeometry.fromPoint(vertex))
+						feat.setAttributes(['Moved Point: {0}'.format(loggedEdits[i])])
+						messageFeats.append(feat)
 			if checkLine:
-				for layer in unsnappedLines:
-					return
+				for line in unsnappedLines:
+					if 'upstream' in line:
+						ind = line.find('upstream')
+						node = 0
+					elif 'downstream' in line:
+						ind = line.find('downstream')
+						node = 1
+					else:
+						return
+					id = line[:ind].strip()
+					vertex = lineDict[id][0][node]
+					feat = QgsFeature()
+					feat.setGeometry(QgsGeometry.fromPoint(vertex))
+					feat.setAttributes(['Unsnapped Line: {0} at {1}, {2}'.format(line, vertex[0], vertex[1])])
+					messageFeats.append(feat)
+			if checkPoint:
+				for point in unsnappedPoints:
+					vertex = pointDict[point][0][0]
+					feat = QgsFeature()
+					feat.setGeometry(QgsGeometry.fromPoint(vertex))
+					feat.setAttributes(['Unsnapped Point: {0} at {1}, {2}'.format(point, vertex[0], vertex[1])])
+					messageFeats.append(feat)
+			dp.addFeatures(messageFeats)
+			messageLyr.updateExtents()
+			QgsVectorFileWriter.writeAsVectorFormat(messageLyr, outPath, 'CP1250', crs, 'ESRI Shapefile')
+			self.iface.addVectorLayer(outPath, outName, 'ogr')
 				
 
 

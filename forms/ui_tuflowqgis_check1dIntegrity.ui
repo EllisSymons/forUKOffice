@@ -444,6 +444,9 @@
     </widget>
    </widget>
    <widget class="QGroupBox" name="groupBox_4">
+    <property name="enabled">
+     <bool>true</bool>
+    </property>
     <property name="geometry">
      <rect>
       <x>5</x>
@@ -467,28 +470,6 @@
     <property name="checked">
      <bool>false</bool>
     </property>
-    <widget class="QCheckBox" name="autoSnap_cb">
-     <property name="enabled">
-      <bool>false</bool>
-     </property>
-     <property name="geometry">
-      <rect>
-       <x>10</x>
-       <y>40</y>
-       <width>71</width>
-       <height>20</height>
-      </rect>
-     </property>
-     <property name="font">
-      <font>
-       <weight>50</weight>
-       <bold>false</bold>
-      </font>
-     </property>
-     <property name="text">
-      <string>Auto snap </string>
-     </property>
-    </widget>
     <widget class="QLabel" name="label_4">
      <property name="enabled">
       <bool>false</bool>
@@ -572,6 +553,25 @@
      </property>
      <property name="text">
       <string>Check 1D Line-Line snapping</string>
+     </property>
+    </widget>
+    <widget class="QCheckBox" name="autoSnap_cb">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>40</y>
+       <width>181</width>
+       <height>20</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <weight>50</weight>
+       <bold>false</bold>
+      </font>
+     </property>
+     <property name="text">
+      <string>Auto Snap</string>
      </property>
     </widget>
    </widget>
