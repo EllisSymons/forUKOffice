@@ -22,7 +22,7 @@
   <widget class="QDialogButtonBox" name="buttonBox">
    <property name="geometry">
     <rect>
-     <x>524</x>
+     <x>530</x>
      <y>783</y>
      <width>161</width>
      <height>32</height>
@@ -127,7 +127,7 @@
       <rect>
        <x>10</x>
        <y>154</y>
-       <width>131</width>
+       <width>191</width>
        <height>20</height>
       </rect>
      </property>
@@ -329,9 +329,9 @@
      </property>
      <property name="geometry">
       <rect>
-       <x>20</x>
+       <x>10</x>
        <y>195</y>
-       <width>21</width>
+       <width>31</width>
        <height>16</height>
       </rect>
      </property>
@@ -351,7 +351,7 @@
      </property>
      <property name="geometry">
       <rect>
-       <x>129</x>
+       <x>176</x>
        <y>170</y>
        <width>51</width>
        <height>20</height>
@@ -384,7 +384,7 @@
       <rect>
        <x>20</x>
        <y>172</y>
-       <width>111</width>
+       <width>131</width>
        <height>16</height>
       </rect>
      </property>
@@ -404,7 +404,7 @@
      </property>
      <property name="geometry">
       <rect>
-       <x>183</x>
+       <x>230</x>
        <y>170</y>
        <width>51</width>
        <height>20</height>
@@ -522,7 +522,7 @@
       <rect>
        <x>210</x>
        <y>20</y>
-       <width>161</width>
+       <width>181</width>
        <height>20</height>
       </rect>
      </property>
@@ -541,7 +541,7 @@
       <rect>
        <x>10</x>
        <y>20</y>
-       <width>181</width>
+       <width>191</width>
        <height>20</height>
       </rect>
      </property>
@@ -939,9 +939,9 @@
      </property>
      <property name="geometry">
       <rect>
-       <x>20</x>
+       <x>10</x>
        <y>140</y>
-       <width>21</width>
+       <width>31</width>
        <height>16</height>
       </rect>
      </property>
@@ -1090,7 +1090,7 @@
       <rect>
        <x>6</x>
        <y>2</y>
-       <width>221</width>
+       <width>171</width>
        <height>20</height>
       </rect>
      </property>
@@ -1127,19 +1127,19 @@
       <string>Browse</string>
      </property>
     </widget>
-   </widget>
-   <widget class="QCheckBox" name="outPLayer_cb">
-    <property name="geometry">
-     <rect>
-      <x>350</x>
-      <y>16</y>
-      <width>151</width>
-      <height>20</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Output messages.shp layer</string>
-    </property>
+    <widget class="QCheckBox" name="outPLayer_cb">
+     <property name="geometry">
+      <rect>
+       <x>185</x>
+       <y>0</y>
+       <width>231</width>
+       <height>20</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Output to 1D_integrity_check.shp</string>
+     </property>
+    </widget>
    </widget>
   </widget>
   <widget class="QComboBox" name="addLine_combo">

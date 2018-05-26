@@ -1826,7 +1826,7 @@ class tuflowqgis_check_1d_integrity_dialog(QDialog, Ui_check1dIntegrity):
 			lambda: self.toggleGroupBox(self.groupBox_7, self.groupBox_4, self.groupBox_6, self.groupBox_3))
 		self.addLine_button.clicked.connect(self.toggleStartElement)
 		self.getGroundElev_cb.clicked.connect(self.toggleDemSel)
-		self.buttonBox.accepted.connect(self.run)
+		self.buttonBox.accepted.connect(self.preRunCheck)
 	
 	def addLyr(self, combo, lw):
 		inLyrs = []
@@ -1993,6 +1993,37 @@ class tuflowqgis_check_1d_integrity_dialog(QDialog, Ui_check1dIntegrity):
 			for gb in args:
 				gb.setChecked(False)
 	
+	def preRunCheck(self):
+		error = False
+		warning = False
+		message = ''
+		# Check inputs
+		if self.lineLyrs_lw.count() < 1:
+			error = True
+			message = 'No input 1d_nwk line layer input.'
+		elif self.check1dPoint_cb.isChecked() and self.pointLyrs_lw.count() < 1:
+			error = True
+			message = 'No input 1d_nwk point layer input.'
+		# Check an output is selected
+		elif not self.outMessBox_cb.isChecked() and not self.outSel_cb.isChecked() and \
+		  not self.outTxtFile_cb.isChecked() and not self.outPLayer_cb.isChecked() and \
+		  not self.plotDsConn_cb.isChecked():
+			warning = True
+			message = 'No output selected. Do you wish to continue anyway?'
+		# Check map projection
+		elif self.iface.mapCanvas().mapUnits() != 0 and self.iface.mapCanvas().mapUnits() != 1:
+			warning = True
+			message = 'Map Projection may not be cartesian. This can cause an error in the tool. Do you wish to continue?'
+		if error:
+			QMessageBox.information(self.iface.mainWindow(), 'Error', message)
+		elif warning:
+			run = QMessageBox.question(self.iface.mainWindow(), "Warning", message, QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel)
+			if run == QMessageBox.Yes:
+				self.run()
+		else:
+			self.run()
+
+
 	def run(self):
 		# Get inputs
 		if self.iface.mapCanvas().mapUnits() == 0:
@@ -2000,8 +2031,6 @@ class tuflowqgis_check_1d_integrity_dialog(QDialog, Ui_check1dIntegrity):
 		elif self.iface.mapCanvas().mapUnits() == 1:
 			units = 'ft'
 		else:
-			QMessageBox.information(self.iface.mainWindow(), 'Warning',
-									'Map projection may not be cartesian, this may cause an error in the tool')
 			units = ''
 		checkLine = False
 		checkPoint = False
@@ -2267,7 +2296,7 @@ class tuflowqgis_check_1d_integrity_dialog(QDialog, Ui_check1dIntegrity):
 			messageLyr.updateExtents()
 			QgsVectorFileWriter.writeAsVectorFormat(messageLyr, outPath, 'CP1250', crs, 'ESRI Shapefile')
 			self.iface.addVectorLayer(outPath, outName, 'ogr')
-				
+		self.check1dIntegrity.accept()
 
 
 # ----------------------------------------------------------
