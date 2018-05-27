@@ -14,7 +14,7 @@ class DownstreamConnectivity():
 	"""
 	
 	def __init__(self, dsLines, startLines, inLyrs, angleLimit, lineDrape, coverLimit, lineDict):
-		self.dsLines = dsLines  # dictionary {name: [[dns network channels], [us invert, ds invert], [other connecting channels]]}
+		self.dsLines = dsLines  # dictionary {name: [[dns network channels], [us invert, ds invert], [angle]]}
 		self.startLines = startLines  # list of initial starting lines for plotting
 		self.inLyrs = inLyrs  # list of nwk line layers
 		self.angleLimit = angleLimit  # angle limit to for integrity checks
@@ -204,7 +204,7 @@ class DownstreamConnectivity():
 					if self.coverLimit is not None:
 						groundCh = self.lineDrape[name][1]
 						ground = self.lineDrape[name][2]
-						obvert = interpolateObvert(usInv, dsInv, height, groundCh)
+						obvert = interpolateObvert(usInv, dsInv, width, groundCh)
 						coverDepth = []
 						for i, g in enumerate(ground):
 							cover = g - obvert[i]

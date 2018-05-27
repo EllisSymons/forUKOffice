@@ -1812,10 +1812,9 @@ class tuflowqgis_check_1d_integrity_dialog(QDialog, Ui_check1dIntegrity):
 		self.browse_button.clicked.connect(self.browse)
 		self.outTxtFile_cb.clicked.connect(self.toggleOutFile)
 		self.autoSnap_cb.clicked.connect(self.toggleSearchRadius_sb)
-		self.correctPipeDir_cb.clicked.connect(self.toggleInvertFields)
-		self.lineLyrs_lw.currentItemChanged.connect(self.toggleInvertFields)
-		self.addLine_button.clicked.connect(self.toggleInvertFields)
 		self.groupBox_3.clicked.connect(self.toggleStartElement)
+		self.checkAngle_cb.clicked.connect(self.toggleAngleLimit)
+		self.checkCover_cb.clicked.connect(self.toggleCoverLimit)
 		self.groupBox_3.clicked.connect(
 			lambda: self.toggleGroupBox(self.groupBox_3, self.groupBox_4, self.groupBox_6, self.groupBox_7))
 		self.groupBox_4.clicked.connect(
@@ -1890,31 +1889,42 @@ class tuflowqgis_check_1d_integrity_dialog(QDialog, Ui_check1dIntegrity):
 		else:
 			self.outFile.setEnabled(False)
 			self.browse_button.setEnabled(False)
+
+	def toggleAngleLimit(self):
+		if self.checkAngle_cb.isChecked():
+			self.label_10.setEnabled(True)
+			self.angle2_sb.setEnabled(True)
+			self.label_14.setEnabled(True)
+		else:
+			self.label_10.setEnabled(False)
+			self.angle2_sb.setEnabled(False)
+			self.label_14.setEnabled(False)
+
+	def toggleCoverLimit(self):
+		if self.checkCover_cb.isChecked():
+			self.dem_combo.clear()
+			self.label_11.setEnabled(True)
+			self.coverDepth2_sb.setEnabled(True)
+			self.label_13.setEnabled(True)
+			self.label_12.setEnabled(True)
+			self.dem_combo_2.setEnabled(True)
+			rasterLyrs = findAllRasterLyrs()
+			if len(rasterLyrs) > 0:
+				for raster in rasterLyrs:
+					self.dem_combo_2.addItem(raster)
+		else:
+			self.label_11.setEnabled(False)
+			self.coverDepth2_sb.setEnabled(False)
+			self.label_13.setEnabled(False)
+			self.label_12.setEnabled(False)
+			self.dem_combo_2.setEnabled(False)
 	
 	def toggleSearchRadius_sb(self):
 		if self.autoSnap_cb.isChecked():
 			self.snapSearchDis_sb.setEnabled(True)
 		else:
 			self.snapSearchDis_sb.setEnabled(False)
-			
-	def toggleInvertFields(self):
-		self.usInvField_combo.clear()
-		self.dsInvField_combo.clear()
-		if self.correctPipeDir_cb.isChecked():
-			self.usInvField_combo.setEnabled(True)
-			self.dsInvField_combo.setEnabled(True)
-			if self.lineLyrs_lw.count() > 0:
-				name = self.lineLyrs_lw.item(0).text()
-				lyr = tuflowqgis_find_layer(name)
-				if lyr is not None:
-					for f in lyr.fields():
-						self.usInvField_combo.addItem(f.name())
-						self.dsInvField_combo.addItem(f.name())
-				
-		else:
-			self.usInvField_combo.setEnabled(False)
-			self.dsInvField_combo.setEnabled(False)
-			
+
 	def toggleStartElement(self):
 		if self.groupBox_3.isChecked():
 			self.name1d_combo.setEnabled(True)
@@ -2000,24 +2010,32 @@ class tuflowqgis_check_1d_integrity_dialog(QDialog, Ui_check1dIntegrity):
 		# Check inputs
 		if self.lineLyrs_lw.count() < 1:
 			error = True
-			message = 'No input 1d_nwk line layer input.'
+			message = 'No 1d_nwk line layer has been input.'
 		elif self.check1dPoint_cb.isChecked() and self.pointLyrs_lw.count() < 1:
 			error = True
-			message = 'No input 1d_nwk point layer input.'
+			message = 'No 1d_nwk point layer has been input.'
+		elif self.getGroundElev_cb.isChecked() and len(self.dem_combo.currentText()) < 1:
+			error = True
+			message = 'No DEM has been input'
+		elif self.checkCover_cb.isChecked() and len(self.dem_combo_2.currentText()) < 1:
+			error = True
+			message = 'No DEM has been input'
 		# Check an output is selected
 		elif not self.outMessBox_cb.isChecked() and not self.outSel_cb.isChecked() and \
 		  not self.outTxtFile_cb.isChecked() and not self.outPLayer_cb.isChecked() and \
 		  not self.plotDsConn_cb.isChecked():
 			warning = True
-			message = 'No output selected. Do you wish to continue anyway?'
+			message = 'No output selected. Do you wish to continue?'
 		# Check map projection
 		elif self.iface.mapCanvas().mapUnits() != 0 and self.iface.mapCanvas().mapUnits() != 1:
 			warning = True
-			message = 'Map Projection may not be cartesian. This can cause an error in the tool. Do you wish to continue?'
+			message = 'Map Projection may not be cartesian. This can cause an error in the tool. ' \
+					  'Do you wish to continue?'
 		if error:
 			QMessageBox.information(self.iface.mainWindow(), 'Error', message)
 		elif warning:
-			run = QMessageBox.question(self.iface.mainWindow(), "Warning", message, QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel)
+			run = QMessageBox.question(self.iface.mainWindow(), "Warning", message,
+									   QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel)
 			if run == QMessageBox.Yes:
 				self.run()
 		else:
@@ -2039,6 +2057,13 @@ class tuflowqgis_check_1d_integrity_dialog(QDialog, Ui_check1dIntegrity):
 		getDnsConn = False
 		plotDnsConn = False
 		getDemElev = False
+		continuityCheck = False
+		checkArea = False
+		checkGradient = False
+		checkAngle = False
+		checkCover = False
+		angleLimit = 90
+		coverDepth = 0.5
 		outMsg = False
 		outSel = False
 		outTxt = False
@@ -2052,10 +2077,6 @@ class tuflowqgis_check_1d_integrity_dialog(QDialog, Ui_check1dIntegrity):
 		if self.autoSnap_cb.isChecked():
 			autoSnap = True
 			searchRadius = self.snapSearchDis_sb.value()
-		if self.correctPipeDir_cb.isChecked():
-			correctPipeDir = True
-			usInvField = self.usInvField_combo.currentText()
-			dsInvField = self.dsInvField_combo.currentText()
 		if self.groupBox_3.isChecked():
 			getDnsConn = True
 			angleLimit = self.angle_sb.value()
@@ -2069,6 +2090,21 @@ class tuflowqgis_check_1d_integrity_dialog(QDialog, Ui_check1dIntegrity):
 				getDemElev = True
 				dem = tuflowqgis_find_layer(self.dem_combo.currentText())
 				plotCoverDepth = self.coverDepth_sb.value()
+		if self.checkArea_cb.isChecked():
+			continuityCheck = True
+			checkArea = True
+		if self.checkGradient_cb.isChecked():
+			continuityCheck = True
+			checkGradient = True
+		if self.checkAngle_cb.isChecked():
+			continuityCheck = True
+			checkAngle = True
+			angleLimit = self.angle2_sb.value()
+		if self.checkCover_cb.isChecked():
+			continuityCheck = True
+			checkCover = True
+			coverLimit = self.coverDepth2_sb.value()
+			dem = tuflowqgis_find_layer(self.dem_combo_2.currentText())
 		if self.outMessBox_cb.isChecked():
 			outMsg = True
 		if self.outSel_cb.isChecked():
@@ -2131,7 +2167,8 @@ class tuflowqgis_check_1d_integrity_dialog(QDialog, Ui_check1dIntegrity):
 			if len(startElem) == 0:
 				return
 			lineDict, lineDrape = getVertices(lineLyrs, dem)
-			pointDict, pointDrape = getVertices(pointLyrs, dem)
+			if len(pointLyrs) > 0:
+				pointDict, pointDrape = getVertices(pointLyrs, dem)
 			unsnappedLines, unsnappedLineNames, closestVLines, dsLines = checkSnapping(lines=lineDict,
 			                                                                           points=pointDict,
 			                                                                           dns_conn=getDnsConn)
@@ -2152,7 +2189,20 @@ class tuflowqgis_check_1d_integrity_dialog(QDialog, Ui_check1dIntegrity):
 					self.dockOpened = True
 					self.resdock = TuPlot(self.iface, profile_integerity_tool=longProfile)
 					self.iface.addDockWidget(Qt.RightDockWidgetArea, self.resdock)
-		
+		# Check network continuity
+		if continuityCheck:
+			continuityLog = ''
+			continuityError = []
+			lineDict, lineDrape = getVertices(lineLyrs, dem)
+			if len(pointLyrs) > 0:
+				pointDict, pointDrape = getVertices(pointLyrs, dem)
+			unsnappedLines, unsnappedLineNames, closestVLines, dsLines = checkSnapping(lines=lineDict,
+																					     points=pointDict,
+																					     dns_conn=continuityCheck)
+			continuityLog, continuityError = checkNetworkContinuity(lineDict, dsLines, lineDrape, angleLimit,
+																	 coverDepth,
+																	 [checkArea, checkGradient, checkAngle, checkCover],
+																	 units)
 		# Output
 		if outMsg or outTxt:
 			if outMsg:
@@ -2198,6 +2248,8 @@ class tuflowqgis_check_1d_integrity_dialog(QDialog, Ui_check1dIntegrity):
 			if getDnsConn:
 				results += '\n' + r'\\ Downstream Connections \\' + '\n\n'
 				results += longProfile.log
+			if continuityCheck:
+				results += '\n' + r'\\ Continuity Checks \\' + '\n\n{0}\n'.format(continuityLog)
 			if outMsg:
 				self.outDialog = tuflowqgis_1d_integrity_output(self.iface, results)
 				self.outDialog.show()
@@ -2235,6 +2287,19 @@ class tuflowqgis_check_1d_integrity_dialog(QDialog, Ui_check1dIntegrity):
 							if f.attributes()[0] in unsnappedLineNames:
 								fid = f.id()
 								layer.select(fid)
+			if continuityCheck:
+				names = continuityLog.split('\n')
+				for n in names:
+					name = n.split(' ')[0].strip()
+					if len(name) > 0:
+						lyr = lineDict[name][2]
+						fid = lineDict[name][1]
+						idFld = lyr.fields()[0]
+						filter = '"{0}" = \'{1}\''.format(idFld.name(), name)
+						request = QgsFeatureRequest().setFilterExpression(filter)
+						for f in lyr.getFeatures(request):
+							if f.id() == fid:
+								lyr.select(fid)
 		if outLyr:
 			crs = lineLyrs[0].crs()
 			crsId = crs.authid()
@@ -2291,6 +2356,13 @@ class tuflowqgis_check_1d_integrity_dialog(QDialog, Ui_check1dIntegrity):
 					feat = QgsFeature()
 					feat.setGeometry(QgsGeometry.fromPoint(vertex))
 					feat.setAttributes(['Unsnapped Point: {0} at {1}, {2}'.format(point, vertex[0], vertex[1])])
+					messageFeats.append(feat)
+			if continuityCheck:
+				loggedContinuityErrors = continuityLog.split('\n')
+				for i, vertex in enumerate(continuityError):
+					feat = QgsFeature()
+					feat.setGeometry(QgsGeometry.fromPoint(vertex))
+					feat.setAttributes(['Continuity Error: {0}'.format(loggedContinuityErrors[i])])
 					messageFeats.append(feat)
 			dp.addFeatures(messageFeats)
 			messageLyr.updateExtents()

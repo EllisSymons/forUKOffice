@@ -1567,6 +1567,181 @@ def getElevFromTa(lineDict, dsLines, lineLyrs, taLyrs):
 	return dsLines
 
 
+def getNetworkMidLocation(usVertex, dsVertex):
+	"""
+
+	:param usVertex: QgsPoint
+	:param dsVetex: QgsPoint
+	:return: QgsPoint
+	"""
+
+	from math import sin, cos, asin
+
+	length = ((dsVertex[1] - usVertex[1]) ** 2. + (dsVertex[0] - usVertex[0]) ** 2.) ** 0.5
+	newLength = length / 2
+	angle = asin((dsVertex[1] - usVertex[1]) / length)
+	x = usVertex[0] + (newLength * cos(angle)) if dsVertex[0] - usVertex[0] >= 0 else usVertex[0] - (newLength * cos(
+		angle))
+	y = usVertex[1] + (newLength * sin(angle))
+	return QgsPoint(x, y)
+
+
+def checkNetworkCover(drape, height, usInvert, dsInvert, limit):
+	"""
+
+	:param drape: list - [QgsPoint], [Chainages], [Elevations]
+	:param height: float
+	:param usInvert: float
+	:param dsInvert: float
+	:param limit: float
+	:return: Bool
+	:return: QgsPoint
+	"""
+
+	flag = False
+	point = None
+	obverts = interpolateObvert(usInvert, dsInvert, height, drape[1])
+	for i, elevation in enumerate(drape[2]):
+		if type(elevation) == float:
+			if elevation - obverts[i] < limit:
+				flag = True
+				point = drape[0][i]
+				break
+	return flag, point, drape[1][i]
+
+
+def checkNetworkContinuity(lineDict, dsLines, lineDrape, angleLimit, coverLimit, check, units):
+	"""
+
+	:param lineDict: dict - {name: [[vertices], feature id, origin lyr, [us invert, ds invert], type}
+	:param dsLines: dict - {name: [[dns network channels], [us invert, ds invert], angle]}
+	:param lineDrape: dict - {name: {[QgsPoint], [Chainages], [Elevations]]}
+	:param angleLimit: int
+	:param coverLimit: float
+	:param check: list - Bool checkArea, Bool checkGradient, Bool checkAngle, Bool checkCover
+	:param units:
+	:return log: string - logged moves
+	:return location: list - list of vertices
+	"""
+
+	checkArea = check[0]
+	checkGradient = check[1]
+	checkAngle = check[2]
+	checkCover = check[3]
+	log = ''
+	location = []
+	for name, parameter in dsLines.items():
+		# define known variables
+		dnsNames = parameter[0]
+		usInvert = parameter[1][0]
+		dsInvert = parameter[1][1]
+		if len(parameter[2]) > 0:
+			angle = min(parameter[2])
+		else:
+			angle = 0
+		if name in lineDrape.keys():
+			drape = lineDrape[name]
+		else:
+			drape = None
+		usVertex = lineDict[name][0][0]
+		dsVertex = lineDict[name][0][1]
+		midVertex = getNetworkMidLocation(usVertex, dsVertex)
+		type = lineDict[name][4]
+		lyr = lineDict[name][2]
+		fid = lineDict[name][1]
+		idFld = lyr.fields()[0]
+		typFld = lyr.fields()[1]
+		if '__connector' in name:
+			filter = '"{0}" = \'{1}\' OR "{0}" = \'{2}\''.format(typFld.name(), 'X', 'x')
+		else:
+			filter = '"{0}" = \'{1}\''.format(idFld.name(), name)
+		request = QgsFeatureRequest().setFilterExpression(filter)
+		for f in lyr.getFeatures(request):
+			if f.id() == fid:
+				feature = f
+		usArea = 0
+		dsArea = 0
+		dnsUsInvert = 99999
+		dnsDsInvert = 99999
+		if type.lower() == 'c' or type.lower() == 'r':
+			no = feature.attributes()[15]
+			width = feature.attributes()[13]
+			height = feature.attributes()[14]
+			if type.lower() == 'c':
+				usArea = no * 3.14 * (width / 2) ** 2
+			elif type.lower() == 'r':
+				usArea = no * width * height
+		# check for x connectors
+		for dnsName in dnsNames[:]:
+			if 'connector' in dnsName:
+				dnsNames += lineDict[dnsName][0]
+				dnsNames.remove(dnsName)
+		# calculate upstream and downstream area and get downstream inverts
+		for dnsName in dnsNames:
+			dnsType = lineDict[dnsName][4]
+			dnsLyr = lineDict[dnsName][2]
+			dnsFid = lineDict[dnsName][1]
+			idFld = dnsLyr.fields()[0]
+			filter = '"{0}" = \'{1}\''.format(idFld.name(), dnsName)
+			request = QgsFeatureRequest().setFilterExpression(filter)
+			for f in dnsLyr.getFeatures(request):
+				if f.id() == dnsFid:
+					dnsFeature = f
+			if dnsType.lower() == 'c' or dnsType.lower() == 'r':
+				dnsNo = dnsFeature.attributes()[15]
+				dnsWidth = dnsFeature.attributes()[13]
+				dnsHeight = dnsFeature.attributes()[14]
+				if dnsType.lower() == 'c':
+					dsArea += dnsNo * 3.14 * (dnsWidth / 2) ** 2
+				elif dnsType.lower() == 'r':
+					dsArea += dnsNo * dnsWidth * dnsHeight
+			if dsLines[dnsName][1][0] != -99999:
+				dnsUsInvert = min(dnsUsInvert, dsLines[dnsName][1][0])
+			if dsLines[dnsName][1][1] != -99999:
+				dnsDsInvert = min(dnsDsInvert, dsLines[dnsName][1][1])
+		# change back to null value if non-existent
+		if dnsUsInvert == 99999:
+			dnsUsInvert = -99999
+		if dnsDsInvert == 99999:
+			dnsDsInvert = -99999
+		# perfrom checks
+		if checkArea:
+			if usArea != 0 and dsArea != 0:
+				if dsArea < usArea:
+					log += '{0} decreases in area downstream ({0} {1:.1f}{2}2, {3} {4.1f}{2}2)\n' \
+						   .format(name, usArea, units, (dnsNames[0] if len(dnsNames) == 1 else dnsNames), dsArea)
+					location.append(dsVertex)
+		if checkGradient:
+			if usInvert != -99999 and dsInvert != -99999:
+				if dsInvert > usInvert:
+					log += '{0} has an adverse gradient (upstream {1:.3f}{2}RL, downstream {3:.3f}{2}RL)\n' \
+						   .format(name, usInvert, units, dsInvert)
+					location.append(midVertex)
+			if dsInvert != -99999 and dnsUsInvert != -99999:
+				if dnsUsInvert > dsInvert:
+					log += '{0} outlet ({1:.3f}{2}RL) is lower than downstream {3} inlet ({4:.3f}{2}RL)\n' \
+						   .format(name, dsInvert, units, (dnsNames[0] if len(dnsNames) == 1 else dnsNames), dnsUsInvert)
+					location.append(dsVertex)
+		if checkAngle:
+			if angle != 0:
+				if angle < angleLimit:
+					log += '{0} outlet angle ({1:.1f} deg) is less than input angle limit ({2:.1f} deg)\n' \
+						   .format(name, angle, angleLimit)
+					location.append(dsVertex)
+		if checkCover:
+			if usInvert != -99999 and dsInvert != -99999:
+				coverFlag = False
+				if type.lower() == 'c':
+					coverFlag, point, chainage = checkNetworkCover(drape, width, usInvert, dsInvert, coverLimit)
+				elif type.lower() == 'r':
+					coverFlag, point, chainage = checkNetworkCover(drape, height, usInvert, dsInvert, coverLimit)
+				if coverFlag:
+					log += '{0} cover depth is below input limit {1} at {2:.1f}{3} along network\n' \
+						   .format(name, coverLimit, chainage, units)
+					location.append(point)
+	return log, location
+
+
 def getPathFromRel(dir, relPath):
 	"""
 	return the full path from a relative reference
