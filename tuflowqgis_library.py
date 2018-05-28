@@ -1481,6 +1481,7 @@ def readInvFromCsv(source, type):
 	else:
 		return min(firstCol)
 	
+	
 def findIntersectFromVertex(vert, lyrs):
 	"""
 	Find an intersecting layer from a vertex
@@ -1747,6 +1748,46 @@ def checkNetworkContinuity(lineDict, dsLines, lineDrape, angleLimit, coverLimit,
 					location.append(point)
 	return log, warningType, location
 
+
+def correctPipeDirectionByInvert(lineDict, dsLines, units):
+	
+	log = ''
+	messageType = []
+	messageLocation = []
+	for name, parameter in dsLines.items():
+		# define known variables
+		if '__connector' not in name:
+			usInvert = parameter[1][0]
+			dsInvert = parameter[1][1]
+			usVertex = lineDict[name][0][0]
+			dsVertex = lineDict[name][0][1]
+			midVertex = getNetworkMidLocation(usVertex, dsVertex)
+			lyr = lineDict[name][2]
+			fid = lineDict[name][1]
+			idFld = lyr.fields()[0]
+			filter = '"{0}" = \'{1}\''.format(idFld.name(), name)
+			request = QgsFeatureRequest().setFilterExpression(filter)
+			for f in lyr.getFeatures(request):
+				if f.id() == fid:
+					feature = f
+			if usInvert != -99999 and dsInvert != -99999:
+				if dsInvert > usInvert:
+					geom = feature.geometry().asPolyline()
+					reversedGeom = geom[::-1]
+					lyr.startEditing()
+					for i in range(len(geom)):
+						lyr.moveVertex(reversedGeom[i][0], reversedGeom[i][1], fid, i)
+					usI = feature.attributes()[6]
+					dsI = feature.attributes()[7]
+					lyr.changeAttributeValue(fid, 6, dsI, usI)
+					lyr.changeAttributeValue(fid, 7, usI, dsI)
+					lyr.commitChanges()
+					log += '{0} line direction has been reversed based on inverts ({1:.3f}{2}RL, {3:.3f}{2}RL)\n' \
+						.format(name, usInvert, units, dsInvert)
+					messageType.append('line direction edit')
+					messageLocation.append(midVertex)
+	return log, messageType, messageLocation
+					
 
 def getPathFromRel(dir, relPath):
 	"""

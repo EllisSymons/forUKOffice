@@ -2109,6 +2109,8 @@ class tuflowqgis_check_1d_integrity_dialog(QDialog, Ui_check1dIntegrity):
 		checkCover = False
 		angleLimit = 90
 		coverDepth = 0.5
+		correctDirectionByGradient = False
+		correctDirectionByContinuity = False
 		outMsg = False
 		outSel = False
 		outTxt = False
@@ -2150,6 +2152,10 @@ class tuflowqgis_check_1d_integrity_dialog(QDialog, Ui_check1dIntegrity):
 			checkCover = True
 			coverLimit = self.coverDepth2_sb.value()
 			dem = tuflowqgis_find_layer(self.dem_combo_2.currentText())
+		if self.correctPipeDir_inverts_cb.isChecked():
+			correctDirectionByGradient = True
+		if self.correctPipeDir_continuity_cb.isChecked():
+			correctDirectionByContinuity = True
 		if self.outMessBox_cb.isChecked():
 			outMsg = True
 		if self.outSel_cb.isChecked():
@@ -2250,6 +2256,16 @@ class tuflowqgis_check_1d_integrity_dialog(QDialog, Ui_check1dIntegrity):
 			                                                                                 [checkArea, checkGradient,
 			                                                                                  checkAngle, checkCover],
 			                                                                                 units)
+		# Correct Network Direction
+		if correctDirectionByGradient:
+			lineDict, lineDrape = getVertices(lineLyrs, dem)
+			if len(pointLyrs) > 0:
+				pointDict, pointDrape = getVertices(pointLyrs, dem)
+			unsnappedLines, unsnappedLineNames, closestVLines, dsLines = checkSnapping(lines=lineDict,
+			                                                                           points=pointDict,
+			                                                                           dns_conn=correctDirectionByGradient)
+			correctDirectionGradLog, correctDirectionGradType, correctDirectionGradPoint = \
+				correctPipeDirectionByInvert(lineDict, dsLines, units)
 		# Output
 		if outMsg or outTxt:
 			if outMsg:
@@ -2297,6 +2313,10 @@ class tuflowqgis_check_1d_integrity_dialog(QDialog, Ui_check1dIntegrity):
 				results += longProfile.log
 			if continuityCheck:
 				results += '\n' + r'\\ Continuity Checks \\' + '\n\n{0}\n'.format(continuityLog)
+			if correctDirectionByGradient or correctDirectionByContinuity:
+				results += '\n' + r'\\ Correct Pipe Direction \\' + '\n\n'
+				if correctDirectionByGradient:
+					results += '# Pipes corrected by gradient\n\n{0}'.format(correctDirectionGradLog)
 			if outMsg:
 				self.outDialog = tuflowqgis_1d_integrity_output(self.iface, results)
 				self.outDialog.show()
@@ -2349,6 +2369,19 @@ class tuflowqgis_check_1d_integrity_dialog(QDialog, Ui_check1dIntegrity):
 								lyr.select(fid)
 			if continuityCheck:
 				names = continuityLog.split('\n')
+				for n in names:
+					name = n.split(' ')[0].strip()
+					if len(name) > 0:
+						lyr = lineDict[name][2]
+						fid = lineDict[name][1]
+						idFld = lyr.fields()[0]
+						filter = '"{0}" = \'{1}\''.format(idFld.name(), name)
+						request = QgsFeatureRequest().setFilterExpression(filter)
+						for f in lyr.getFeatures(request):
+							if f.id() == fid:
+								lyr.select(fid)
+			if correctDirectionByGradient:
+				names = correctDirectionGradLog.split('\n')
 				for n in names:
 					name = n.split(' ')[0].strip()
 					if len(name) > 0:
@@ -2434,6 +2467,14 @@ class tuflowqgis_check_1d_integrity_dialog(QDialog, Ui_check1dIntegrity):
 					feat.setGeometry(QgsGeometry.fromPoint(vertex))
 					feat.setAttributes(['{0}'.format(continiuityWarningTypes[i]),
 					                    'Continuity Warning: {0}'.format(loggedContinuityErrors[i])])
+					messageFeats.append(feat)
+			if correctDirectionByGradient:
+				loggedDirectionChange = correctDirectionGradLog.split('\n')
+				for i, vertex in enumerate(correctDirectionGradPoint):
+					feat = QgsFeature()
+					feat.setGeometry(QgsGeometry.fromPoint(vertex))
+					feat.setAttributes(['{0}'.format(correctDirectionGradType[i]),
+					                    'Line Direction Edit: {0}'.format(loggedDirectionChange[i])])
 					messageFeats.append(feat)
 			dp.addFeatures(messageFeats)
 			messageLyr.updateExtents()
