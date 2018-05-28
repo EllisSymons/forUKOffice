@@ -2003,12 +2003,56 @@ class tuflowqgis_check_1d_integrity_dialog(QDialog, Ui_check1dIntegrity):
 			for gb in args:
 				gb.setChecked(False)
 	
+	def checkLayerType(self, lyr):
+		error = False
+		message = ''
+		for feature in lyr.getFeatures():
+			break
+		if feature.fields().field(0).type() != QVariant.String:
+			error = True
+			message = '{0} must be in a 1D_nwk format: Error with ID Attribute'.format(lyr.name())
+		elif feature.fields().field(1).type() != QVariant.String:
+			error = True
+			message = '{0} must be in a 1D_nwk format: Error with Type Attribute'.format(lyr.name())
+		elif feature.fields().field(4).type() != QVariant.Double:
+			error = True
+			message = '{0} must be in a 1D_nwk format: Error with Length Attribute'.format(lyr.name())
+		elif feature.fields().field(6).type() != QVariant.Double:
+			error = True
+			message = '{0} must be in a 1D_nwk format: Error with Upstream Invert Attribute'.format(lyr.name())
+		elif feature.fields().field(7).type() != QVariant.Double:
+			error = True
+			message = '{0} must be in a 1D_nwk format: Error with Downstream Invert Attribute'.format(lyr.name())
+		elif feature.fields().field(13).type() != QVariant.Double:
+			error = True
+			message = '{0} must be in a 1D_nwk format: Error with Width Attribute'.format(lyr.name())
+		elif feature.fields().field(14).type() != QVariant.Double:
+			error = True
+			message = '{0} must be in a 1D_nwk format: Error with Height Attribute'.format(lyr.name())
+		elif feature.fields().field(15).type() != QVariant.LongLong and \
+				feature.fields().field(15).type() != QVariant.Int and feature.fields().field(15).type() != QVariant.Double:
+			error = True
+			message = '{0} must be in a 1D_nwk format: Error with Number Of Attribute'.format(lyr.name())
+		return error, message
+	
 	def preRunCheck(self):
 		error = False
 		warning = False
 		message = ''
 		# Check inputs
-		if self.lineLyrs_lw.count() < 1:
+		for i in range(self.lineLyrs_lw.count()):
+			lyr = tuflowqgis_find_layer(self.lineLyrs_lw.item(i).text())
+			error, message = self.checkLayerType(lyr)
+			if error:
+				break
+		for i in range(self.pointLyrs_lw.count()):
+			lyr = tuflowqgis_find_layer(self.pointLyrs_lw.item(i).text())
+			error, message = self.checkLayerType(lyr)
+			if error:
+				break
+		if error:
+			pass
+		elif self.lineLyrs_lw.count() < 1:
 			error = True
 			message = 'No 1d_nwk line layer has been input.'
 		elif self.check1dPoint_cb.isChecked() and self.pointLyrs_lw.count() < 1:
