@@ -2043,6 +2043,7 @@ class tuflowqgis_check_1d_integrity_dialog(QDialog, Ui_check1dIntegrity):
 
 
 	def run(self):
+		self.check1dIntegrity.accept()  # destroy dialog window
 		# Get inputs
 		if self.iface.mapCanvas().mapUnits() == 0:
 			units = 'm'
@@ -2175,7 +2176,7 @@ class tuflowqgis_check_1d_integrity_dialog(QDialog, Ui_check1dIntegrity):
 			if len(taLyrs) > 0:
 				dsLines = getElevFromTa(lineDict, dsLines, lineLyrs, taLyrs)
 			longProfile = TUFLOW_longprofile.DownstreamConnectivity(dsLines, startElem, lineLyrs, angleLimit,
-			                                                        lineDrape, plotCoverDepth, lineDict)
+			                                                        lineDrape, plotCoverDepth, lineDict, units)
 			longProfile.getBranches()
 			longProfile.reportLog()
 			if plotDnsConn:
@@ -2199,10 +2200,12 @@ class tuflowqgis_check_1d_integrity_dialog(QDialog, Ui_check1dIntegrity):
 			unsnappedLines, unsnappedLineNames, closestVLines, dsLines = checkSnapping(lines=lineDict,
 																					     points=pointDict,
 																					     dns_conn=continuityCheck)
-			continuityLog, continuityError = checkNetworkContinuity(lineDict, dsLines, lineDrape, angleLimit,
-																	 coverDepth,
-																	 [checkArea, checkGradient, checkAngle, checkCover],
-																	 units)
+			continuityLog, continiuityWarningTypes, continuityError = checkNetworkContinuity(lineDict, dsLines,
+			                                                                                 lineDrape, angleLimit,
+			                                                                                 coverDepth,
+			                                                                                 [checkArea, checkGradient,
+			                                                                                  checkAngle, checkCover],
+			                                                                                 units)
 		# Output
 		if outMsg or outTxt:
 			if outMsg:
@@ -2287,6 +2290,19 @@ class tuflowqgis_check_1d_integrity_dialog(QDialog, Ui_check1dIntegrity):
 							if f.attributes()[0] in unsnappedLineNames:
 								fid = f.id()
 								layer.select(fid)
+			if getDnsConn:
+				names = longProfile.log.split('\n')
+				for n in names:
+					name = n.split(' ')[0].strip()
+					if len(name) > 0:
+						lyr = lineDict[name][2]
+						fid = lineDict[name][1]
+						idFld = lyr.fields()[0]
+						filter = '"{0}" = \'{1}\''.format(idFld.name(), name)
+						request = QgsFeatureRequest().setFilterExpression(filter)
+						for f in lyr.getFeatures(request):
+							if f.id() == fid:
+								lyr.select(fid)
 			if continuityCheck:
 				names = continuityLog.split('\n')
 				for n in names:
@@ -2303,11 +2319,11 @@ class tuflowqgis_check_1d_integrity_dialog(QDialog, Ui_check1dIntegrity):
 		if outLyr:
 			crs = lineLyrs[0].crs()
 			crsId = crs.authid()
-			outName = '1D_integrity_check'
+			outName = '_1D_integrity_check'
 			outPath = os.path.join(os.path.dirname(lineLyrs[0].source()), '{0}.shp'.format(outName))
 			messageLyr = QgsVectorLayer("Point?crs={0}".format(crsId), 'temp_points', 'memory')
 			dp = messageLyr.dataProvider()
-			dp.addAttributes([QgsField('message', QVariant.String)])
+			dp.addAttributes([QgsField('Warning', QVariant.String), QgsField('message', QVariant.String)])
 			messageLyr.updateFields()
 			messageFeats = []  # list of QgsFeature objects
 			# lines
@@ -2322,7 +2338,7 @@ class tuflowqgis_check_1d_integrity_dialog(QDialog, Ui_check1dIntegrity):
 						vertex = lineDict[id][0][node]
 						feat = QgsFeature()
 						feat.setGeometry(QgsGeometry.fromPoint(vertex))
-						feat.setAttributes(['Moved Line Vertex: {0}'.format(loggedEdits[i])])
+						feat.setAttributes(['Line Snapping Edit', 'Moved Line Vertex: {0}'.format(loggedEdits[i])])
 						messageFeats.append(feat)
 				if checkPoint:
 					unsnappedPoints = unsnappedPoints2
@@ -2332,7 +2348,7 @@ class tuflowqgis_check_1d_integrity_dialog(QDialog, Ui_check1dIntegrity):
 						vertex = pointDict[point][0][0]
 						feat = QgsFeature()
 						feat.setGeometry(QgsGeometry.fromPoint(vertex))
-						feat.setAttributes(['Moved Point: {0}'.format(loggedEdits[i])])
+						feat.setAttributes(['Point Snapping Edit', 'Moved Point: {0}'.format(loggedEdits[i])])
 						messageFeats.append(feat)
 			if checkLine:
 				for line in unsnappedLines:
@@ -2348,27 +2364,37 @@ class tuflowqgis_check_1d_integrity_dialog(QDialog, Ui_check1dIntegrity):
 					vertex = lineDict[id][0][node]
 					feat = QgsFeature()
 					feat.setGeometry(QgsGeometry.fromPoint(vertex))
-					feat.setAttributes(['Unsnapped Line: {0} at {1}, {2}'.format(line, vertex[0], vertex[1])])
+					feat.setAttributes(
+						['Line Snapping Warning', 'Unsnapped Line: {0} at {1}, {2}'.format(line, vertex[0], vertex[1])])
 					messageFeats.append(feat)
 			if checkPoint:
 				for point in unsnappedPoints:
 					vertex = pointDict[point][0][0]
 					feat = QgsFeature()
 					feat.setGeometry(QgsGeometry.fromPoint(vertex))
-					feat.setAttributes(['Unsnapped Point: {0} at {1}, {2}'.format(point, vertex[0], vertex[1])])
+					feat.setAttributes(['Point Snapping Warning',
+					                    'Unsnapped Point: {0} at {1}, {2}'.format(point, vertex[0], vertex[1])])
+					messageFeats.append(feat)
+			if getDnsConn:
+				loggedContinuityErrors = longProfile.log.split('\n')
+				for i, vertex in enumerate(longProfile.warningLocation):
+					feat = QgsFeature()
+					feat.setGeometry(QgsGeometry.fromPoint(vertex))
+					feat.setAttributes(['{0}'.format(longProfile.warningType[i]),
+					                    'Continuity Warning: {0}'.format(loggedContinuityErrors[i])])
 					messageFeats.append(feat)
 			if continuityCheck:
 				loggedContinuityErrors = continuityLog.split('\n')
 				for i, vertex in enumerate(continuityError):
 					feat = QgsFeature()
 					feat.setGeometry(QgsGeometry.fromPoint(vertex))
-					feat.setAttributes(['Continuity Error: {0}'.format(loggedContinuityErrors[i])])
+					feat.setAttributes(['{0}'.format(continiuityWarningTypes[i]),
+					                    'Continuity Warning: {0}'.format(loggedContinuityErrors[i])])
 					messageFeats.append(feat)
 			dp.addFeatures(messageFeats)
 			messageLyr.updateExtents()
 			QgsVectorFileWriter.writeAsVectorFormat(messageLyr, outPath, 'CP1250', crs, 'ESRI Shapefile')
 			self.iface.addVectorLayer(outPath, outName, 'ogr')
-		self.check1dIntegrity.accept()
 
 
 # ----------------------------------------------------------

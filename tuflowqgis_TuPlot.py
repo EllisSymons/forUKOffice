@@ -2180,10 +2180,13 @@ class TuPlot(QDockWidget, Ui_tuflowqgis_TuPlot):
 					for nwk in reversed(self.profileIntTool.pathsNwks[pInd]):
 						nInd = self.profileIntTool.pathsNwks[pInd].index(nwk)
 						advG = ''
+						advI = ''
 						decA = ''
 						sharpA = ''
 						if self.profileIntTool.pathsAdverseGradient[pInd][nInd]:
 							advG = ' -- Adverse Gradient'
+						if self.profileIntTool.pathsAdverseInvert[pInd][nInd]:
+							advI = ' -- Adverse Invert'
 						if self.profileIntTool.pathsDecreaseFlowArea[pInd][nInd]:
 							decA = ' -- Decrease in Area'
 						if self.profileIntTool.pathsSharpAngle[pInd][nInd]:
@@ -2233,6 +2236,15 @@ class TuPlot(QDockWidget, Ui_tuflowqgis_TuPlot):
 							ymax = max(ymax, max(self.profileIntTool.pathsPlotAdvG[pInd][1]))
 							self.artists.append(a)
 							label = "{0} Adverse Gradient".format(path)
+							self.labels.append(label)
+							self.subplot.hold(True)
+						if len(self.profileIntTool.pathsPlotAdvI[pInd][1]) > 0:
+							a, = self.subplot.plot(self.profileIntTool.pathsPlotAdvI[pInd][0],
+							                       self.profileIntTool.pathsPlotAdvI[pInd][1], marker='o',
+							                       linestyle='None')
+							ymax = max(ymax, max(self.profileIntTool.pathsPlotAdvI[pInd][1]))
+							self.artists.append(a)
+							label = "{0} Adverse Invert".format(path)
 							self.labels.append(label)
 							self.subplot.hold(True)
 						# Decrease in Area Flag

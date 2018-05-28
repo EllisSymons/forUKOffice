@@ -13,7 +13,7 @@ class DownstreamConnectivity():
 	Class for storing downstream connectivity information
 	"""
 	
-	def __init__(self, dsLines, startLines, inLyrs, angleLimit, lineDrape, coverLimit, lineDict):
+	def __init__(self, dsLines, startLines, inLyrs, angleLimit, lineDrape, coverLimit, lineDict, units):
 		self.dsLines = dsLines  # dictionary {name: [[dns network channels], [us invert, ds invert], [angle]]}
 		self.startLines = startLines  # list of initial starting lines for plotting
 		self.inLyrs = inLyrs  # list of nwk line layers
@@ -21,8 +21,15 @@ class DownstreamConnectivity():
 		self.lineDrape = lineDrape  # dict {name: [[QgsPoint - line vertices], [vertex chainage], [elevations]]}
 		self.coverLimit = coverLimit  # pipe obvert to ground depth limit for integrity checks
 		self.lineDict = lineDict
+		self.units = units
 		self.processed_nwks = []  # list of processed networks so there is no repetition
 		self.log = ''  # string for output log
+		self.warningType = []  # list for storing the continuity warning type
+		self.warningInformation = []  # pipe name, other information
+		self.warningLocation = []  # list for storing the continuity warning location
+		self.warningChainage = []  # list for stroing the continuity warning chainage for plotting
+		self.bWarningChainage = []  # list for stroing the continuity warning chainage for plotting locally for branch
+		self.pathsWarningChainage = []
 		self.type = []  # list of network types e.g. C R S
 		self.name = []  # list of network IDs
 		self.branchName = []  # list of branch names
@@ -39,6 +46,7 @@ class DownstreamConnectivity():
 		self.obvert = []  # list of pipe obverts along pipe at same locations as ground
 		self.coverDepth = []  # list of cover depths along pipe
 		self.adverseGradient = []  # list of flags for adverse gradients
+		self.adverseInvert = []  # list of flags for adverse inverts at pipe junctions
 		self.decreaseFlowArea = []  # list of flags for decreased flow area
 		self.sharpAngle = []  # list of flags for sharp angles
 		self.insffCover = []  # list of flags for insufficient cover
@@ -65,10 +73,12 @@ class DownstreamConnectivity():
 		self.pathsCover = []  # list of cover depths for plotting
 		self.pathsGroundX = []  # list of X coordinates for plotting relative to other paths (final plotting)
 		self.pathsGroundY = []  # list of Y coordinates for plotting relative to other paths (final plotting)
+		self.pathsAdverseInvert = []  # list of flags for adverse inverts at junctions relative to the paths
 		self.pathsAdverseGradient = []  # list of flags for adverse gradients relative to the paths
 		self.pathsDecreaseFlowArea = []  # list of flags for decreased flow area relative to the paths
 		self.pathsSharpAngle = []  # list of flags for sharp angles relative to the paths
 		self.pathsInsffCover = []  # list of flags for insufficient cover depth relative to the paths
+		self.pathsPlotAdvI = []  # list of adverse Inverts X, Y coords for plotting
 		self.pathsPlotAdvG = []  # list of adverse gradient X, Y coords for plotting
 		self.pathsPlotDecA = []  # list of decreased area X, Y coords for plotting
 		self.pathsPlotSharpA = []  # list of sharp angle X, Y coords for plotting
@@ -90,6 +100,7 @@ class DownstreamConnectivity():
 		self.bCoverDepth = []  # list of cover depths along pipe used locally per branch within branch routine
 		self.bDnsConnectionPipe = []  # list of a branch's downstream connection pipe name used locally per branch within branch routine
 		self.bAdverseGradient = []  # list of flags for adverse gradients used locally per branch within branch routine
+		self.bAdverseInvert = []  # list of flags for adverse inverts at pipe junctions used locally per branch within branch routine
 		self.bDecreaseFlowArea = []  # list of flags for decreased flow area used locally per branch within branch routine
 		self.bSharpAngle = []  # list of flags for sharp angles used locally per branch within branch routine
 		self.bInsffCover = []  # list of flags for insufficient cover used locally per branch within branch routine
@@ -118,10 +129,13 @@ class DownstreamConnectivity():
 		self.bCoverDepth = []
 		self.bDnsConnectionPipe = []
 		self.bAdverseGradient = []
+		self.bAdverseInvert = []
 		self.bDecreaseFlowArea = []
 		self.bSharpAngle = []
 		self.bInsffCover = []
+		self.bWarningChainage = []
 		self.first_sel = True
+		name_prev = None
 		area_prev = 0
 		dsInv_prev = 99999
 		bn = []
@@ -132,6 +146,7 @@ class DownstreamConnectivity():
 		while dns:
 			# Get QgsFeature layers for start lines
 			adverseGradient = False
+			adverseInvert = False
 			decreaseFlowArea = False
 			sharpAngle = False
 			insffCover = False
@@ -140,6 +155,7 @@ class DownstreamConnectivity():
 			groundCh = []
 			obvert = []
 			coverDepth = []
+			warningChainage = None
 			for lyr in self.inLyrs:
 				fld = lyr.fields()[0]
 				typFld = lyr.fields()[1]
@@ -199,6 +215,11 @@ class DownstreamConnectivity():
 							coverDepth.append(cover)
 							if cover < self.coverLimit:
 								insffCover = True
+								self.warningLocation.append(self.lineDrape[name][0][i])
+								warningChainage = groundCh[i]
+								self.warningType.append('Cover Warning')
+								self.warningInformation.append([network[0], warningChainage])
+								break
 				elif typ.lower() == 'c':
 					area = float(no) * (width / 2) ** 2 * 3.14
 					if self.coverLimit is not None:
@@ -211,6 +232,11 @@ class DownstreamConnectivity():
 							coverDepth.append(cover)
 							if cover < self.coverLimit:
 								insffCover = True
+								self.warningLocation.append(self.lineDrape[name][0][i])
+								warningChainage = groundCh[i]
+								self.warningType.append('Cover Warning')
+								self.warningInformation.append([network[0], warningChainage])
+								break
 				else:
 					area = 0
 					if self.coverLimit is not None:
@@ -218,12 +244,30 @@ class DownstreamConnectivity():
 						ground = self.lineDrape[name][2]
 						obvert = []
 						coverDepth = []
-				if (dsInv > usInv and usInv != -99999.00) or (usInv > dsInv_prev and dsInv_prev != -99999.00):
+				if (dsInv > usInv and usInv != -99999.00):
 					adverseGradient = True
+					point = getNetworkMidLocation(self.lineDict[network[0]][0][0], self.lineDict[network[0]][0][1])
+					self.warningLocation.append(point)
+					self.warningType.append('Gradient Warning')
+					self.warningInformation.append([network[0], usInv, dsInv])
+				if usInv > dsInv_prev and dsInv_prev != -99999.00:
+					adverseInvert = True
+					point = self.lineDict[network[0]][0][0]
+					self.warningLocation.append(point)
+					self.warningType.append('Invert Warning')
+					self.warningInformation.append([name_prev, dsInv_prev, network[0], usInv])
 				if area < area_prev and area != 0:
 					decreaseFlowArea = True
+					point = self.lineDict[network[0]][0][0]
+					self.warningLocation.append(point)
+					self.warningType.append('Area Warning')
+					self.warningInformation.append([name_prev, area_prev, network[0], area])
 				if angle < self.angleLimit and angle != 0:
 					sharpAngle = True
+					point = self.lineDict[network[0]][0][1]
+					self.warningLocation.append(point)
+					self.warningType.append('Angle Warning')
+					self.warningInformation.append([network[0], angle])
 				self.bType.append(typ)
 				self.bLength.append(length)
 				self.bName.append(name)
@@ -239,9 +283,11 @@ class DownstreamConnectivity():
 				self.bObvert.append(obvert)
 				self.bCoverDepth.append(coverDepth)
 				self.bAdverseGradient.append(adverseGradient)
+				self.bAdverseInvert.append(adverseInvert)
 				self.bDecreaseFlowArea.append(decreaseFlowArea)
 				self.bSharpAngle.append(sharpAngle)
 				self.bInsffCover.append(insffCover)
+				self.bWarningChainage.append(warningChainage)
 				if network[0] in self.dsLines.keys():
 					if len(self.dsLines[network[0]][0]) == 0:
 						self.joiningOutlet.append(self.dsLines[network[0]][3])
@@ -250,6 +296,7 @@ class DownstreamConnectivity():
 						dns = False
 					else:
 						self.processed_nwks.append(network[0])
+						name_prev = network[0]
 						area_prev = area
 						dsInv_prev = dsInv
 						network = self.dsLines[network[0]][0]
@@ -328,6 +375,11 @@ class DownstreamConnectivity():
 					angle = []
 					length = []
 					inProcessedNwks = False
+					skip_advG = False
+					skip_advI = False
+					skip_decA = False
+					skip_sharpA = False
+					skip_insffC = False
 					for nwk in nwks:
 						for f in features:
 							id = f.attributes()[0]
@@ -371,6 +423,13 @@ class DownstreamConnectivity():
 											cd.append(c)
 											if c < self.coverLimit:
 												insffCover = True
+												if not skip_insffC:
+													point = self.lineDrape[na][0][i]
+													self.warningLocation.append(point)
+													warningChainage = gc[i]
+													self.warningInformation.append([nwk, warningChainage])
+													skip_insffC = True
+												break
 								elif t.lower() == 'c':
 									a = float(n) * (w / 2) ** 2 * 3.14
 									if self.coverLimit is not None:
@@ -383,6 +442,13 @@ class DownstreamConnectivity():
 											cd.append(c)
 											if c < self.coverLimit:
 												insffCover = True
+												if not skip_insffC:
+													point = self.lineDrape[na][0][i]
+													self.warningLocation.append(point)
+													warningChainage = gc[i]
+													self.warningInformation.append([nwk, warningChainage])
+													skip_insffC = True
+												break
 								else:
 									a = 0
 									if self.coverLimit is not None:
@@ -390,12 +456,35 @@ class DownstreamConnectivity():
 										gr = self.lineDrape[na][2]
 										o = []
 										cd = []
-								if (dI > uI and uI != -99999.00) or (uI > dsInv_prev and dsInv_prev != -99999.00):
+								if dI > uI and uI != -99999.00:
 									adverseGradient = True
+									if not skip_advG:
+										point = getNetworkMidLocation(self.lineDict[nwk][0][0],
+									                                  self.lineDict[nwk][0][1])
+										self.warningLocation.append(point)
+										self.warningInformation.append([nwk, uI, dI])
+										skip_advG = True
+								if uI > dsInv_prev and dsInv_prev != -99999.00:
+									adverseInvert = True
+									if not skip_advI:
+										point = self.lineDict[nwk][0][0]
+										self.warningLocation.append(point)
+										self.warningInformation.append([name_prev, dsInv_prev, nwk, uI])
+										skip_advI = True
 								if a < area_prev and a != 0:
 									decFlowArea = True
+									if not skip_decA:
+										point = self.lineDict[nwk][0][0]
+										self.warningLocation.append(point)
+										self.warningInformation.append([name_prev, area_prev, nwk, a])
+										skip_decA = True
 								if ang < self.angleLimit and ang != 0:
 									sharpAngle = True
+									if not skip_sharpA:
+										point = self.lineDict[nwk][0][1]
+										self.warningLocation.append(point)
+										self.warningInformation.append([nwk, ang])
+										skip_sharpA = True
 								name.append(na)
 								typ.append(t)
 								no.append(n)
@@ -429,9 +518,11 @@ class DownstreamConnectivity():
 					self.bObvert.append(obvert[0])
 					self.bCoverDepth.append(coverDepth[0])
 					self.bAdverseGradient.append(adverseGradient)
+					self.bAdverseInvert.append(adverseInvert)
 					self.bDecreaseFlowArea.append(decreaseFlowArea)
 					self.bSharpAngle.append(sharpAngle)
 					self.bInsffCover.append(insffCover)
+					self.bWarningChainage.append(warningChainage)
 					if nwks[0] in self.dsLines.keys():
 						if len(self.dsLines[nwks[0]][0]) == 0:
 							self.joiningOutlet.append(self.dsLines[nwks[0]][3])
@@ -442,6 +533,7 @@ class DownstreamConnectivity():
 						else:
 							for nwk in nwks:
 								self.processed_nwks.append(nwk)
+							name_prev = nwks
 							area_prev = sum(area)
 							dsInv_prev = min(dsInv)
 							network = self.dsLines[nwks[0]][0]
@@ -488,9 +580,11 @@ class DownstreamConnectivity():
 			self.obvert.append(self.bObvert)
 			self.coverDepth.append(self.bCoverDepth)
 			self.adverseGradient.append(self.bAdverseGradient)
+			self.adverseInvert.append(self.bAdverseInvert)
 			self.decreaseFlowArea.append(self.bDecreaseFlowArea)
 			self.sharpAngle.append(self.bSharpAngle)
 			self.insffCover.append(self.bInsffCover)
+			self.warningChainage.append(self.bWarningChainage)
 		while len(self.network) > 0:
 			nwk = self.network[0]
 			self.branchExists = False
@@ -513,9 +607,11 @@ class DownstreamConnectivity():
 				self.obvert.append(self.bObvert)
 				self.coverDepth.append(self.bCoverDepth)
 				self.adverseGradient.append(self.bAdverseGradient)
+				self.adverseInvert.append(self.bAdverseInvert)
 				self.decreaseFlowArea.append(self.bDecreaseFlowArea)
 				self.sharpAngle.append(self.bSharpAngle)
 				self.insffCover.append(self.bInsffCover)
+				self.warningChainage.append(self.bWarningChainage)
 			self.network.remove(nwk)
 			
 	def reportLog(self):
@@ -524,23 +620,24 @@ class DownstreamConnectivity():
 		
 		:return:
 		"""
+		
+		for i, msg in enumerate(self.warningInformation):
+			if self.warningType[i] == 'Cover Warning':
+				self.log += '{0} cover depth is below input limit {1} at {2:.1f}{3} along network\n' \
+					        .format(msg[0], self.coverLimit, msg[1], self.units)
+			elif self.warningType[i] == 'Gradient Warning':
+				self.log += '{0} has an adverse gradient (upstream {1:.3f}{2}RL, downstream {3:.3f}{2}RL)\n' \
+						    .format(msg[0], msg[1], self.units, msg[2])
+			elif self.warningType[i] == 'Invert Warning':
+				self.log += '{0} outlet ({1:.3f}{2}RL) is lower than downstream {3} inlet ({4:.3f}{2}RL)\n' \
+						    .format(msg[0], msg[1], self.units, msg[2], msg[3])
+			elif self.warningType[i] == 'Area Warning':
+				self.log += '{0} decreases in area downstream ({0} {1:.1f}{2}2, {3} {4:.1f}{2}2)\n' \
+						    .format(msg[0], msg[1], self.units, msg[2], msg[3])
+			elif self.warningType[i] == 'Angle Warning':
+				self.log += '{0} outlet angle ({1:.1f} deg) is less than input angle limit ({2:.1f} deg)\n' \
+						    .format(msg[0], msg[1], self.angleLimit)
 
-		for i, branch in enumerate(self.branchName):
-			self.log += '\n# {0}\n\n'.format(branch)
-			for j, name in enumerate(self.name[i]):
-				advG = ''
-				decA = ''
-				sharpA = ''
-				insffC = ''
-				if self.adverseGradient[i][j]:
-					advG = ' -- Adverse Gradient'
-				if self.decreaseFlowArea[i][j]:
-					decA = ' -- Decrease in Area'
-				if self.sharpAngle[i][j]:
-					sharpA = ' -- Sharp Outflow Angle'
-				if self.insffCover[i][j]:
-					insffC = ' -- Insufficient Cover Depth'
-				self.log += '{0}{1}{2}{3}\n'.format(name, advG, decA, sharpA, insffC)
 				
 	def checkDnsNwks(self):
 		"""
@@ -660,9 +757,11 @@ class DownstreamConnectivity():
 			pathsGroundCh = []
 			pathsGround = []
 			pathsAdvG = []
+			pathsAdvI = []
 			pathsDecA = []
 			pathsSharpA = []
 			pathsInsffCover = []
+			pathsWarningChainage = []
 			for i, branch in enumerate(path):
 				if i + 1 < len(path):
 					dnsB = path[i+1]
@@ -680,9 +779,11 @@ class DownstreamConnectivity():
 						pathsNwks.append(nwk)
 						pathsLen.append(self.length[bInd][j])
 						pathsAdvG.append(self.adverseGradient[bInd][j])
+						pathsAdvI.append(self.adverseInvert[bInd][j])
 						pathsDecA.append(self.decreaseFlowArea[bInd][j])
 						pathsSharpA.append(self.sharpAngle[bInd][j])
 						pathsInsffCover.append(self.insffCover[bInd][j])
+						pathsWarningChainage.append(self.warningChainage[bInd][j])
 						if self.coverLimit is not None:
 							pathsGroundCh.append(self.groundCh[bInd][j])
 							if None not in self.ground[bInd][j]:
@@ -713,9 +814,11 @@ class DownstreamConnectivity():
 			self.pathsGroundCh.append(pathsGroundCh)
 			self.pathsGround.append(pathsGround)
 			self.pathsAdverseGradient.append(pathsAdvG)
+			self.pathsAdverseInvert.append(pathsAdvI)
 			self.pathsDecreaseFlowArea.append(pathsDecA)
 			self.pathsSharpAngle.append(pathsSharpA)
 			self.pathsInsffCover.append(pathsInsffCover)
+			self.pathsWarningChainage.append(pathsWarningChainage)
 	
 	def addX(self, ind, start):
 		"""
@@ -868,6 +971,7 @@ class DownstreamConnectivity():
 		"""
 
 		advG = [[], []]  # X list, Y List
+		advI = [[], []]  # X list, Y List
 		decA = [[], []]  # X list, Y List
 		sharpA = [[], []]  # X list, Y List
 		insffC = [[], []]  # X list, Y List
@@ -887,6 +991,15 @@ class DownstreamConnectivity():
 				y = (yStart + yEnd) / 2
 				advG[0].append(x)
 				advG[1].append(y)
+				count += 1
+			if self.pathsAdverseInvert[ind][i]:
+				x = self.pathsX[xInd][i * 2]
+				if len(self.pathsPipe[xInd][i]) > 0:
+					y = self.pathsPipe[xInd][i][3][1] + (0.1 * count)
+				else:
+					y = self.pathsInvert[xInd][i * 2] + (0.1 * count)
+				advI[0].append(x)
+				advI[1].append(y)
 				count += 1
 			if self.pathsDecreaseFlowArea[ind][i]:
 				x = self.pathsX[xInd][i * 2]
@@ -909,18 +1022,19 @@ class DownstreamConnectivity():
 			if self.pathsInsffCover[ind][i]:
 				xStart = self.pathsX[xInd][i * 2]
 				xEnd = self.pathsX[xInd][i * 2 + 1]
-				x = (xStart + xEnd) / 2
+				x = xStart + self.pathsWarningChainage[ind][i]
 				if len(self.pathsPipe[xInd][i]) > 0:
 					yStart = self.pathsPipe[xInd][i][3][1] + (0.1 * count)
 					yEnd = self.pathsPipe[xInd][i][2][1] + (0.1 * count)
 				else:
 					yStart = self.pathsInvert[xInd][i * 2] + (0.1 * count)
 					yEnd = self.pathsInvert[xInd][i * 2 + 1] + (0.1 * count)
-				y = (yStart + yEnd) / 2
+				y = (yStart - yEnd) / (xStart - xEnd) * (x - xStart) + yStart
 				insffC[0].append(x)
 				insffC[1].append(y)
 				count += 1
 		self.pathsPlotAdvG.insert(ind, advG)
+		self.pathsPlotAdvI.insert(ind, advI)
 		self.pathsPlotDecA.insert(ind, decA)
 		self.pathsPlotSharpA.insert(ind, sharpA)
 		self.pathsPlotInCover.insert(ind, insffC)

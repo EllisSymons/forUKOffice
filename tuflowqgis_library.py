@@ -1630,6 +1630,7 @@ def checkNetworkContinuity(lineDict, dsLines, lineDrape, angleLimit, coverLimit,
 	checkCover = check[3]
 	log = ''
 	location = []
+	warningType = []
 	for name, parameter in dsLines.items():
 		# define known variables
 		dnsNames = parameter[0]
@@ -1708,25 +1709,29 @@ def checkNetworkContinuity(lineDict, dsLines, lineDrape, angleLimit, coverLimit,
 		if checkArea:
 			if usArea != 0 and dsArea != 0:
 				if dsArea < usArea:
-					log += '{0} decreases in area downstream ({0} {1:.1f}{2}2, {3} {4.1f}{2}2)\n' \
+					log += '{0} decreases in area downstream ({0} {1:.1f}{2}2, {3} {4:.1f}{2}2)\n' \
 						   .format(name, usArea, units, (dnsNames[0] if len(dnsNames) == 1 else dnsNames), dsArea)
+					warningType.append('Area Warning')
 					location.append(dsVertex)
 		if checkGradient:
 			if usInvert != -99999 and dsInvert != -99999:
 				if dsInvert > usInvert:
 					log += '{0} has an adverse gradient (upstream {1:.3f}{2}RL, downstream {3:.3f}{2}RL)\n' \
 						   .format(name, usInvert, units, dsInvert)
+					warningType.append('Gradient Warning')
 					location.append(midVertex)
 			if dsInvert != -99999 and dnsUsInvert != -99999:
 				if dnsUsInvert > dsInvert:
 					log += '{0} outlet ({1:.3f}{2}RL) is lower than downstream {3} inlet ({4:.3f}{2}RL)\n' \
 						   .format(name, dsInvert, units, (dnsNames[0] if len(dnsNames) == 1 else dnsNames), dnsUsInvert)
+					warningType.append('Invert Warning')
 					location.append(dsVertex)
 		if checkAngle:
 			if angle != 0:
 				if angle < angleLimit:
 					log += '{0} outlet angle ({1:.1f} deg) is less than input angle limit ({2:.1f} deg)\n' \
 						   .format(name, angle, angleLimit)
+					warningType.append('Angle Warning')
 					location.append(dsVertex)
 		if checkCover:
 			if usInvert != -99999 and dsInvert != -99999:
@@ -1738,8 +1743,9 @@ def checkNetworkContinuity(lineDict, dsLines, lineDrape, angleLimit, coverLimit,
 				if coverFlag:
 					log += '{0} cover depth is below input limit {1} at {2:.1f}{3} along network\n' \
 						   .format(name, coverLimit, chainage, units)
+					warningType.append('Cover Warning')
 					location.append(point)
-	return log, location
+	return log, warningType, location
 
 
 def getPathFromRel(dir, relPath):
