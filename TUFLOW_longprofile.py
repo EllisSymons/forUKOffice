@@ -14,7 +14,7 @@ class DownstreamConnectivity():
 	"""
 	
 	def __init__(self, dsLines, startLines, inLyrs, angleLimit, lineDrape, coverLimit, lineDict, units):
-		self.dsLines = dsLines  # dictionary {name: [[dns network channels], [us invert, ds invert], [angle]]}
+		self.dsLines = dsLines  # dictionary {name: [[dns network channels], [us invert, ds invert], [angle], [dns-dns connected channels], [upsnetworks}, [ups-ups channels]]
 		self.startLines = startLines  # list of initial starting lines for plotting
 		self.inLyrs = inLyrs  # list of nwk line layers
 		self.angleLimit = angleLimit  # angle limit to for integrity checks
@@ -427,6 +427,7 @@ class DownstreamConnectivity():
 													point = self.lineDrape[na][0][i]
 													self.warningLocation.append(point)
 													warningChainage = gc[i]
+													self.warningType.append('Cover Warning')
 													self.warningInformation.append([nwk, warningChainage])
 													skip_insffC = True
 												break
@@ -446,6 +447,7 @@ class DownstreamConnectivity():
 													point = self.lineDrape[na][0][i]
 													self.warningLocation.append(point)
 													warningChainage = gc[i]
+													self.warningType.append('Cover Warning')
 													self.warningInformation.append([nwk, warningChainage])
 													skip_insffC = True
 												break
@@ -457,33 +459,43 @@ class DownstreamConnectivity():
 										o = []
 										cd = []
 								if dI > uI and uI != -99999.00:
-									adverseGradient = True
 									if not skip_advG:
+										adverseGradient = True
 										point = getNetworkMidLocation(f)
 										self.warningLocation.append(point)
+										self.warningType.append('Gradient Warning')
 										self.warningInformation.append([nwk, uI, dI])
 										skip_advG = True
+								elif dI <= uI and uI != -99999.00:
+									skip_advG = True
 								if uI > dsInv_prev and dsInv_prev != -99999.00:
-									adverseInvert = True
 									if not skip_advI:
+										adverseInvert = True
 										point = self.lineDict[nwk][0][0]
 										self.warningLocation.append(point)
+										self.warningType.append('Invert Warning')
 										self.warningInformation.append([name_prev, dsInv_prev, nwk, uI])
 										skip_advI = True
+								elif uI <= dsInv_prev and dsInv_prev != -99999:
+									skip_advI = True
 								if a < area_prev and a != 0:
 									decFlowArea = True
 									if not skip_decA:
 										point = self.lineDict[nwk][0][0]
 										self.warningLocation.append(point)
+										self.warningType.append('Area Warning')
 										self.warningInformation.append([name_prev, area_prev, nwk, a])
 										skip_decA = True
 								if ang < self.angleLimit and ang != 0:
-									sharpAngle = True
 									if not skip_sharpA:
+										sharpAngle = True
 										point = self.lineDict[nwk][0][1]
 										self.warningLocation.append(point)
+										self.warningType.append('Angle Warning')
 										self.warningInformation.append([nwk, ang])
 										skip_sharpA = True
+								elif ang >= self.angleLimit and ang != 0:
+									skip_sharpA = True
 								name.append(na)
 								typ.append(t)
 								no.append(n)
@@ -613,13 +625,14 @@ class DownstreamConnectivity():
 				self.warningChainage.append(self.bWarningChainage)
 			self.network.remove(nwk)
 			
+			
 	def reportLog(self):
 		"""
 		log branch results
 		
 		:return:
 		"""
-		
+
 		for i, msg in enumerate(self.warningInformation):
 			if self.warningType[i] == 'Cover Warning':
 				self.log += '{0} cover depth is below input limit {1} at {2:.1f}{3} along network\n' \

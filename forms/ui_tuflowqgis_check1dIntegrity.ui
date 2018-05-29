@@ -183,6 +183,12 @@
       <height>21</height>
      </rect>
     </property>
+    <property name="font">
+     <font>
+      <weight>50</weight>
+      <bold>false</bold>
+     </font>
+    </property>
     <property name="text">
      <string>Browse</string>
     </property>
@@ -538,7 +544,7 @@
     <property name="geometry">
      <rect>
       <x>45</x>
-      <y>192</y>
+      <y>170</y>
       <width>331</width>
       <height>22</height>
      </rect>
@@ -557,7 +563,7 @@
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>154</y>
+      <y>132</y>
       <width>191</width>
       <height>20</height>
      </rect>
@@ -619,8 +625,8 @@
     </property>
     <property name="geometry">
      <rect>
-      <x>10</x>
-      <y>135</y>
+      <x>11</x>
+      <y>200</y>
       <width>181</width>
       <height>20</height>
      </rect>
@@ -761,7 +767,7 @@
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>195</y>
+      <y>173</y>
       <width>31</width>
       <height>16</height>
      </rect>
@@ -783,7 +789,7 @@
     <property name="geometry">
      <rect>
       <x>176</x>
-      <y>170</y>
+      <y>148</y>
       <width>51</width>
       <height>20</height>
      </rect>
@@ -795,10 +801,10 @@
      </font>
     </property>
     <property name="decimals">
-     <number>2</number>
+     <number>1</number>
     </property>
     <property name="minimum">
-     <double>0.010000000000000</double>
+     <double>-99999.000000000000000</double>
     </property>
     <property name="maximum">
      <double>9999.000000000000000</double>
@@ -814,7 +820,7 @@
     <property name="geometry">
      <rect>
       <x>20</x>
-      <y>172</y>
+      <y>150</y>
       <width>131</width>
       <height>16</height>
      </rect>
@@ -836,7 +842,7 @@
     <property name="geometry">
      <rect>
       <x>230</x>
-      <y>170</y>
+      <y>148</y>
       <width>51</width>
       <height>20</height>
      </rect>
@@ -1137,10 +1143,10 @@
      </font>
     </property>
     <property name="decimals">
-     <number>2</number>
+     <number>1</number>
     </property>
     <property name="minimum">
-     <double>0.010000000000000</double>
+     <double>-99999.000000000000000</double>
     </property>
     <property name="maximum">
      <double>9999.000000000000000</double>

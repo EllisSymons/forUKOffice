@@ -990,11 +990,10 @@ def getAngle(line1, line2):
 	:return: float angle
 	"""
 	from math import acos, pi
-
+	
 	a = ((line1[1][1] - line1[0][1]) ** 2 + (line1[1][0] - line1[0][0]) ** 2) ** 0.5  # triangle side a
 	b = ((line2[1][1] - line2[0][1]) ** 2 + (line2[1][0] - line2[0][0]) ** 2) ** 0.5  # triangle side b
 	c = ((line2[1][1] - line1[0][1]) ** 2 + (line2[1][0] - line1[0][0]) ** 2) ** 0.5  # triangle side c
-	
 	cosC = float(str((a ** 2 + b ** 2 - c ** 2) / (2 * a * b)))  # cosine rule - annoyingly wasn't working without convert to string then convert back to float!
 	angle = acos(cosC) * 180 / pi  # convert to degrees
 	
@@ -1172,10 +1171,20 @@ def checkSnapping(**kwargs):
 	if checkLine:
 		for lName, lParam in lineDict.items():
 			lLoc = lParam[0]
-			lFid = lParam[1]
-			lyr = lParam[2]
 			lUsInv = lParam[3][0]
 			lDsInv = lParam[3][1]
+			lFid = lParam[1]
+			lLyr = lParam[2]
+			idFld = lLyr.fields()[0]
+			typFld = lLyr.fields()[1]
+			if '__connector' in lName:
+				filter = '"{0}" = \'{1}\' OR "{0}" = \'{2}\''.format(typFld.name(), 'X', 'x')
+			else:
+				filter = '"{0}" = \'{1}\''.format(idFld.name(), lName)
+			request = QgsFeatureRequest().setFilterExpression(filter)
+			for f in lLyr.getFeatures(request):
+				if f.id() == lFid:
+					feature = f
 			xIn = False  # helps determine downstream direction in relation to X connectors
 			for j, v in enumerate(lLoc):
 				found = False
@@ -1183,7 +1192,18 @@ def checkSnapping(**kwargs):
 				minDist = 99999
 				for i, (lName2, lParam2) in enumerate(sorted(lineDict.items())):  # sort dict so x connectors are assessed first
 					lLoc2 = lParam2[0]
+					lLyr2 = lParam2[2]
 					lFid2 = lParam2[1]
+					idFld2 = lLyr2.fields()[0]
+					typFld2 = lLyr2.fields()[1]
+					if '__connector' in lName:
+						filter = '"{0}" = \'{1}\' OR "{0}" = \'{2}\''.format(typFld.name(), 'X', 'x')
+					else:
+						filter = '"{0}" = \'{1}\''.format(idFld.name(), lName2)
+					request = QgsFeatureRequest().setFilterExpression(filter)
+					for f in lLyr2.getFeatures(request):
+						if f.id() == lFid2:
+							feature2 = f
 					if found and not dnsConn:
 						break
 					for j2, v2 in enumerate(lLoc2):
@@ -1192,7 +1212,7 @@ def checkSnapping(**kwargs):
 						if v == v2:
 							found = True
 							if lName not in dsNwk.keys():
-								dsNwk[lName] = [[], [], [], []]  # dsNwk name, us and ds invert, outflow angle, joining nwk names
+								dsNwk[lName] = [[], [], [], [], [], []]  # dsNwk name, us and ds invert, outflow angle, joining nwk dns, upstream network, upstream network to upstream network
 							if 'connector' in lName:
 								if j == 0 and j2 == 0:  # X Connector is entering side channel
 									found_dns = True
@@ -1247,10 +1267,20 @@ def checkSnapping(**kwargs):
 									if len(dsNwk[lName][1]) == 0:
 										dsNwk[lName][1].append(lUsInv)
 										dsNwk[lName][1].append(lDsInv)
-									angle = getAngle(lLoc, lLoc2)
+									point1 = [feature.geometry().asPolyline()[-2][0], feature.geometry().asPolyline()[-2][1]]
+									point2 = [feature.geometry().asPolyline()[-1][0], feature.geometry().asPolyline()[-1][1]]
+									point3 = [feature2.geometry().asPolyline()[0][0], feature2.geometry().asPolyline()[0][1]]
+									point4 = [feature2.geometry().asPolyline()[1][0], feature2.geometry().asPolyline()[1][1]]
+									geom1 = [feature.geometry().asPolyline()[-2], feature.geometry().asPolyline()[-1]]
+									geom2 = [feature2.geometry().asPolyline()[0], feature2.geometry().asPolyline()[1]]
+									angle = getAngle(geom1, geom2)
 									dsNwk[lName][2].append(angle)
-								elif j == 1 and j2 == 1:
+								elif j == 1 and j2 == 1:  # end vertex connected to an end vertex
 									dsNwk[lName][3].append(lName2)
+								elif j == 0 and j2 == 1:  # start vertex connected to an end vertex i.e. found an ups nwk
+									dsNwk[lName][4].append(lName2)
+								elif j == 0 and j2 == 0:  # start vertex connected to a start vertex
+									dsNwk[lName][5].append(lName2)
 							continue
 						else:
 							dist = ((v2[0] - v[0]) ** 2 + (v2[1] - v[1]) ** 2) ** 0.5
@@ -1261,13 +1291,13 @@ def checkSnapping(**kwargs):
 								node = j2
 					if i + 1 == lineDict_len and not found_dns:
 						if lName not in dsNwk.keys():
-							dsNwk[lName] = [[], [], [], []]
+							dsNwk[lName] = [[], [], [], [], [], []]
 						if len(dsNwk[lName][1]) == 0:
 							dsNwk[lName][1].append(lUsInv)
 							dsNwk[lName][1].append(lDsInv)
 					if i + 1 == lineDict_len and not found:
 						if lName not in dsNwk.keys():
-							dsNwk[lName] = [[], [], [], []]
+							dsNwk[lName] = [[], [], [], [], [], []]
 						if len(dsNwk[lName][1]) == 0:
 							dsNwk[lName][1].append(lUsInv)
 							dsNwk[lName][1].append(lDsInv)
@@ -1275,10 +1305,10 @@ def checkSnapping(**kwargs):
 							unsnapped_names.append(lName)
 						if j == 0:
 							unsnapped.append('{0} upstream'.format(lName))
-							closestV['{0}==0'.format(lName)] = [lyr, lFid, '{0}=={1}'.format(name, node), v3, minDist]
+							closestV['{0}==0'.format(lName)] = [lLyr, lFid, '{0}=={1}'.format(name, node), v3, minDist]
 						else:
 							unsnapped.append('{0} downstream'.format(lName))
-							closestV['{0}==1'.format(lName)] = [lyr, lFid, '{0}=={1}'.format(name, node), v3, minDist]
+							closestV['{0}==1'.format(lName)] = [lLyr, lFid, '{0}=={1}'.format(name, node), v3, minDist]
 		
 		if not checkPoint:
 			return unsnapped, unsnapped_names, closestV, dsNwk
@@ -1505,7 +1535,7 @@ def getElevFromTa(lineDict, dsLines, lineLyrs, taLyrs):
 	Use 1d_ta layers to populate elevations of network
 	
 	:param lineDict: dict {name: [[vertices], feature id, origin lyr, [us invert, ds invert], type}
-	:param dsLines: dict {name: [[dns network channels], [us invert, ds invert], [other connecting channels]]}
+	:param dsLines: dict # dictionary {name: [[dns network channels], [us invert, ds invert], [angle], [dns-dns connected channels], [upsnetworks}, [ups-ups channels]]
 	:param taLyrs: list QgsVectorLayer
 	:return: updated dsLines dict with updated us and ds inverts
 	"""
@@ -1627,7 +1657,7 @@ def checkNetworkContinuity(lineDict, dsLines, lineDrape, angleLimit, coverLimit,
 	"""
 
 	:param lineDict: dict - {name: [[vertices], feature id, origin lyr, [us invert, ds invert], type}
-	:param dsLines: dict - {name: [[dns network channels], [us invert, ds invert], angle]}
+	:param dsLines: dict - # dictionary {name: [[dns network channels], [us invert, ds invert], [angle], [dns-dns connected channels], [upsnetworks}, [ups-ups channels]]
 	:param lineDrape: dict - {name: {[QgsPoint], [Chainages], [Elevations]]}
 	:param angleLimit: int
 	:param coverLimit: float
@@ -1645,119 +1675,120 @@ def checkNetworkContinuity(lineDict, dsLines, lineDrape, angleLimit, coverLimit,
 	location = []
 	warningType = []
 	for name, parameter in dsLines.items():
-		# define known variables
-		dnsNames = parameter[0]
-		usInvert = parameter[1][0]
-		dsInvert = parameter[1][1]
-		if len(parameter[2]) > 0:
-			angle = min(parameter[2])
-		else:
-			angle = 0
-		if name in lineDrape.keys():
-			drape = lineDrape[name]
-		else:
-			drape = None
-		usVertex = lineDict[name][0][0]
-		dsVertex = lineDict[name][0][1]
-		type = lineDict[name][4]
-		lyr = lineDict[name][2]
-		fid = lineDict[name][1]
-		idFld = lyr.fields()[0]
-		typFld = lyr.fields()[1]
-		if '__connector' in name:
-			filter = '"{0}" = \'{1}\' OR "{0}" = \'{2}\''.format(typFld.name(), 'X', 'x')
-		else:
-			filter = '"{0}" = \'{1}\''.format(idFld.name(), name)
-		request = QgsFeatureRequest().setFilterExpression(filter)
-		for f in lyr.getFeatures(request):
-			if f.id() == fid:
-				feature = f
-		midVertex = getNetworkMidLocation(feature)
-		usArea = 0
-		dsArea = 0
-		dnsUsInvert = 99999
-		dnsDsInvert = 99999
-		if type.lower() == 'c' or type.lower() == 'r':
-			no = feature.attributes()[15]
-			width = feature.attributes()[13]
-			height = feature.attributes()[14]
-			if type.lower() == 'c':
-				usArea = no * 3.14 * (width / 2) ** 2
-			elif type.lower() == 'r':
-				usArea = no * width * height
-		# check for x connectors
-		for dnsName in dnsNames[:]:
-			if 'connector' in dnsName:
-				dnsNames += lineDict[dnsName][0]
-				dnsNames.remove(dnsName)
-		# calculate upstream and downstream area and get downstream inverts
-		for dnsName in dnsNames:
-			dnsType = lineDict[dnsName][4]
-			dnsLyr = lineDict[dnsName][2]
-			dnsFid = lineDict[dnsName][1]
-			idFld = dnsLyr.fields()[0]
-			filter = '"{0}" = \'{1}\''.format(idFld.name(), dnsName)
+		if '__connector' not in name:
+			# define known variables
+			dnsNames = parameter[0]
+			usInvert = parameter[1][0]
+			dsInvert = parameter[1][1]
+			if len(parameter[2]) > 0:
+				angle = min(parameter[2])
+			else:
+				angle = 0
+			if name in lineDrape.keys():
+				drape = lineDrape[name]
+			else:
+				drape = None
+			usVertex = lineDict[name][0][0]
+			dsVertex = lineDict[name][0][1]
+			type = lineDict[name][4]
+			lyr = lineDict[name][2]
+			fid = lineDict[name][1]
+			idFld = lyr.fields()[0]
+			typFld = lyr.fields()[1]
+			if '__connector' in name:
+				filter = '"{0}" = \'{1}\' OR "{0}" = \'{2}\''.format(typFld.name(), 'X', 'x')
+			else:
+				filter = '"{0}" = \'{1}\''.format(idFld.name(), name)
 			request = QgsFeatureRequest().setFilterExpression(filter)
-			for f in dnsLyr.getFeatures(request):
-				if f.id() == dnsFid:
-					dnsFeature = f
-			if dnsType.lower() == 'c' or dnsType.lower() == 'r':
-				dnsNo = dnsFeature.attributes()[15]
-				dnsWidth = dnsFeature.attributes()[13]
-				dnsHeight = dnsFeature.attributes()[14]
-				if dnsType.lower() == 'c':
-					dsArea += dnsNo * 3.14 * (dnsWidth / 2) ** 2
-				elif dnsType.lower() == 'r':
-					dsArea += dnsNo * dnsWidth * dnsHeight
-			if dsLines[dnsName][1][0] != -99999:
-				dnsUsInvert = min(dnsUsInvert, dsLines[dnsName][1][0])
-			if dsLines[dnsName][1][1] != -99999:
-				dnsDsInvert = min(dnsDsInvert, dsLines[dnsName][1][1])
-		# change back to null value if non-existent
-		if dnsUsInvert == 99999:
-			dnsUsInvert = -99999
-		if dnsDsInvert == 99999:
-			dnsDsInvert = -99999
-		# perfrom checks
-		if checkArea:
-			if usArea != 0 and dsArea != 0:
-				if dsArea < usArea:
-					log += '{0} decreases in area downstream ({0} {1:.1f}{2}2, {3} {4:.1f}{2}2)\n' \
-						   .format(name, usArea, units, (dnsNames[0] if len(dnsNames) == 1 else dnsNames), dsArea)
-					warningType.append('Area Warning')
-					location.append(dsVertex)
-		if checkGradient:
-			if usInvert != -99999 and dsInvert != -99999:
-				if dsInvert > usInvert:
-					log += '{0} has an adverse gradient (upstream {1:.3f}{2}RL, downstream {3:.3f}{2}RL)\n' \
-						   .format(name, usInvert, units, dsInvert)
-					warningType.append('Gradient Warning')
-					location.append(midVertex)
-			if dsInvert != -99999 and dnsUsInvert != -99999:
-				if dnsUsInvert > dsInvert:
-					log += '{0} outlet ({1:.3f}{2}RL) is lower than downstream {3} inlet ({4:.3f}{2}RL)\n' \
-						   .format(name, dsInvert, units, (dnsNames[0] if len(dnsNames) == 1 else dnsNames), dnsUsInvert)
-					warningType.append('Invert Warning')
-					location.append(dsVertex)
-		if checkAngle:
-			if angle != 0:
-				if angle < angleLimit:
-					log += '{0} outlet angle ({1:.1f} deg) is less than input angle limit ({2:.1f} deg)\n' \
-						   .format(name, angle, angleLimit)
-					warningType.append('Angle Warning')
-					location.append(dsVertex)
-		if checkCover:
-			if usInvert != -99999 and dsInvert != -99999:
-				coverFlag = False
+			for f in lyr.getFeatures(request):
+				if f.id() == fid:
+					feature = f
+			midVertex = getNetworkMidLocation(feature)
+			usArea = 0
+			dsArea = 0
+			dnsUsInvert = 99999
+			dnsDsInvert = 99999
+			if type.lower() == 'c' or type.lower() == 'r':
+				no = feature.attributes()[15]
+				width = feature.attributes()[13]
+				height = feature.attributes()[14]
 				if type.lower() == 'c':
-					coverFlag, point, chainage = checkNetworkCover(drape, width, usInvert, dsInvert, coverLimit)
+					usArea = no * 3.14 * (width / 2) ** 2
 				elif type.lower() == 'r':
-					coverFlag, point, chainage = checkNetworkCover(drape, height, usInvert, dsInvert, coverLimit)
-				if coverFlag:
-					log += '{0} cover depth is below input limit {1} at {2:.1f}{3} along network\n' \
-						   .format(name, coverLimit, chainage, units)
-					warningType.append('Cover Warning')
-					location.append(point)
+					usArea = no * width * height
+			# check for x connectors
+			for dnsName in dnsNames[:]:
+				if 'connector' in dnsName:
+					dnsNames += dsLines[dnsName][0]
+					dnsNames.remove(dnsName)
+			# calculate upstream and downstream area and get downstream inverts
+			for dnsName in dnsNames:
+				dnsType = lineDict[dnsName][4]
+				dnsLyr = lineDict[dnsName][2]
+				dnsFid = lineDict[dnsName][1]
+				idFld = dnsLyr.fields()[0]
+				filter = '"{0}" = \'{1}\''.format(idFld.name(), dnsName)
+				request = QgsFeatureRequest().setFilterExpression(filter)
+				for f in dnsLyr.getFeatures(request):
+					if f.id() == dnsFid:
+						dnsFeature = f
+				if dnsType.lower() == 'c' or dnsType.lower() == 'r':
+					dnsNo = dnsFeature.attributes()[15]
+					dnsWidth = dnsFeature.attributes()[13]
+					dnsHeight = dnsFeature.attributes()[14]
+					if dnsType.lower() == 'c':
+						dsArea += dnsNo * 3.14 * (dnsWidth / 2) ** 2
+					elif dnsType.lower() == 'r':
+						dsArea += dnsNo * dnsWidth * dnsHeight
+				if dsLines[dnsName][1][0] != -99999:
+					dnsUsInvert = min(dnsUsInvert, dsLines[dnsName][1][0])
+				if dsLines[dnsName][1][1] != -99999:
+					dnsDsInvert = min(dnsDsInvert, dsLines[dnsName][1][1])
+			# change back to null value if non-existent
+			if dnsUsInvert == 99999:
+				dnsUsInvert = -99999
+			if dnsDsInvert == 99999:
+				dnsDsInvert = -99999
+			# perfrom checks
+			if checkArea:
+				if usArea != 0 and dsArea != 0:
+					if dsArea < usArea:
+						log += '{0} decreases in area downstream ({0} {1:.1f}{2}2, {3} {4:.1f}{2}2)\n' \
+							   .format(name, usArea, units, (dnsNames[0] if len(dnsNames) == 1 else dnsNames), dsArea)
+						warningType.append('Area Warning')
+						location.append(dsVertex)
+			if checkGradient:
+				if usInvert != -99999 and dsInvert != -99999:
+					if dsInvert > usInvert:
+						log += '{0} has an adverse gradient (upstream {1:.3f}{2}RL, downstream {3:.3f}{2}RL)\n' \
+							   .format(name, usInvert, units, dsInvert)
+						warningType.append('Gradient Warning')
+						location.append(midVertex)
+				if dsInvert != -99999 and dnsUsInvert != -99999:
+					if dnsUsInvert > dsInvert:
+						log += '{0} outlet ({1:.3f}{2}RL) is lower than downstream {3} inlet ({4:.3f}{2}RL)\n' \
+							   .format(name, dsInvert, units, (dnsNames[0] if len(dnsNames) == 1 else dnsNames), dnsUsInvert)
+						warningType.append('Invert Warning')
+						location.append(dsVertex)
+			if checkAngle:
+				if angle != 0:
+					if angle < angleLimit:
+						log += '{0} outlet angle ({1:.1f} deg) is less than input angle limit ({2:.1f} deg)\n' \
+							   .format(name, angle, angleLimit)
+						warningType.append('Angle Warning')
+						location.append(dsVertex)
+			if checkCover:
+				if usInvert != -99999 and dsInvert != -99999:
+					coverFlag = False
+					if type.lower() == 'c':
+						coverFlag, point, chainage = checkNetworkCover(drape, width, usInvert, dsInvert, coverLimit)
+					elif type.lower() == 'r':
+						coverFlag, point, chainage = checkNetworkCover(drape, height, usInvert, dsInvert, coverLimit)
+					if coverFlag:
+						log += '{0} cover depth is below input limit {1} at {2:.1f}{3} along network\n' \
+							   .format(name, coverLimit, chainage, units)
+						warningType.append('Cover Warning')
+						location.append(point)
 	return log, warningType, location
 
 
@@ -1765,7 +1796,7 @@ def correctPipeDirectionByInvert(lineDict, dsLines, units):
 	"""
 	
 	:param lineDict: dict - {name: [[vertices], feature id, origin lyr, [us invert, ds invert], type}
-	:param dsLines: dict - {name: [[dns network channels], [us invert, ds invert], angle]}
+	:param dsLines: dict - # dictionary {name: [[dns network channels], [us invert, ds invert], [angle], [dns-dns connected channels], [upsnetworks}, [ups-ups channels]]
 	:param units: string - 'm' or 'ft' or ''
 	:return: string, string, QgsPoint
 	"""
@@ -1805,6 +1836,47 @@ def correctPipeDirectionByInvert(lineDict, dsLines, units):
 						.format(name, usInvert, units, dsInvert)
 					messageType.append('line direction edit')
 					messageLocation.append(midVertex)
+	return log, messageType, messageLocation
+
+
+def correctPipeDirectionFromConnections(lineDict, dsLines):
+	"""
+	Reverses the pipe direction based on the upstream and downstream pipe directions
+	
+	:param lineDict: dict - {name: [[vertices], feature id, origin lyr, [us invert, ds invert], type}
+	:param dsLines: dict - dictionary {name: [[dns network channels], [us invert, ds invert], [angle], [dns-dns connected channels], [ups networks}, [ups-ups channels]]
+	:return: string, string, QgsPoint
+	"""
+
+	log = ''
+	messageType = []
+	messageLocation = []
+	for name, parameter in dsLines.items():
+		if '__connector' not in name:
+			dsNwks = parameter[0]
+			usNwks = parameter[4]
+			dsDsNwks = parameter[3]
+			usUsNwks = parameter[5]
+			if len(dsDsNwks) > 0 and len(usUsNwks) > 0 and len(dsNwks) == 0 and len(usNwks) == 0:
+				lyr = lineDict[name][2]
+				fid = lineDict[name][1]
+				idFld = lyr.fields()[0]
+				filter = '"{0}" = \'{1}\''.format(idFld.name(), name)
+				request = QgsFeatureRequest().setFilterExpression(filter)
+				for f in lyr.getFeatures(request):
+					if f.id() == fid:
+						feature = f
+				midVertex = getNetworkMidLocation(feature)
+				geom = feature.geometry().asPolyline()
+				reversedGeom = geom[::-1]
+				lyr.startEditing()
+				for i in range(len(geom)):
+					lyr.moveVertex(reversedGeom[i][0], reversedGeom[i][1], fid, i)
+				lyr.commitChanges()
+				log += '{0} line direction has been reversed based on upstream and downstream connected networks\n' \
+					.format(name)
+				messageType.append('line direction edit')
+				messageLocation.append(midVertex)
 	return log, messageType, messageLocation
 					
 

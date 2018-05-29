@@ -2108,7 +2108,7 @@ class tuflowqgis_check_1d_integrity_dialog(QDialog, Ui_check1dIntegrity):
 		checkAngle = False
 		checkCover = False
 		angleLimit = 90
-		coverDepth = 0.5
+		coverLimit = 0.5
 		correctDirectionByGradient = False
 		correctDirectionByContinuity = False
 		outMsg = False
@@ -2250,9 +2250,11 @@ class tuflowqgis_check_1d_integrity_dialog(QDialog, Ui_check1dIntegrity):
 			unsnappedLines, unsnappedLineNames, closestVLines, dsLines = checkSnapping(lines=lineDict,
 																					     points=pointDict,
 																					     dns_conn=continuityCheck)
+			if len(taLyrs) > 0:
+				dsLines = getElevFromTa(lineDict, dsLines, lineLyrs, taLyrs)
 			continuityLog, continiuityWarningTypes, continuityError = checkNetworkContinuity(lineDict, dsLines,
 			                                                                                 lineDrape, angleLimit,
-			                                                                                 coverDepth,
+			                                                                                 coverLimit,
 			                                                                                 [checkArea, checkGradient,
 			                                                                                  checkAngle, checkCover],
 			                                                                                 units)
@@ -2264,8 +2266,19 @@ class tuflowqgis_check_1d_integrity_dialog(QDialog, Ui_check1dIntegrity):
 			unsnappedLines, unsnappedLineNames, closestVLines, dsLines = checkSnapping(lines=lineDict,
 			                                                                           points=pointDict,
 			                                                                           dns_conn=correctDirectionByGradient)
+			if len(taLyrs) > 0:
+				dsLines = getElevFromTa(lineDict, dsLines, lineLyrs, taLyrs)
 			correctDirectionGradLog, correctDirectionGradType, correctDirectionGradPoint = \
 				correctPipeDirectionByInvert(lineDict, dsLines, units)
+		if correctDirectionByContinuity:
+			lineDict, lineDrape = getVertices(lineLyrs, dem)
+			if len(pointLyrs) > 0:
+				pointDict, pointDrape = getVertices(pointLyrs, dem)
+			unsnappedLines, unsnappedLineNames, closestVLines, dsLines = checkSnapping(lines=lineDict,
+			                                                                           points=pointDict,
+			                                                                           dns_conn=correctDirectionByContinuity)
+			correctDirectionContLog, correctDirectionContType, correctDirectionContPoint = \
+				correctPipeDirectionFromConnections(lineDict, dsLines)
 		# Output
 		if outMsg or outTxt:
 			if outMsg:
@@ -2316,7 +2329,9 @@ class tuflowqgis_check_1d_integrity_dialog(QDialog, Ui_check1dIntegrity):
 			if correctDirectionByGradient or correctDirectionByContinuity:
 				results += '\n' + r'\\ Correct Pipe Direction \\' + '\n\n'
 				if correctDirectionByGradient:
-					results += '# Pipes corrected by gradient\n\n{0}'.format(correctDirectionGradLog)
+					results += '# Pipes Corrected by Gradient\n\n{0}\n'.format(correctDirectionGradLog)
+				if correctDirectionByContinuity:
+					results += '# Pipes Corrected by Continuity\n\n{0}\n'.format(correctDirectionContLog)
 			if outMsg:
 				self.outDialog = tuflowqgis_1d_integrity_output(self.iface, results)
 				self.outDialog.show()
@@ -2382,6 +2397,19 @@ class tuflowqgis_check_1d_integrity_dialog(QDialog, Ui_check1dIntegrity):
 								lyr.select(fid)
 			if correctDirectionByGradient:
 				names = correctDirectionGradLog.split('\n')
+				for n in names:
+					name = n.split(' ')[0].strip()
+					if len(name) > 0:
+						lyr = lineDict[name][2]
+						fid = lineDict[name][1]
+						idFld = lyr.fields()[0]
+						filter = '"{0}" = \'{1}\''.format(idFld.name(), name)
+						request = QgsFeatureRequest().setFilterExpression(filter)
+						for f in lyr.getFeatures(request):
+							if f.id() == fid:
+								lyr.select(fid)
+			if correctDirectionByContinuity:
+				names = correctDirectionContLog.split('\n')
 				for n in names:
 					name = n.split(' ')[0].strip()
 					if len(name) > 0:
@@ -2474,6 +2502,14 @@ class tuflowqgis_check_1d_integrity_dialog(QDialog, Ui_check1dIntegrity):
 					feat = QgsFeature()
 					feat.setGeometry(QgsGeometry.fromPoint(vertex))
 					feat.setAttributes(['{0}'.format(correctDirectionGradType[i]),
+					                    'Line Direction Edit: {0}'.format(loggedDirectionChange[i])])
+					messageFeats.append(feat)
+			if correctDirectionByContinuity:
+				loggedDirectionChange = correctDirectionContLog.split('\n')
+				for i, vertex in enumerate(correctDirectionContPoint):
+					feat = QgsFeature()
+					feat.setGeometry(QgsGeometry.fromPoint(vertex))
+					feat.setAttributes(['{0}'.format(correctDirectionContType[i]),
 					                    'Line Direction Edit: {0}'.format(loggedDirectionChange[i])])
 					messageFeats.append(feat)
 			dp.addFeatures(messageFeats)
