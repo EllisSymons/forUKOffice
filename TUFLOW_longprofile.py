@@ -246,7 +246,7 @@ class DownstreamConnectivity():
 						coverDepth = []
 				if (dsInv > usInv and usInv != -99999.00):
 					adverseGradient = True
-					point = getNetworkMidLocation(self.lineDict[network[0]][0][0], self.lineDict[network[0]][0][1])
+					point = getNetworkMidLocation(features[0])
 					self.warningLocation.append(point)
 					self.warningType.append('Gradient Warning')
 					self.warningInformation.append([network[0], usInv, dsInv])
@@ -459,8 +459,7 @@ class DownstreamConnectivity():
 								if dI > uI and uI != -99999.00:
 									adverseGradient = True
 									if not skip_advG:
-										point = getNetworkMidLocation(self.lineDict[nwk][0][0],
-									                                  self.lineDict[nwk][0][1])
+										point = getNetworkMidLocation(f)
 										self.warningLocation.append(point)
 										self.warningInformation.append([nwk, uI, dI])
 										skip_advG = True

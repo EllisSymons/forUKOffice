@@ -1041,7 +1041,7 @@ def lineToPoints(feat, spacing):
 
 	:param feat: QgsFeature - Line to be converted to points
 	:param spacing: float - max spacing to use when converting line to points
-	:return: List - QgsPoint
+	:return: List, List - QgsPoint, Chainages
 	"""
 	from math import sin, cos, asin
 	
@@ -1568,8 +1568,9 @@ def getElevFromTa(lineDict, dsLines, lineLyrs, taLyrs):
 	return dsLines
 
 
-def getNetworkMidLocation(usVertex, dsVertex):
+def getNetworkMidLocation(feature):
 	"""
+	Returns the location of the mid point along a polyline
 
 	:param usVertex: QgsPoint
 	:param dsVetex: QgsPoint
@@ -1577,9 +1578,20 @@ def getNetworkMidLocation(usVertex, dsVertex):
 	"""
 
 	from math import sin, cos, asin
-
+	
+	length = getLength(feature)
+	desiredLength = length / 2.
+	points, chainages = lineToPoints(feature, 99999)
+	chPrev = 0
+	for i, ch in enumerate(chainages):
+		if ch > desiredLength and chPrev < desiredLength:
+			break
+		else:
+			chPrev = ch
+	usVertex = points[i-1]
+	dsVertex = points[i]
 	length = ((dsVertex[1] - usVertex[1]) ** 2. + (dsVertex[0] - usVertex[0]) ** 2.) ** 0.5
-	newLength = length / 2
+	newLength = desiredLength - chPrev
 	angle = asin((dsVertex[1] - usVertex[1]) / length)
 	x = usVertex[0] + (newLength * cos(angle)) if dsVertex[0] - usVertex[0] >= 0 else usVertex[0] - (newLength * cos(
 		angle))
@@ -1647,7 +1659,6 @@ def checkNetworkContinuity(lineDict, dsLines, lineDrape, angleLimit, coverLimit,
 			drape = None
 		usVertex = lineDict[name][0][0]
 		dsVertex = lineDict[name][0][1]
-		midVertex = getNetworkMidLocation(usVertex, dsVertex)
 		type = lineDict[name][4]
 		lyr = lineDict[name][2]
 		fid = lineDict[name][1]
@@ -1661,6 +1672,7 @@ def checkNetworkContinuity(lineDict, dsLines, lineDrape, angleLimit, coverLimit,
 		for f in lyr.getFeatures(request):
 			if f.id() == fid:
 				feature = f
+		midVertex = getNetworkMidLocation(feature)
 		usArea = 0
 		dsArea = 0
 		dnsUsInvert = 99999
@@ -1750,6 +1762,13 @@ def checkNetworkContinuity(lineDict, dsLines, lineDrape, angleLimit, coverLimit,
 
 
 def correctPipeDirectionByInvert(lineDict, dsLines, units):
+	"""
+	
+	:param lineDict: dict - {name: [[vertices], feature id, origin lyr, [us invert, ds invert], type}
+	:param dsLines: dict - {name: [[dns network channels], [us invert, ds invert], angle]}
+	:param units: string - 'm' or 'ft' or ''
+	:return: string, string, QgsPoint
+	"""
 	
 	log = ''
 	messageType = []
@@ -1761,7 +1780,6 @@ def correctPipeDirectionByInvert(lineDict, dsLines, units):
 			dsInvert = parameter[1][1]
 			usVertex = lineDict[name][0][0]
 			dsVertex = lineDict[name][0][1]
-			midVertex = getNetworkMidLocation(usVertex, dsVertex)
 			lyr = lineDict[name][2]
 			fid = lineDict[name][1]
 			idFld = lyr.fields()[0]
@@ -1770,6 +1788,7 @@ def correctPipeDirectionByInvert(lineDict, dsLines, units):
 			for f in lyr.getFeatures(request):
 				if f.id() == fid:
 					feature = f
+			midVertex = getNetworkMidLocation(feature)
 			if usInvert != -99999 and dsInvert != -99999:
 				if dsInvert > usInvert:
 					geom = feature.geometry().asPolyline()
