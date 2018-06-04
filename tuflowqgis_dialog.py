@@ -362,8 +362,8 @@ class tuflowqgis_line_from_points(QDialog, Ui_tuflowqgis_line_from_point):
 	def browse_outfile(self):
 		newname = QFileDialog.getSaveFileName(None, "Output Shapefile", 
 			self.outfilename.displayText(), "*.shp")
-                if newname != None:
-                	self.outfilename.setText(newname)
+		if newname != None:
+			self.outfilename.setText(newname)
 
 	def source_changed(self):
 		layername = unicode(self.sourcelayer.currentText())
@@ -479,24 +479,7 @@ class tuflowqgis_line_from_points(QDialog, Ui_tuflowqgis_line_from_point):
 		del outfile
 		#QgsMapLayerRegistry.instance().addMapLayers([v_layer])
 		self.iface.addVectorLayer(savename, os.path.basename(savename), "ogr")
-		#line_start = QgsPoint(x[0],y[0])
-		#QMessageBox.information(self.iface.mainWindow(),"debug", "x1 = "+str(x[1])+", y0 = "+str(y[1]))
-		#line_end = QgsPoint(x[1],y[1])
-		#line = QgsGeometry.fromPolyline([line_start,line_end])
-		# create a new memory layer
-		#v_layer = QgsVectorLayer("LineString", "line", "memory")
-		#pr = v_layer.dataProvider()
-		# create a new feature
-		#seg = QgsFeature()
-		# add the geometry to the feature, 
-		#seg.setGeometry(QgsGeometry.fromPolyline([line_start, line_end]))
-		# ...it was here that you can add attributes, after having defined....
-		# add the geometry to the layer
-		#pr.addFeatures( [ seg ] )
-		# update extent of the layer (not necessary)
-		#v_layer.updateExtents()
-		# show the line  
-		#QgsMapLayerRegistry.instance().addMapLayers([v_layer])
+
 
 # ----------------------------------------------------------
 #    tuflowqgis configure tuflow project
@@ -1752,6 +1735,95 @@ class tuflowqgis_tuplotAxisEditor(QDialog, Ui_tuplotAxisEditor):
 			self.yAxisAuto_rb_2.setChecked(False)
 			self.yAxisCustom_rb_2.setChecked(True)
 
+
+# ----------------------------------------------------------
+#    tuflowqgis tuplot axis labels
+# ----------------------------------------------------------
+from ui_tuflowqgis_tuplotAxisLabels import *
+
+
+class tuflowqgis_tuplotAxisLabels(QDialog, Ui_tuplotAxisLabel):
+	def __init__(self, iface, xLabel, yLabel, xLabel2, yLabel2, title, xAxisAuto_cb, yAxisAuto_cb, xAxisAuto2_cb,
+	             yAxisAuto2_cb):
+		QDialog.__init__(self)
+		self.iface = iface
+		self.xLabel = xLabel
+		self.yLabel = yLabel
+		self.xLabel2 = xLabel2
+		self.yLabel2 = yLabel2
+		self.title = title
+		self.setupUi(self)
+		# Setup Axis 1 defaults
+		self.chartTitle.setText(self.title)
+		self.xAxisLabel.setText(self.xLabel)
+		self.yAxisLabel.setText(self.yLabel)
+		if xAxisAuto_cb:
+			self.xAxisAuto_cb.setChecked(True)
+		else:
+			self.xAxisAuto_cb.setChecked(False)
+		if yAxisAuto_cb:
+			self.yAxisAuto_cb.setChecked(True)
+		else:
+			self.yAxisAuto_cb.setChecked(False)
+		# Setup Axis 2 defaults
+		if self.xLabel2 is not None:
+			self.xAxisAuto2_cb.setEnabled(True)
+			self.xAxisLabel2.setEnabled(True)
+			self.xAxisLabel2.setText(self.xLabel2)
+			if xAxisAuto2_cb:
+				self.xAxisAuto2_cb.setChecked(True)
+			else:
+				self.xAxisAuto2_cb.setChecked(False)
+		else:
+			self.xAxisAuto2_cb.setEnabled(False)
+			self.xAxisLabel2.setEnabled(False)
+		if self.yLabel2 is not None:
+			self.yAxisAuto2_cb.setEnabled(True)
+			self.yAxisLabel2.setEnabled(True)
+			self.yAxisLabel2.setText(self.yLabel2)
+			if yAxisAuto2_cb:
+				self.yAxisAuto2_cb.setChecked(True)
+			else:
+				self.yAxisAuto2_cb.setChecked(False)
+		else:
+			self.yAxisAuto2_cb.setEnabled(False)
+			self.yAxisLabel2.setEnabled(False)
+		# Signals
+		self.buttonBox.rejected.connect(lambda: self.cancel(xAxisAuto_cb, yAxisAuto_cb, xAxisAuto2_cb, yAxisAuto2_cb))
+		self.buttonBox.accepted.connect(self.run)
+		self.xAxisLabel.textChanged.connect(lambda: self.auto_label(self.xAxisAuto_cb))
+		self.yAxisLabel.textChanged.connect(lambda: self.auto_label(self.yAxisAuto_cb))
+		self.xAxisLabel2.textChanged.connect(lambda: self.auto_label(self.xAxisAuto2_cb))
+		self.yAxisLabel2.textChanged.connect(lambda: self.auto_label(self.yAxisAuto2_cb))
+	
+	def auto_label(self, cb):
+		cb.setChecked(True)
+	
+	def run(self):
+		self.xLabel = self.xAxisLabel.text()
+		self.yLabel = self.yAxisLabel.text()
+		self.xLabel2 = self.xAxisLabel2.text()
+		self.yLabel2 = self.yAxisLabel2.text()
+		self.title = self.chartTitle.text()
+	
+	def cancel(self, xAxisAuto_cb, yAxisAuto_cb, xAxisAuto2_cb, yAxisAuto2_cb):
+		if xAxisAuto_cb:
+			self.xAxisAuto_cb.setChecked(True)
+		else:
+			self.xAxisAuto_cb.setChecked(False)
+		if yAxisAuto_cb:
+			self.yAxisAuto_cb.setChecked(True)
+		else:
+			self.yAxisAuto_cb.setChecked(False)
+		if xAxisAuto2_cb:
+			self.xAxisAuto2_cb.setChecked(True)
+		else:
+			self.xAxisAuto2_cb.setChecked(False)
+		if yAxisAuto2_cb:
+			self.yAxisAuto2_cb.setChecked(True)
+		else:
+			self.yAxisAuto2_cb.setChecked(False)
+			
 
 # ----------------------------------------------------------
 #    tuflowqgis 1D integrity output window

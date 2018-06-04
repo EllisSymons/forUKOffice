@@ -21,6 +21,8 @@ import TUFLOW_1dTa
 import math
 from collections import OrderedDict
 from tuflowqgis_library import *
+import tuflowqgis_dialog
+
 
 
 # Debug using PyCharm
@@ -31,7 +33,6 @@ sys.path.append(r'C:\Program Files\JetBrains\PyCharm 2018.1\helpers\pydev')
 sys.path.append(os.path.dirname(os.path.abspath(__file__)) + "/forms")
 from ui_tuflowqgis_TuPlot import Ui_tuflowqgis_TuPlot
 import tuflowqgis_styles
-
 
 class TuPlot(QDockWidget, Ui_tuflowqgis_TuPlot):
     
@@ -67,6 +68,7 @@ class TuPlot(QDockWidget, Ui_tuflowqgis_TuPlot):
 		self.xs_list = []
 		self.labels = []
 		self.customAxis = None
+		self.customLabels = None
 		self.profileIntTool = None
 		self.is_intTool = False
 		#self.setAttribute(Qt.WA_DeleteOnClose, True)
@@ -217,6 +219,7 @@ class TuPlot(QDockWidget, Ui_tuflowqgis_TuPlot):
 		message = message+'For some functionality, this utitlity relies on the output formats available in the 2016 version of TUFLOW.  Some of the functioalaity is available for the 2013 version of TUFLOW.\n'
 		message = message+'For more information on using this please see http://wiki.tuflow.com/index.php?title=TuPlot'
 		QMessageBox.information(self.iface.mainWindow(), "TuPlot Information", message)
+		
 	def clear_status(self):
 		"""
 			Clears the status list wdiget
@@ -239,7 +242,6 @@ class TuPlot(QDockWidget, Ui_tuflowqgis_TuPlot):
 			return
 		#else:
 		#	self.qgis_connect()
-
 
 	def deactivate_changed(self):
 		"""
@@ -272,7 +274,6 @@ class TuPlot(QDockWidget, Ui_tuflowqgis_TuPlot):
 			Close up and remove the dock
 		"""
 		QMessageBox.information(self.iface.mainWindow(), "Information", "Closing and removing dock")
-		
 	
 	def changed_forcexs(self):
 		"""
@@ -731,7 +732,6 @@ class TuPlot(QDockWidget, Ui_tuflowqgis_TuPlot):
 		
 		self.loc_changed()
 		
-		
 	def add_profileIntTool(self, profileIntTool):
 		"""
 		Open profile integrity tool in an existing tuplot.
@@ -743,7 +743,6 @@ class TuPlot(QDockWidget, Ui_tuflowqgis_TuPlot):
 		self.profileIntTool = profileIntTool
 		self.layerChanged()
 		self.select_changed()
-		
 
 	def layerChanged(self):
 		self.is_intTool = False
@@ -819,7 +818,7 @@ class TuPlot(QDockWidget, Ui_tuflowqgis_TuPlot):
 		else: #it might be a result file
 			self.is_xs = False
 			self.locationDrop.clear()
-			if len(self.res)==0:
+			if len(self.res) == 0 and not self.hydTables.loadedData:
 				self.locationDrop.addItem('No Results Open / Not a TUFLOW layer')
 				self.lwStatus.item(0).setTextColor(self.qblue)
 				return
@@ -831,10 +830,13 @@ class TuPlot(QDockWidget, Ui_tuflowqgis_TuPlot):
 			
 			#determine latest version (if multiple results selected)
 			version = 1
-			for i in range(len(self.res)):
-				#self.lwStatus.insertItem(0,'Results file '+str(i+1)+' has version: '+str(self.res[i].formatVersion))
-				version = max(version,self.res[i].formatVersion)
-				self.res_version = version
+			if not self.res and self.hydTables.loadedData:
+				self.res_version = 2
+			else:
+				for i in range(len(self.res)):
+					#self.lwStatus.insertItem(0,'Results file '+str(i+1)+' has version: '+str(self.res[i].formatVersion))
+					version = max(version,self.res[i].formatVersion)
+					self.res_version = version
 							
 			if self.res_version>2:
 				self.lwStatus.insertItem(0,'ERROR - Unxpected results version, expecting 1 or 2.')
@@ -1117,8 +1119,10 @@ class TuPlot(QDockWidget, Ui_tuflowqgis_TuPlot):
 
 		if not error:
 			self.start_draw()
+			
 	def timeChanged(self):
 		self.start_draw()
+		
 	def res_type_changed(self):
 		#self.lwStatus.insertItem(0,'Result type changed - use Update Plot to Update')
 		#self.lwStatus.item(0).setTextColor(self.qgrey)
@@ -1423,6 +1427,7 @@ class TuPlot(QDockWidget, Ui_tuflowqgis_TuPlot):
 		if (draw):
 			#self.lwStatus.insertItem(0,'call draw_figure()')
 			self.draw_figure()
+			
 	def showIt(self):
 		self.layout = self.frame_for_plot.layout()
 		minsize = self.minimumSize()
@@ -1435,13 +1440,14 @@ class TuPlot(QDockWidget, Ui_tuflowqgis_TuPlot):
 		self.artists = []
 		self.labels = []
 		
-		self.fig = Figure( (1.0, 1.0), linewidth=0.0, subplotpars = matplotlib.figure.SubplotParams(left=0.125, bottom=0.1, right=0.9, top=0.9, wspace=0, hspace=0))
+		#self.fig = Figure( (1.0, 1.0), linewidth=0.0, subplotpars = matplotlib.figure.SubplotParams(left=0.125, bottom=0.1, right=0.9, top=0.9, wspace=0, hspace=0))
+		self.fig, self.subplot = plt.subplots()
 			
 		font = {'family' : 'arial', 'weight' : 'normal', 'size'   : 12}
 		
 		rect = self.fig.patch
 		rect.set_facecolor((0.9,0.9,0.9))
-		self.subplot = self.fig.add_axes((0.10, 0.15, 0.85,0.82))
+		#self.subplot = self.fig.add_axes((0.10, 0.15, 0.85,0.82))
 		self.subplot.set_xbound(0,1000)
 		self.subplot.set_ybound(0,1000)			
 		self.manageMatplotlibAxe(self.subplot)
@@ -1483,22 +1489,19 @@ class TuPlot(QDockWidget, Ui_tuflowqgis_TuPlot):
 			self.axis2.cla()
 		except:
 			self.ax2_exists = False
-			
 		
 	def showMenu(self, pos):
 		menu = QMenu(self)
 		exportCsv_action = QAction("Export Plot Data to Csv", menu)
 		setAxis_action = QAction("Set Axis Limits", menu)
+		setLabels_action = QAction("Set Axis Labels", menu)
 		exportCsv_action.triggered.connect(self.export_csv)
-		setAxis_action.triggered.connect(self.set_axis)
+		setAxis_action.triggered.connect(self.set_axisLimits)
+		setLabels_action.triggered.connect(self.set_axisLabels)
 		menu.addAction(exportCsv_action)
 		menu.addAction(setAxis_action)
-		if self.locationDrop.currentText() == 'Check Downstream Integrity':
-			selectPaths_action = QAction('Select Networks in Current Path(s) in Map Window', menu)
-			selectPaths_action.triggered.connect(self.selectPaths)
-			menu.addAction(selectPaths_action)
+		menu.addAction(setLabels_action)
 		menu.popup(self.plotWdg.mapToGlobal(pos))
-		
 		
 	def showMenuSelElements(self, pos):
 		menu = QMenu(self)
@@ -1507,7 +1510,6 @@ class TuPlot(QDockWidget, Ui_tuflowqgis_TuPlot):
 			selectPaths_action.triggered.connect(self.selectPaths)
 			menu.addAction(selectPaths_action)
 		menu.popup(self.IDList.mapToGlobal(pos))
-		
 		
 	def export_csv(self):
 		#QMessageBox.information(self.iface.mainWindow(), "DEBUG", "Export csv!")
@@ -1693,23 +1695,30 @@ class TuPlot(QDockWidget, Ui_tuflowqgis_TuPlot):
 					return
 			self.lwStatus.insertItem(0, 'Successfully exported csv')
 	
-	def set_axis(self):
+	def set_axisLimits(self):
 		"""
 		sets the axis limits for the plot window
 
 		:return: void
 		"""
-		from tuflowqgis_dialog import tuflowqgis_tuplotAxisEditor
 		
 		# Get Axis limits
 		xLim = self.subplot.get_xlim()
 		yLim = self.subplot.get_ylim()
 		
 		# Get Axis Increments
-		xMajorTickLabels = self.subplot.xaxis.get_majorticklabels()
-		yMajorTickLabels = self.subplot.yaxis.get_majorticklabels()
-		xInc = xMajorTickLabels[-2]._x - xMajorTickLabels[-3]._x
-		yInc = yMajorTickLabels[-2]._y - yMajorTickLabels[-3]._y
+		# xMajorTickLabels = self.subplot.xaxis.get_majorticklabels()
+		# yMajorTickLabels = self.subplot.yaxis.get_majorticklabels()
+		xTicks = self.subplot.get_xticks()
+		yTicks = self.subplot.get_yticks()
+		if len(xTicks) > 1:
+			xInc = xTicks[1] - xTicks[0]
+		else:
+			xInc = 99999
+		if len(yTicks) > 1:
+			yInc = yTicks[1] - yTicks[0]
+		else:
+			yInc = 99999
 		
 		# Get radio buttons
 		if self.customAxis is not None:
@@ -1753,11 +1762,46 @@ class TuPlot(QDockWidget, Ui_tuflowqgis_TuPlot):
 				x2MajorTickLabels = self.axis2.xaxis.get_majorticklabels()
 				x2Inc = x2MajorTickLabels[-2]._x - x2MajorTickLabels[-3]._x
 		
-		self.customAxis = tuflowqgis_tuplotAxisEditor(self.iface, xLim, yLim, xAuto, yAuto, xInc, yInc, axis2, x2Lim,
+		self.customAxis = tuflowqgis_dialog.tuflowqgis_tuplotAxisEditor(self.iface, xLim, yLim, xAuto, yAuto, xInc, yInc, axis2, x2Lim,
 		                                              y2Lim, x2Inc, y2Inc, x2Auto, y2Auto)
 		self.customAxis.exec_()
 		self.start_draw()
+	
+	def set_axisLabels(self):
+		"""
+		Sets the axis labels for the plot area.
+
+		:return: void
+		"""
 		
+		# Get Current Labels
+		xLabel = self.subplot.get_xlabel()
+		yLabel = self.subplot.get_ylabel()
+		title = self.subplot.get_title()
+		# Secontdary axis
+		xLabel2 = None
+		yLabel2 = None
+		if self.ax2_exists:
+			if self.axis2._sharex is not None:
+				yLabel2 = self.axis2.get_ylabel()
+			elif self.axis2._sharey is not None:
+				xLabel2 = self.axis2.get_xlabel()
+		# Get previous settings
+		xAxisAuto_cb = False
+		yAxisAuto_cb = False
+		xAxisAuto2_cb = False
+		yAxisAuto2_cb = False
+		try:
+			xAxisAuto_cb = self.customLabels.xAxisAuto_cb.isChecked()
+			yAxisAuto_cb = self.customLabels.yAxisAuto_cb.isChecked()
+			xAxisAuto2_cb = self.customLabels.xAxisAuto2_cb.isChecked()
+			yAxisAuto2_cb = self.customLabels.yAxisAuto2_cb.isChecked()
+		except:
+			pass
+		self.customLabels = tuflowqgis_dialog.tuflowqgis_tuplotAxisLabels(self.iface, xLabel, yLabel, xLabel2, yLabel2, title,
+		                                                xAxisAuto_cb, yAxisAuto_cb, xAxisAuto2_cb, yAxisAuto2_cb)
+		self.customLabels.exec_()
+		self.start_draw()
 		
 	def selectPaths(self):
 		"""
@@ -1790,8 +1834,6 @@ class TuPlot(QDockWidget, Ui_tuflowqgis_TuPlot):
 				else:
 					filter += 'OR "{0}" = \'{1}\''.format(id, nwk)
 			lyr.selectByExpression(filter)
-		
-		
 
 	def draw_figure(self):
 		self.clear_figure()
@@ -1834,9 +1876,29 @@ class TuPlot(QDockWidget, Ui_tuflowqgis_TuPlot):
 		ymax = -999999.
 		mmin = 0
 		mmax = 1
+		# Innitialise axis names
+		xTitle = None
+		yTitle = None
+		xTitle2 = None
+		yTitle2 = None
+		try:
+			for i, res in enumerate(self.res):
+				if i == 0:
+					if res.units.lower() == 'metric':
+						units = 'm'
+					else:
+						units = 'ft'
+				else:
+					if res.units.lower() == 'metric' and units != 'm':
+						units = None
+					elif res.units.lower != 'metric' and units != 'ft':
+						units = None
+		except:
+			units = None
 		
 		if self.is_xs:  # drawing section
 			# Get result types to plot
+			yTitle = 'Elevation ({0} RL)'.format(units) if units is not None else 'Elevation'
 			resFiles = []
 			for i in range(self.ResList.count()):
 				if self.ResList.item(i).isSelected():
@@ -1882,6 +1944,7 @@ class TuPlot(QDockWidget, Ui_tuflowqgis_TuPlot):
 							ymin = round(min(xs.z), 0) - 1
 							ymax = round(max(xs.z), 0) + 1
 							label = xs.source + " - " + xs.type
+							xTitle = 'Station ({0})'.format(units) if units is not None else 'Station'
 							self.subplot.set_xbound(lower=xmin, upper=xmax)
 							self.subplot.set_ybound(lower=ymin, upper=ymax)
 							a, = self.subplot.plot(xs.x, xs.z)
@@ -1890,7 +1953,7 @@ class TuPlot(QDockWidget, Ui_tuflowqgis_TuPlot):
 							self.subplot.hold(True)
 					except:
 						self.lwStatus.insertItem(0, 'ERROR plotting XZ')
-				if 'HW' in typenames or 'CS' in typenames or 'LC' in typenames or 'BG' in typenames:
+				if 'HW' in typenames or 'CS' in typenames:
 					try:
 						if xs.type.upper() == 'HW' or xs.type.upper() == 'CS' or xs.type.upper() == 'LC' or xs.type.upper() == 'BG':
 							xmin = round(min(xs.z), 0) - 1
@@ -1898,6 +1961,24 @@ class TuPlot(QDockWidget, Ui_tuflowqgis_TuPlot):
 							ymin = round(min(xs.x), 0) - 1
 							ymax = round(max(xs.x), 0) + 1
 							label = xs.source + " - " + xs.type
+							xTitle = 'Width ({0})'.format(units) if units is not None else 'Width'
+							self.subplot.set_xbound(lower=xmin, upper=xmax)
+							self.subplot.set_ybound(lower=ymin, upper=ymax)
+							a, = self.subplot.plot(xs.z, xs.x)
+							self.artists.append(a)
+							self.labels.append(label)
+							self.subplot.hold(True)
+					except:
+						self.lwStatus.insertItem(0, 'ERROR plotting 1d ta')
+				if 'LC' in typenames or 'BG' in typenames:
+					try:
+						if xs.type.upper() == 'HW' or xs.type.upper() == 'CS' or xs.type.upper() == 'LC' or xs.type.upper() == 'BG':
+							xmin = round(min(xs.z), 0) - 1
+							xmax = round(max(xs.z), 0) + 1
+							ymin = round(min(xs.x), 0) - 1
+							ymax = round(max(xs.x), 0) + 1
+							label = xs.source + " - " + xs.type
+							xTitle = 'Form Loss Factor'
 							self.subplot.set_xbound(lower=xmin, upper=xmax)
 							self.subplot.set_ybound(lower=ymin, upper=ymax)
 							a, = self.subplot.plot(xs.z, xs.x)
@@ -1917,6 +1998,7 @@ class TuPlot(QDockWidget, Ui_tuflowqgis_TuPlot):
 					if 'Max Water Level' in typenames:
 						try:
 							for i, result in enumerate(xsResult.maxHx):
+								xTitle = 'Station ({0})'.format(units) if units is not None else 'Station'
 								a, = self.subplot.plot(result, xsResult.maxHz[i])
 								self.artists.append(a)
 								if nRes < 2:
@@ -1936,6 +2018,7 @@ class TuPlot(QDockWidget, Ui_tuflowqgis_TuPlot):
 									timeInd = x
 									timeStr = list_item.text()
 							for i, result in enumerate(xsResult.hx):
+								xTitle = 'Station ({0})'.format(units) if units is not None else 'Station'
 								a, = self.subplot.plot(result[timeInd], xsResult.hz[i][timeInd])
 								self.artists.append(a)
 								if nRes < 2:
@@ -1951,6 +2034,7 @@ class TuPlot(QDockWidget, Ui_tuflowqgis_TuPlot):
 					if 'Left Bank' in typenames:
 						try:
 							for i, result in enumerate(xsResult.lb):
+								xTitle = 'Station ({0})'.format(units) if units is not None else 'Station'
 								a, = self.subplot.plot(xsResult.lbx[i], result, marker='o',
 								                       linestyle='None', color='r')
 								self.artists.append(a)
@@ -1966,6 +2050,7 @@ class TuPlot(QDockWidget, Ui_tuflowqgis_TuPlot):
 					if 'Right Bank' in typenames:
 						try:
 							for i, result in enumerate(xsResult.rb):
+								xTitle = 'Station ({0})'.format(units) if units is not None else 'Station'
 								a, = self.subplot.plot(xsResult.rbx[i], result, marker='o',
 								                       linestyle='None', color='r')
 								self.artists.append(a)
@@ -1984,7 +2069,7 @@ class TuPlot(QDockWidget, Ui_tuflowqgis_TuPlot):
 						tableIndex = i
 						break
 				d = self.hydTables.loadedData[tableIndex]
-				if 'Depth' in typenames or 'Width' in typenames or 'Width' in typenames or \
+				if 'Depth' in typenames or 'Width' in typenames or \
 						'Eff Width' in typenames or 'Eff Area' in typenames or \
 						'Eff Wet Per' in typenames or 'Radius' in typenames or \
 						'Vert Res Factor' in typenames or 'K (n=1.000)' in typenames:
@@ -1992,6 +2077,14 @@ class TuPlot(QDockWidget, Ui_tuflowqgis_TuPlot):
 						try:
 							tIndex = d.xsHydTa_headers.index(t)
 							for j in range(self.IDList.count()):
+								if t.lower() == 'eff area':
+									xTitle = 'Area ({0}2)'.format(units) if units is not None else 'Area'
+								elif t.lower() == 'eff wet per' or t.lower() == 'radius' or t.lower() == 'depth':
+									xTitle = '({0})'.format(units) if units is not None else None
+								elif t.lower() == 'width' or t.lower() == 'eff width':
+									xTitle = 'Width ({0})'.format(units) if units is not None else 'Width'
+								else:
+									xTitle = None
 								jIndex = d.xsNames.index(self.IDList.item(j).text())
 								a, = self.subplot.plot(d.xsHydTa[jIndex][:, tIndex], d.xsHydTa[jIndex][:, 0])
 								self.artists.append(a)
@@ -2003,20 +2096,50 @@ class TuPlot(QDockWidget, Ui_tuflowqgis_TuPlot):
 								self.subplot.hold(True)
 						except:
 							pass
+			if len(typenames) > 1:
+				compatible_list = ['XZ', 'Max Water Level', 'Water Level at Time', 'Left Bank', 'Right Bank']
+				compatible = True
+				found = False
+				for i, typename in enumerate(typenames):
+					if i == 0 and typename not in compatible_list:
+						break
+					elif typename not in compatible_list:
+						found = True
+						compatible = False
+						break
+				compatible_list = ['HW', 'CS', 'Width', 'Eff Width']
+				for i, typename in enumerate(typenames):
+					if i == 0 and typename not in compatible_list:
+						break
+					elif typename not in compatible_list:
+						found = True
+						compatible = False
+						break
+				compatible_list = ['Eff Wet Per', 'Radius', 'Depth']
+				for i, typename in enumerate(typenames):
+					if i == 0 and typename not in compatible_list:
+						break
+					elif typename not in compatible_list:
+						found = True
+						compatible = False
+						break
+				if not compatible or not found:
+					xTitle = None
 			# AXIS 2
 			if (self.cb2ndAxis.isChecked()):
 				for xs in xs_data:
 					if 'XZ' in typenames2:
 						try:
 							if xs.type.upper() == 'XZ':
-								self.axis2.xaxis.set_ticks_position("bottom")
-								self.axis2.xaxis.set_label_position("bottom")
-								self.axis2.spines['bottom'].set_position(("axes", -0.1))
+								#self.axis2.xaxis.set_ticks_position("bottom")
+								#self.axis2.xaxis.set_label_position("bottom")
+								#self.axis2.spines['bottom'].set_position(("axes", -0.1))
 								xmin = round(min(xs.x), 0) - 1
 								xmax = round(max(xs.x), 0) + 1
 								ymin = round(min(xs.z), 0) - 1
 								ymax = round(max(xs.z), 0) + 1
 								label = xs.source + " - " + xs.type + " (axis 2)"
+								xTitle2 = 'Station ({0})'.format(units) if units is not None else 'Station'
 								self.axis2.set_xbound(lower=xmin, upper=xmax)
 								self.axis2.set_ybound(lower=ymin, upper=ymax)
 								a2, = self.axis2.plot(xs.x, xs.z, marker='x')
@@ -2028,14 +2151,18 @@ class TuPlot(QDockWidget, Ui_tuflowqgis_TuPlot):
 					if 'HW' in typenames2 or 'CS' in typenames2 or 'LC' in typenames2 or 'BG' in typenames2:
 						try:
 							if xs.type.upper() == 'HW' or xs.type.upper() == 'CS' or xs.type.upper() == 'LC' or xs.type.upper() == 'BG':
-								self.axis2.xaxis.set_ticks_position("bottom")
-								self.axis2.xaxis.set_label_position("bottom")
-								self.axis2.spines['bottom'].set_position(("axes", -0.1))
+								#self.axis2.xaxis.set_ticks_position("bottom")
+								#self.axis2.xaxis.set_label_position("bottom")
+								#self.axis2.spines['bottom'].set_position(("axes", -0.1))
 								xmin = round(min(xs.z), 0) - 1
 								xmax = round(max(xs.z), 0) + 1
 								ymin = round(min(xs.x), 0) - 1
 								ymax = round(max(xs.x), 0) + 1
 								label = xs.source + " - " + xs.type + " (axis 2)"
+								if xs.type.upper() == 'HW' or xs.type.upper() == 'CS':
+									xTitle2 = 'Width ({0})'.format(units) if units is not None else 'Width'
+								elif xs.type.upper() == 'LC' or xs.type.upper() == 'BG':
+									xTitle2 = 'Form Loss Factor'
 								self.axis2.set_xbound(lower=xmin, upper=xmax)
 								self.axis2.set_ybound(lower=ymin, upper=ymax)
 								a2, = self.axis2.plot(xs.z, xs.x, marker='x')
@@ -2055,9 +2182,10 @@ class TuPlot(QDockWidget, Ui_tuflowqgis_TuPlot):
 						if 'Max Water Level' in typenames2:
 							try:
 								for i, result in enumerate(xsResult.maxHx):
-									self.axis2.xaxis.set_ticks_position("bottom")
-									self.axis2.xaxis.set_label_position("bottom")
-									self.axis2.spines['bottom'].set_position(("axes", -0.1))
+									xTitle2 = 'Station ({0})'.format(units) if units is not None else 'Station'
+									#self.axis2.xaxis.set_ticks_position("bottom")
+									#self.axis2.xaxis.set_label_position("bottom")
+									#self.axis2.spines['bottom'].set_position(("axes", -0.1))
 									a2, = self.axis2.plot(result, xsResult.maxHz[i], marker='x')
 									self.artists.append(a2)
 									if nRes < 2:
@@ -2078,9 +2206,9 @@ class TuPlot(QDockWidget, Ui_tuflowqgis_TuPlot):
 										timeInd = x
 										timeStr = list_item.text()
 								for i, result in enumerate(xsResult.hx):
-									self.axis2.xaxis.set_ticks_position("bottom")
-									self.axis2.xaxis.set_label_position("bottom")
-									self.axis2.spines['bottom'].set_position(("axes", -0.1))
+									#self.axis2.xaxis.set_ticks_position("bottom")
+									#self.axis2.xaxis.set_label_position("bottom")
+									#self.axis2.spines['bottom'].set_position(("axes", -0.1))
 									a2, = self.axis2.plot(result[timeInd], xsResult.hz[i][timeInd], marker='x')
 									self.artists.append(a2)
 									if nRes < 2:
@@ -2096,9 +2224,10 @@ class TuPlot(QDockWidget, Ui_tuflowqgis_TuPlot):
 						if 'Left Bank' in typenames2:
 							try:
 								for i, result in enumerate(xsResult.lb):
-									self.axis2.xaxis.set_ticks_position("bottom")
-									self.axis2.xaxis.set_label_position("bottom")
-									self.axis2.spines['bottom'].set_position(("axes", -0.1))
+									xTitle2 = 'Station ({0})'.format(units) if units is not None else 'Station'
+									#self.axis2.xaxis.set_ticks_position("bottom")
+									#self.axis2.xaxis.set_label_position("bottom")
+									#self.axis2.spines['bottom'].set_position(("axes", -0.1))
 									a2, = self.axis2.plot(xsResult.lbx[i], result, marker='o',
 									                      linestyle='None', color='r')
 									self.artists.append(a2)
@@ -2114,9 +2243,10 @@ class TuPlot(QDockWidget, Ui_tuflowqgis_TuPlot):
 						if 'Right Bank' in typenames2:
 							try:
 								for i, result in enumerate(xsResult.rb):
-									self.axis2.xaxis.set_ticks_position("bottom")
-									self.axis2.xaxis.set_label_position("bottom")
-									self.axis2.spines['bottom'].set_position(("axes", -0.1))
+									xTitle2 = 'Station ({0})'.format(units) if units is not None else 'Station'
+									#self.axis2.xaxis.set_ticks_position("bottom")
+									#self.axis2.xaxis.set_label_position("bottom")
+									#self.axis2.spines['bottom'].set_position(("axes", -0.1))
 									a2, = self.axis2.plot(xsResult.rbx[i], result, marker='o',
 									                      linestyle='None', color='r')
 									self.artists.append(a2)
@@ -2143,9 +2273,17 @@ class TuPlot(QDockWidget, Ui_tuflowqgis_TuPlot):
 							try:
 								tIndex = d.xsHydTa_headers.index(t)
 								for j in range(self.IDList.count()):
-									self.axis2.xaxis.set_ticks_position("bottom")
-									self.axis2.xaxis.set_label_position("bottom")
-									self.axis2.spines['bottom'].set_position(("axes", -0.1))
+									if t.lower() == 'eff area':
+										xTitle2 = 'Area ({0}2)'.format(units) if units is not None else 'Area'
+									elif t.lower() == 'eff wet per' or t.lower() == 'radius' or t.lower() == 'depth':
+										xTitle2 = '({0})'.format(units) if units is not None else None
+									elif t.lower() == 'width' or t.lower() == 'eff width':
+										xTitle2 = 'Width ({0})'.format(units) if units is not None else 'Width'
+									else:
+										xTitle2 = None
+									#self.axis2.xaxis.set_ticks_position("bottom")
+									#self.axis2.xaxis.set_label_position("bottom")
+									#self.axis2.spines['bottom'].set_position(("axes", -0.1))
 									jIndex = d.xsNames.index(self.IDList.item(j).text())
 									a2, = self.axis2.plot(d.xsHydTa[jIndex][:, tIndex],
 									                      d.xsHydTa[jIndex][:, 0], marker='x')
@@ -2159,7 +2297,38 @@ class TuPlot(QDockWidget, Ui_tuflowqgis_TuPlot):
 									self.axis2.hold(True)
 							except:
 								pass
+				if len(typenames2) > 1:
+					compatible_list = ['XZ', 'Max Water Level', 'Water Level at Time', 'Left Bank', 'Right Bank']
+					compatible = True
+					found = False
+					for i, typename in enumerate(typenames2):
+						if i == 0 and typename not in compatible_list:
+							break
+						elif typename not in compatible_list:
+							found = True
+							compatible = False
+							break
+					compatible_list = ['HW', 'CS', 'Width', 'Eff Width']
+					for i, typename in enumerate(typenames2):
+						if i == 0 and typename not in compatible_list:
+							break
+						elif typename not in compatible_list:
+							found = True
+							compatible = False
+							break
+					compatible_list = ['Eff Wet Per', 'Radius', 'Depth']
+					for i, typename in enumerate(typenames2):
+						if i == 0 and typename not in compatible_list:
+							break
+						elif typename not in compatible_list:
+							found = True
+							compatible = False
+							break
+					if not compatible or not found:
+						xTitle2 = None
 		elif self.is_intTool:
+			xTitle = 'Chainage ({0})'.format(units) if units is not None else 'Chainage'
+			yTitle = 'Elevation ({0} RL)'.format(units) if units is not None else 'Elevation'
 			self.IDList.clear()
 			typeids = []
 			typenames = []
@@ -2361,6 +2530,8 @@ class TuPlot(QDockWidget, Ui_tuflowqgis_TuPlot):
 
 			# Long Profiles___________________________________________________________________
 			if loc == "Long Profile": # LP
+				xTitle = 'Chainage ({0})'.format(units) if units is not None else 'Chainage'
+				yTitle = 'Elevation ({0} RL)'.format(units) if units is not None else 'Elevation'
 				nres_used = 0
 				for resno in reslist:
 					nres_used = nres_used + 1
@@ -2565,6 +2736,7 @@ class TuPlot(QDockWidget, Ui_tuflowqgis_TuPlot):
 								self.axis2.set_ylabel("Time of Peak Level")
 			# Timeseries______________________________________________________________________
 			elif loc == "Timeseries":
+				xTitle = 'Time (hrs)'
 				nres_used = 0
 				for resno in reslist:
 					nres_used = nres_used + 1
@@ -2588,10 +2760,15 @@ class TuPlot(QDockWidget, Ui_tuflowqgis_TuPlot):
 										if (dom == '2D'):
 											if typename.upper().find('STRUCTURE FLOWS')>= 0 and source=='QS':
 												typename = 'QS'
+												yTitle = 'Flow ({0}$^3$/s)'.format(units) if units is not None else 'Flow'
 											elif typename.upper().find('STRUCTURE LEVELS')>= 0 and source=='HU':
 												typename = 'HU'
+												yTitle = 'Elevation ({0} RL)'.format(
+													units) if units is not None else 'Elevation'
 											elif typename.upper().find('STRUCTURE LEVELS')>= 0 and source=='HD':
 												typename = 'HD'
+												yTitle = 'Elevation ({0} RL)'.format(
+													units) if units is not None else 'Elevation'
 										try:
 											found, ydata, message = res.getTSData(ydataid,dom,typename, 'Geom')
 											xdata = res.times
@@ -2651,8 +2828,23 @@ class TuPlot(QDockWidget, Ui_tuflowqgis_TuPlot):
 											self.artists.append(a)
 											self.labels.append(label)
 											self.subplot.hold(True)
+											if 'flow' in typename.lower():
+												yTitle = 'Flow ({0}$^3$/s)'.format(units) if units is not None else 'Flow'
+											elif 'velocit' in typename.lower():
+												yTitle = 'Velocity ({0}/s)'.format(
+													units) if units is not None else 'Velocity'
+											elif 'level' in typename.lower():
+												yTitle = 'Elevation ({0} RL)'.format(
+													units) if units is not None else 'Elevation'
+											else:
+												yTitle = None
 										else:
 											self.lwStatus.insertItem(0,'ERROR - Size of x and y data doesnt match')
+					if len(typenames) > 1:
+						if len(typenames) > 2:
+							yTitle = None
+						elif len(typenames) == 2 and not ('US Levels' in typenames and 'DS Levels' in typenames):
+							yTitle = None
 					# add median data
 					if calc_median:
 						try:
@@ -2682,7 +2874,6 @@ class TuPlot(QDockWidget, Ui_tuflowqgis_TuPlot):
 									self.labels.append(label)
 						except:
 							self.lwStatus.insertItem(0, 'ERROR - Adding Median data, skipping')
-					
 					# add mean data (2017-06-AD)
 					if calc_mean:
 						try:
@@ -2739,10 +2930,16 @@ class TuPlot(QDockWidget, Ui_tuflowqgis_TuPlot):
 											if (dom == '2D'):
 												if typename.upper().find('STRUCTURE FLOWS')>= 0 and source=='QS':
 													typename = 'QS'
+													yTitle2 = 'Flow ({0}$^3$/s)'.format(
+														units) if units is not None else 'Flow'
 												elif typename.upper().find('STRUCTURE LEVELS')>= 0 and source=='HU':
 													typename = 'HU'
+													yTitle2 = 'Elevation ({0} RL)'.format(
+														units) if units is not None else 'Elevation'
 												elif typename.upper().find('STRUCTURE LEVELS')>= 0 and source=='HD':
 													typename = 'HD'
+													yTitle2 = 'Elevation ({0} RL)'.format(
+														units) if units is not None else 'Elevation'
 											try:
 												found, ydata, message = res.getTSData(ydataid,dom,typename, 'Geom')
 												xdata = res.times
@@ -2789,6 +2986,17 @@ class TuPlot(QDockWidget, Ui_tuflowqgis_TuPlot):
 												self.artists.append(a2)
 												self.labels.append(label)
 												self.axis2.hold(True)
+												if 'flow' in typename.lower():
+													yTitle2 = 'Flow ({0}$^3$/s)'.format(
+														units) if units is not None else 'Flow'
+												elif 'velocit' in typename.lower():
+													yTitle2 = 'Velocity ({0}/s)'.format(
+														units) if units is not None else 'Velocity'
+												elif 'level' in typename.lower():
+													yTitle2 = 'Elevation ({0} RL)'.format(
+														units) if units is not None else 'Elevation'
+												else:
+													yTitle = None
 											else:
 												self.lwStatus.insertItem(0,'ERROR - Number of x and y data points doesnt match')
 					#add time if time enabled
@@ -2808,8 +3016,14 @@ class TuPlot(QDockWidget, Ui_tuflowqgis_TuPlot):
 									#self.subplot.hold(True)
 								except:
 									self.lwStatus.insertItem(0,'Unable to add current time')
+					if len(typenames2) > 1:
+						if len(typenames2) > 2:
+							yTitle2 = None
+						elif len(typenames2) == 2 and not ('US Levels' in typenames2 and 'DS Levels' in typenames2):
+							yTitle2 = None
 			# Hydraulic properties______________________________________________________________________
 			elif loc == "Hydraulic Properties":
+				yTitle = 'Elevation ({0} RL)'.format(units) if units is not None else 'Elevation'
 				# 1D ta table check files
 				tableFiles = []
 				for i in range(self.HydPropList.count()):
@@ -2848,6 +3062,14 @@ class TuPlot(QDockWidget, Ui_tuflowqgis_TuPlot):
 										label = "{0}: {1} - {2}".format(d.displayName, self.IDList.item(j).text(), t)
 									self.labels.append(label)
 									self.subplot.hold(True)
+									if 'Storage Width' in typenames or 'Flow Width' in typenames:
+										xTitle = 'Station ({0})'.format(units) if units is not None else 'Station'
+									elif 'Area' in typenames:
+										xTitle = 'Area ({0}$^2$)'.format(units) if units is not None else 'Area'
+									elif 'Vert Res Factor' in typenames or 'K (n=' in k:
+										xTitle = None
+									else:
+										xTitle = '{0}'.format(units) if units is not None else None
 							except:
 								pass
 					if 'US XSection' in typenames:
@@ -2868,6 +3090,7 @@ class TuPlot(QDockWidget, Ui_tuflowqgis_TuPlot):
 									label = "{0}: US XSection - {1}".format(d.displayName, self.IDList.item(j).text())
 								self.labels.append(label)
 								self.subplot.hold(True)
+								xTitle = 'Station ({0})'.format(units) if units is not None else 'Station'
 							except:
 								self.lwStatus.insertItem(0, "can't find XS for channel")
 					if 'DS XSection' in typenames:
@@ -2891,8 +3114,18 @@ class TuPlot(QDockWidget, Ui_tuflowqgis_TuPlot):
 									label = "{0}: DS XSection - {1}".format(d.displayName, self.IDList.item(j).text())
 								self.labels.append(label)
 								self.subplot.hold(True)
+								xTitle = 'Station ({0})'.format(units) if units is not None else 'Station'
 							except:
 								self.lwStatus.insertItem(0, "can't find XS for channel")
+				if len(typenames) > 1:
+					compatible_list = ['Storage Width', 'Flow Width', 'US XSection', 'DS XSection']
+					compatible = True
+					for typename in typenames:
+						if typename not in compatible_list:
+							compatible = False
+							break
+					if not compatible:
+						xTitle = None
 				# AXIS 2
 				if (self.cb2ndAxis.isChecked()):
 					for i, tableFile in enumerate(tableFiles):
@@ -2908,9 +3141,9 @@ class TuPlot(QDockWidget, Ui_tuflowqgis_TuPlot):
 								try:
 									tIndex = d.channelHydTa_headers.index(t)
 									for j in range(self.IDList.count()):
-										self.axis2.xaxis.set_ticks_position("bottom")
-										self.axis2.xaxis.set_label_position("bottom")
-										self.axis2.spines['bottom'].set_position(("axes", -0.1))
+										#self.axis2.xaxis.set_ticks_position("bottom")
+										#self.axis2.xaxis.set_label_position("bottom")
+										#self.axis2.spines['bottom'].set_position(("axes", -0.1))
 										jIndex = d.channelNames.index(self.IDList.item(j).text())
 										a2, = self.axis2.plot(d.channelHydTa[jIndex][:, tIndex],
 										                      d.channelHydTa[jIndex][:, 0], marker='x')
@@ -2921,6 +3154,14 @@ class TuPlot(QDockWidget, Ui_tuflowqgis_TuPlot):
 											label = "{0}: {1} - {2} (axis 2)".format(d.displayName, self.IDList.item(j).text(), t)
 										self.labels.append(label)
 										self.axis2.hold(True)
+										if 'Storage Width' in typenames2 or 'Flow Width' in typenames2:
+											xTitle2 = 'Station ({0})'.format(units) if units is not None else 'Station'
+										elif 'Area' in typenames2:
+											xTitle2 = 'Area ({0}$^2$)'.format(units) if units is not None else 'Area'
+										elif 'Vert Res Factor' in typenames2 or 'K (n=' in k2:
+											xTitle2 = None
+										else:
+											xTitle2 = '{0}'.format(units) if units is not None else None
 								except:
 									pass
 						if 'US XSection' in typenames2:
@@ -2929,9 +3170,9 @@ class TuPlot(QDockWidget, Ui_tuflowqgis_TuPlot):
 									jIndex = d.channelNames.index(self.IDList.item(j).text())
 									usSection = d.channelXs[jIndex][0]
 									usIndex = d.xsNos.index(usSection)
-									self.axis2.xaxis.set_ticks_position("bottom")
-									self.axis2.xaxis.set_label_position("bottom")
-									self.axis2.spines['bottom'].set_position(("axes", -0.1))
+									#self.axis2.xaxis.set_ticks_position("bottom")
+									#self.axis2.xaxis.set_label_position("bottom")
+									#self.axis2.spines['bottom'].set_position(("axes", -0.1))
 									a2, = self.axis2.plot(d.xsSections[usIndex][:, 0],
 									                       d.xsSections[usIndex][:, 1], marker='x')
 									self.artists.append(a2)
@@ -2941,6 +3182,7 @@ class TuPlot(QDockWidget, Ui_tuflowqgis_TuPlot):
 										label = "{0}: US XSection - {1} (axis 2)".format(d.displayName, self.IDList.item(j).text())
 									self.labels.append(label)
 									self.axis2.hold(True)
+									xTitle2 = 'Station ({0})'.format(units) if units is not None else 'Station'
 								except:
 									self.lwStatus.insertItem(0, "can't find XS for channel")
 						if 'DS XSection' in typenames2:
@@ -2952,9 +3194,9 @@ class TuPlot(QDockWidget, Ui_tuflowqgis_TuPlot):
 									else:
 										dsSection = d.channelXs[jIndex][0]
 									dsIndex = d.xsNos.index(dsSection)
-									self.axis2.xaxis.set_ticks_position("bottom")
-									self.axis2.xaxis.set_label_position("bottom")
-									self.axis2.spines['bottom'].set_position(("axes", -0.1))
+									#self.axis2.xaxis.set_ticks_position("bottom")
+									#self.axis2.xaxis.set_label_position("bottom")
+									#self.axis2.spines['bottom'].set_position(("axes", -0.1))
 									a2, = self.axis2.plot(d.xsSections[dsIndex][:, 0],
 									                       d.xsSections[dsIndex][:, 1], marker='x')
 									self.artists.append(a2)
@@ -2964,9 +3206,18 @@ class TuPlot(QDockWidget, Ui_tuflowqgis_TuPlot):
 										label = "{0}: DS XSection - {1} (axis 2)".format(d.displayName, self.IDList.item(j).text())
 									self.labels.append(label)
 									self.axis2.hold(True)
+									xTitle2 = 'Station ({0})'.format(units) if units is not None else 'Station'
 								except:
 									self.lwStatus.insertItem(0, "can't find XS for channel")
-			
+					if len(typenames2) > 1:
+						compatible_list = ['Storage Width', 'Flow Width', 'US XSection', 'DS XSection']
+						compatible = True
+						for typename in typenames2:
+							if typename not in compatible_list:
+								compatible = False
+								break
+						if not compatible:
+							xTitle = None
 		if self.cbShowLegend.isChecked():
 			if self.cbLegendUR.isChecked():
 				self.subplot.legend(self.artists, self.labels, loc=1)
@@ -3037,9 +3288,23 @@ class TuPlot(QDockWidget, Ui_tuflowqgis_TuPlot):
 				yinc = 100000000
 			elif ymax - ymin < 10000000000:
 				yinc = 1000000000
-			
 			ymax = math.ceil(ymax / yinc) * yinc  # round upper to nearest xinc
 			self.subplot.set_ybound(lower=ymin, upper=ymax)
+		if xTitle is not None:
+			self.subplot.set_xlabel(xTitle)
+		else:
+			self.subplot.set_xlabel('')
+		if yTitle is not None:
+			self.subplot.set_ylabel(yTitle)
+		else:
+			self.subplot.set_ylabel('')
+		try:
+			if self.customLabels.xAxisAuto_cb.isChecked():
+				self.subplot.set_xlabel(self.customLabels.xLabel)
+			if self.customLabels.yAxisAuto_cb.isChecked():
+				self.subplot.set_ylabel(self.customLabels.yLabel)
+		except:
+			pass
 		# Secondary axis
 		if self.ax2_exists:
 			if self.axis2._sharey is not None:
@@ -3052,6 +3317,15 @@ class TuPlot(QDockWidget, Ui_tuflowqgis_TuPlot):
 						self.axis2.set_xticks(scipy.arange(x2min, x2max, x2inc))
 					else:
 						self.axis2.set_xticks(scipy.arange(x2min, x2max + x2inc, x2inc))
+				if xTitle2 is not None:
+					self.axis2.set_xlabel(xTitle2)
+				else:
+					self.axis2.set_xlabel('')
+				try:
+					if self.customLabels.xAxisAuto2_cb.isChecked():
+						self.axis2.set_xlabel(self.customLabels.xLabel2)
+				except:
+					pass
 			elif self.axis2._sharex is not None:
 				if self.customAxis is not None and self.customAxis.yAxisCustom_rb_2.isChecked():
 					y2min = self.customAxis.y2Lim[0]
@@ -3062,6 +3336,22 @@ class TuPlot(QDockWidget, Ui_tuflowqgis_TuPlot):
 						self.axis2.set_yticks(scipy.arange(y2min, y2max, y2inc))
 					else:
 						self.axis2.set_yticks(scipy.arange(y2min, y2max + y2inc, y2inc))
-		
+				if yTitle2 is not None:
+					self.axis2.set_ylabel(yTitle2)
+				else:
+					self.axis2.set_ylabel('')
+				try:
+					if self.customLabels.yAxisAuto2_cb.isChecked():
+						self.axis2.set_ylabel(self.customLabels.yLabel2)
+				except:
+					pass
+		try:
+			if self.customLabels.title:
+				self.subplot.set_title(self.customLabels.title)
+			else:
+				self.subplot.set_title('')
+		except:
+			pass
+		self.fig.tight_layout()
 		self.plotWdg.draw()
 
