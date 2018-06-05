@@ -7,8 +7,7 @@ version = '2018-04-AA'
 # Debug using PyCharm
 sys.path.append(r'C:\Program Files\JetBrains\PyCharm 2018.1\debug-eggs')
 sys.path.append(r'C:\Program Files\JetBrains\PyCharm 2018.1\helpers\pydev')
-import pydevd
-#pydevd.settrace('localhost', port=53100, stdoutToServer=True, stderrToServer=True)
+
 
 class XS_Data():
 	def __init__(self,fpath,fname,xs_type,flags,col1,col2,col3,col4,col5,col6):

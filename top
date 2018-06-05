@@ -1,0 +1,241 @@
+[33mcommit 96a2f479e4c7b05fe9e9e4662a539715a6c4de71[m[33m ([m[1;36mHEAD -> [m[1;32mmaster[m[33m, [m[1;31morigin/master[m[33m)[m
+Author: EllisSymons <ellis.symons88@gmail.com>
+Date:   Tue May 29 17:11:53 2018 +1000
+
+    added correct network direction based on continuity tool and fixed a fwe bugs with the continuity tool and flow trace tool
+
+[33mcommit e03c8907e63a043a7fcc469ecdf0a5007b800d7b[m
+Author: EllisSymons <ellis.symons88@gmail.com>
+Date:   Tue May 29 10:32:26 2018 +1000
+
+    fixed bug with placing message.shp at polyline mid section where it would not work properly if line wasn't straight
+
+[33mcommit 1768690aaf4c6b609cc07b030416bdff729a605f[m
+Author: EllisSymons <ellis.symons88@gmail.com>
+Date:   Mon May 28 18:11:57 2018 +1000
+
+    added correct line direction by gradient
+
+[33mcommit 75532aba3795edfd736b5a4442fc556a7ddee458[m
+Author: EllisSymons <ellis.symons88@gmail.com>
+Date:   Mon May 28 16:10:49 2018 +1000
+
+    added precheck file type (1d_nwk)
+
+[33mcommit f8b33034d6c22559b5917bc36c5c3b8fb30ada6d[m
+Author: EllisSymons <ellis.symons88@gmail.com>
+Date:   Mon May 28 13:05:20 2018 +1000
+
+    added check continuity tool. Added selection and message.shp to all tools. Added selection output to flow trace
+
+[33mcommit 5cb42e2c3b56936d3138a6fdde9d6888a799ef53[m
+Author: EllisSymons <ellis.symons88@gmail.com>
+Date:   Mon May 21 10:26:13 2018 +1000
+
+    fixed bugs in plot flowtrace tool when selecting networks in map window, fix bug when encountering multiple channels in a branch, added vertical bar and scenario functionality to import tuflow layers from tcf
+
+[33mcommit 890bf7ea2f42a61eac3e0ad271c08514e18582bc[m
+Author: EllisSymons <ellis.symons88@gmail.com>
+Date:   Fri May 18 16:58:07 2018 +1000
+
+    added tool to bring in tuflow layers from TCF
+
+[33mcommit cb9f22cbacde906d6545a6e1e39143e26fd43695[m
+Author: EllisSymons <ellis.symons88@gmail.com>
+Date:   Thu May 17 17:35:52 2018 +1000
+
+    made 'ground' and 'flags' separate result variables to be turned on and off for plotting the 1d flow trace tool
+
+[33mcommit 515cae7ff1590a2f0ef9b1ef0dcc343f66eaf0a3[m
+Author: EllisSymons <ellis.symons88@gmail.com>
+Date:   Thu May 17 17:24:03 2018 +1000
+
+    added 1d table input files to the 1d integrity check
+
+[33mcommit 8acfadb26e08c47d9911bcc2617d11e5625c1a69[m
+Author: EllisSymons <ellis.symons88@gmail.com>
+Date:   Thu May 17 12:25:29 2018 +1000
+
+    started adding 1d_ta to inputs
+
+[33mcommit 7ddbfd6148b6cdab335081a6fe6c96760b87ce54[m
+Author: EllisSymons <ellis.symons88@gmail.com>
+Date:   Wed May 16 15:15:40 2018 +1000
+
+    fixed bugs with X connectors and multi element networks taht in the same branch
+
+[33mcommit 2a895089042fc3c70c0ca1723d1f745a3468a4e4[m
+Author: EllisSymons <ellis.symons88@gmail.com>
+Date:   Wed May 16 12:19:02 2018 +1000
+
+    fix bug where if dem wasn't specified it would error when flow trace plotting
+
+[33mcommit cd78be2382b7f45657ba572d304164349e61c3b1[m
+Author: EllisSymons <ellis.symons88@gmail.com>
+Date:   Wed May 16 12:01:16 2018 +1000
+
+    fixed plotting flow trace so that flags of the same kind are plotted as one series
+
+[33mcommit 69791fd56357becacc246071969de6b58a93b175[m
+Author: EllisSymons <ellis.symons88@gmail.com>
+Date:   Wed May 16 10:59:07 2018 +1000
+
+    fix minor bug when looking for connections and the last pipe was self, it would skip the check to see if it was the last pipe and therefore add it to the unsnapped pipe list
+
+[33mcommit a1558bd0c3112d281e39f82cf6c56f53e5b493d7[m
+Author: EllisSymons <ellis.symons88@gmail.com>
+Date:   Tue May 15 16:10:10 2018 +1000
+
+    added cover depth flag to message output
+
+[33mcommit f580d91a6a5b2ed3a16e53feceaf60723afb39ae[m
+Author: EllisSymons <ellis.symons88@gmail.com>
+Date:   Tue May 15 15:00:51 2018 +1000
+
+    added DEM extract for downstream connectin tool - renamed to flow trace
+
+[33mcommit bda43642ed3a57c780872f609067cc927ea0053d[m
+Author: EllisSymons <ellis.symons88@gmail.com>
+Date:   Fri May 11 15:40:42 2018 +1000
+
+    added select path nwks in map window
+
+[33mcommit 88831f81d883ab3496514423887bfdaf8b6fbf70[m
+Author: EllisSymons <ellis.symons88@gmail.com>
+Date:   Thu May 10 18:27:49 2018 +1000
+
+    moved dns connection plotting to tuplot
+
+[33mcommit f34b13dbb6d9d1bfdc58ed113f64da4680c4cc3e[m
+Author: EllisSymons <ellis.symons88@gmail.com>
+Date:   Wed May 9 18:34:45 2018 +1000
+
+    deleted obsolete code
+
+[33mcommit 51c90b5091a03904ff848d23fc24ab83496026bf[m
+Author: EllisSymons <ellis.symons88@gmail.com>
+Date:   Wed May 9 18:10:57 2018 +1000
+
+    Added all paths to plotting
+
+[33mcommit 3245b6fb8cc799adc8a4faf77a56a776a8263db1[m
+Author: EllisSymons <ellis.symons88@gmail.com>
+Date:   Mon May 7 17:03:53 2018 +1000
+
+    started to add plotting
+
+[33mcommit 7b3b75b210dd5d4e347ed0072e4df3f66647dd08[m
+Author: EllisSymons <ellis.symons88@gmail.com>
+Date:   Mon May 7 12:36:01 2018 +1000
+
+    getAllPaths method added
+
+[33mcommit ed6a0a665a8eb9b80bcce2a8527fb44ed10f4a97[m
+Author: EllisSymons <ellis.symons88@gmail.com>
+Date:   Fri May 4 17:54:44 2018 +1000
+
+    updated 1d integrity tools ui
+
+[33mcommit 527aadea845a5fac8855554a135717a4560aec19[m
+Author: EllisSymons <ellis.symons88@gmail.com>
+Date:   Fri May 4 16:47:25 2018 +1000
+
+    added flowtrace.py
+
+[33mcommit f72ebac6fc6b15356c00c3a89f433d02a958755c[m
+Author: Ellis <ellis.symons88@gmail.com>
+Date:   Fri May 4 16:39:18 2018 +1000
+
+    minor update
+
+[33mcommit 6e6f817c1c128b430cb8c664943f9647c307ddd2[m
+Author: Ellis <ellis.symons88@gmail.com>
+Date:   Fri May 4 16:37:43 2018 +1000
+
+    moving dns connectivity into class object
+
+[33mcommit 6004185524de33319e039a4207b96875c4574dd1[m
+Author: Ellis <ellis.symons88@gmail.com>
+Date:   Thu May 3 16:26:30 2018 +1000
+
+    started plotting tool for long profile check
+
+[33mcommit 4aa7a156df40e59010214d27406006d22514e092[m
+Author: Ellis <ellis.symons88@gmail.com>
+Date:   Thu May 3 12:02:19 2018 +1000
+
+    minor update
+
+[33mcommit 966e2fc065839ce65bfe524edd041a995d7e9ea4[m
+Author: Ellis <ellis.symons88@gmail.com>
+Date:   Thu May 3 11:55:49 2018 +1000
+
+    added RL region volume timeseries to TUPLOT
+
+[33mcommit 09ded5fb5128f7a88894c38178b57cfc67c0363e[m
+Author: Ellis <ellis.symons88@gmail.com>
+Date:   Tue May 1 17:46:36 2018 +1000
+
+    added angles to downstream profile tool
+
+[33mcommit afb51e7d760b2e83c5a1d2542b4cb3b5a9748f95[m
+Author: Ellis <ellis.symons88@gmail.com>
+Date:   Tue May 1 14:45:52 2018 +1000
+
+    updates to downstream connection tool
+
+[33mcommit 813982365fdea71b8e5c885dfea199ef64dac123[m
+Author: Ellis <ellis.symons88@gmail.com>
+Date:   Mon Apr 30 17:31:34 2018 +1000
+
+    work on 1d integrity tool
+
+[33mcommit adf16745c4135b14a856b4c0a52d0a6d98f4177d[m
+Author: Ellis <ellis.symons88@gmail.com>
+Date:   Thu Apr 26 16:20:47 2018 +1000
+
+    started 1D nwk integrity tool
+
+[33mcommit a4d361acba73272ee5fa5c48339ef8a84b55a746[m
+Author: Ellis <ellis.symons88@gmail.com>
+Date:   Tue Apr 24 11:25:16 2018 +1000
+
+    added user defined axis limits to primary and 2nd axis
+
+[33mcommit ee01f185d5b11a0ad2b2813abb8266a6c6fdc7bc[m
+Author: Ellis <ellis.symons88@gmail.com>
+Date:   Fri Apr 20 15:18:28 2018 +1000
+
+    made export to csv more robust and changed the plot ordering so that export to csv will work
+
+[33mcommit 50e4b229de1dfc80be6a240a2b496b1d9559c327[m
+Author: Ellis <ellis.symons88@gmail.com>
+Date:   Thu Apr 19 09:40:22 2018 +1000
+
+    minor update to the hydraulic properties result type ordering
+
+[33mcommit 3c4001814b8052f587734379db1f253ae4bf7a49[m
+Author: Ellis <ellis.symons88@gmail.com>
+Date:   Wed Apr 18 19:05:18 2018 +1000
+
+    added us and ds xsection to hydraulic properties
+
+[33mcommit 2266cf8ee5bba6de69f0b2f386c7790068738d7c[m
+Author: Ellis <ellis.symons88@gmail.com>
+Date:   Wed Apr 18 12:56:18 2018 +1000
+
+    add hydraulic properties to channels
+
+[33mcommit 6d8aeba73d1cfbfb7337038df6c56696653516bc[m
+Author: Ellis <ellis.symons88@gmail.com>
+Date:   Thu Apr 12 17:28:28 2018 +1000
+
+    added 1D hydraulic properties plotting
+
+[33mcommit 676f4e9157e7ee4247166b74415133784eae8a1b[m
+Author: Ellis <ellis.symons88@gmail.com>
+Date:   Mon Apr 9 17:52:10 2018 +1000
+
+    added 1d tables to ui
+
+[33mcommit 3f5829

@@ -475,7 +475,7 @@
               </property>
               <property name="minimumSize">
                <size>
-                <width>10</width>
+                <width>5</width>
                 <height>0</height>
                </size>
               </property>
@@ -501,7 +501,7 @@
              <widget class="QListWidget" name="listTime">
               <property name="minimumSize">
                <size>
-                <width>10</width>
+                <width>5</width>
                 <height>0</height>
                </size>
               </property>
@@ -522,6 +522,12 @@
             </item>
             <item row="5" column="0">
              <widget class="QListWidget" name="lwStatus">
+              <property name="minimumSize">
+               <size>
+                <width>5</width>
+                <height>0</height>
+               </size>
+              </property>
               <property name="maximumSize">
                <size>
                 <width>200</width>
