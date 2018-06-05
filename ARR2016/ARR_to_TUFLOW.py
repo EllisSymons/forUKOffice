@@ -6,6 +6,7 @@ import ARR_WebRes
 import BOM_WebRes
 from ARR_TUFLOW_func_lib import get_args, tpRegion_coords
 
+
 pythonV = sys.version_info[0]
 if pythonV == 3:
     from urllib import request as urllib2
@@ -27,18 +28,18 @@ duration = {10: 'm', 15: 'min', 30: 'min', 60: 'min'}  # dict object {mag(float/
 access_web = True  # once the .html files have been read, they are saved and you can set this to false for debugging
 out_form = 'csv'   # csv or ts1
 export_path = r'C:\TUFLOW\ARR2016\DualVersion\Output'  # Export path
-non_stnd_dur = {20: 'min', 25: 'min', 45: 'min'}  # non-standard durations. dict object similar to duraiton e.g. {4.5: 'hr'}
+non_stnd_dur = {270: 'm'}  # non-standard durations. dict object similar to duraiton e.g. {4.5: 'hr'}
 frequent_events = False  # set to true to include frequent events (12EY - 0.2EY)
 rare_events = False  # set to true to include rare events (1 in 200 - 1 in 2000)
-cc = True  # Set to True to output climate change
-cc_years = [2090]  # climate change years. List object [year(int)] e.g. [2090]
-cc_RCP = ['RCP8.5']  # Representative Concentration Pathways. List object [RCP(str)] e.g. ['RCP8.5']
+cc = False  # Set to True to output climate change
+cc_years = []  # climate change years. List object [year(int)] e.g. [2090]
+cc_RCP = []  # Representative Concentration Pathways. List object [RCP(str)] e.g. ['RCP8.5']
 preBurst = '50%'
 lossMethod = '60min'
 mar = 1500
 staticLoss = 10
 catchment_area = 100  # catchment area (km2)
-add_tp = ['central slopes', 'east coast south']
+add_tp = []
 ARF_frequent = True  # Set to true if you want to ignore ARF limits and apply to frequent events (>50% AEP)
 min_ARF = 0.2  # minimum ARF factor
 catchment_no = 0  # used in batch mode if specifying more than one catchment. Iterate in cmd to append catchments.
@@ -284,9 +285,10 @@ if access_web:
     url_rare = 'http://www.bom.gov.au/water/designRainfalls/revised-ifd/?design=rare&sdday=true&coordinate_type' \
                '=dd&latitude={0}&longitude={1}&user_label=brisbane&values=depths&update=&year=2016'\
                .format(abs(latitude), longitude)
+    urlRequest = urllib2.Request(url, headers={'User-Agent': 'Magic Browswer'})
     try:
         print('Attempting to access BOM: {0}'.format(url))
-        f = opener.open(url)
+        f = opener.open(urlRequest)
         page = f.read()
         if frequent_events:
             f_frequent = opener.open(url_frequent)

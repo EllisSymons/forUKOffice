@@ -1,9 +1,6 @@
-import matplotlib as mpl
-mpl.use('Qt4Agg')  # or mpl.use('agg')
-import matplotlib.pyplot as plt
-
 import numpy as np
 from math import log10
+import matplotlib.pyplot as plt
 from matplotlib.ticker import ScalarFormatter
 import matplotlib.ticker as ticker
 import warnings
