@@ -1425,21 +1425,31 @@ class tuflowqgis_extract_arr2016_dialog(QDialog, Ui_tuflowqgis_arr2016):
 			else:
 				logfile = open(os.path.join(outFolder, 'log.txt'), 'a')
 			CREATE_NO_WINDOW = 0x08000000 # suppresses python console window
-			proc = subprocess.Popen(sys_args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, 
-								    creationflags=CREATE_NO_WINDOW)
-			#proc = subprocess.Popen(sys_args)
+			error = False
 			try:
-				for line in proc.stdout:
-					#sys.stdout.write(line)
-					logfile.write(line)
-					proc.wait()
+				proc = subprocess.Popen(sys_args, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+									    creationflags=CREATE_NO_WINDOW)
+				out, err = proc.communicate()
+				logfile.write(out)
+				logfile.write(err)
 				logfile.close()
 			except:
-				QMessageBox.critical(self.iface.mainWindow(), "Error", 'Error writing log file.')
-				logfile.close()
-		QMessageBox.information(self.iface.mainWindow(), "Message", 
-							   'Process Complete. Please see\n{0}\nfor warning and error messages.'\
-							   .format(os.path.join(outFolder, 'log.txt')))
+				try:
+					proc = subprocess.Popen(sys_args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+					out, err = proc.communicate()
+					logfile.write(out)
+					logfile.write(err)
+					logfile.close()
+				except:
+					proc = subprocess.Popen(sys_args)
+					error = True
+					logfile.close()
+		if error:
+			QMessageBox.information(self.iface.mainWindow(), "Error", 'Process Complete. Error writing log file.')
+		else:
+			QMessageBox.information(self.iface.mainWindow(), "Message",
+								   'Process Complete. Please see\n{0}\nfor warning and error messages.'\
+								   .format(os.path.join(outFolder, 'log.txt')))
 		
 		return
 

@@ -5,8 +5,6 @@ from datetime import datetime
 import ARR_WebRes
 import BOM_WebRes
 from ARR_TUFLOW_func_lib import get_args, tpRegion_coords
-
-
 pythonV = sys.version_info[0]
 if pythonV == 3:
     from urllib import request as urllib2
