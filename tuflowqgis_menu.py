@@ -199,7 +199,7 @@ class tuflowqgis_menu:
 		self.iface.addToolBarIcon(self.load_tuflowFiles_from_TCF_action)
 		
 		# Check 1D network integrity
-		self.check_1d_integrity_action = QAction("Check 1D Network Integrity", self.iface.mainWindow())
+		self.check_1d_integrity_action = QAction("Check 1D Network Integrity (beta)", self.iface.mainWindow())
 		self.check_1d_integrity_action.triggered.connect(self.check_1d_integrity)
 		self.iface.addPluginToMenu("&TUFLOW", self.check_1d_integrity_action)
 		
