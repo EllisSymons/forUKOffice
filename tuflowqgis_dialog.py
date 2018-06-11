@@ -1187,7 +1187,7 @@ class tuflowqgis_extract_arr2016_dialog(QDialog, Ui_tuflowqgis_arr2016):
 			rare_events = 'true'
 		if self.checkBox_500y.isChecked():
 			AEP_list += '500ARI '
-			rare_events = '-true'
+			rare_events = 'true'
 		if self.checkBox_1000y.isChecked():
 			AEP_list += '1000ARI '
 			rare_events = 'true'

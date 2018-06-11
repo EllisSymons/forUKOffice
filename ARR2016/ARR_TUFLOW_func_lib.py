@@ -8,6 +8,7 @@ import matplotlib.ticker as ticker
 import warnings
 warnings.filterwarnings("ignore", category =RuntimeWarning)
 
+
 def get_args(argv):
     """Get command arguments for input. Flags will begin with '-' and can be followed by values."""
 

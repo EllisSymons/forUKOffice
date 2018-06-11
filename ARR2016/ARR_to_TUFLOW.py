@@ -283,16 +283,20 @@ if access_web:
     url_rare = 'http://www.bom.gov.au/water/designRainfalls/revised-ifd/?design=rare&sdday=true&coordinate_type' \
                '=dd&latitude={0}&longitude={1}&user_label=brisbane&values=depths&update=&year=2016'\
                .format(abs(latitude), longitude)
-    urlRequest = urllib2.Request(url, headers={'User-Agent': 'Magic Browswer'})
+    urlRequest = urllib2.Request(url, headers={'User-Agent': 'Magic Browser'})
+    urlRequest_frequent = urllib2.Request(url_frequent, headers={'User-Agent': 'Magic Browser'})
+    urlRequest_rare = urllib2.Request(url_rare, headers={'User-Agent': 'Magic Browser'})
     try:
         print('Attempting to access BOM: {0}'.format(url))
         f = opener.open(urlRequest)
         page = f.read()
         if frequent_events:
-            f_frequent = opener.open(url_frequent)
+            print('Attempting to access BOM frequent events: {0}'.format(url_frequent))
+            f_frequent = opener.open(urlRequest_frequent)
             page_frequent = f_frequent.read()
         if rare_events:
-            f_rare = opener.open(url_rare)
+            print('Attempting to access BOM rare events: {0}'.format(url_rare))
+            f_rare = opener.open(urlRequest_rare)
             page_rare = f_rare.read()
     except:
         print('Failed to get data from BOM website')
