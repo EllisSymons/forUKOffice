@@ -671,8 +671,8 @@ def tuflowqgis_insert_tf_attributes(qgis, inputLayer, basedir, runID, template, 
 		fpath = os.path.join(basedir, '{0}_empty{1}.shp'.format(template, geomType))
 	if os.path.isfile(fpath):
 		layer = QgsVectorLayer(fpath, "tmp", "ogr")
-		name = '{0}_{1}{2}.shp'.format(template, runID, geomType)
-		savename = os.path.join(gis_folder, name)
+		name = '{0}_{1}{2}'.format(template, runID, geomType)
+		savename = os.path.join(gis_folder, '{0}.shp'.format(name))
 		if QFile(savename).exists():
 			QMessageBox.critical(qgis.mainWindow(),"Info", ("File Exists: {0}".format(savename)))
 			message = 'Unable to complete utility because file already exists'
@@ -706,7 +706,7 @@ def tuflowqgis_insert_tf_attributes(qgis, inputLayer, basedir, runID, template, 
 				row_dict[j] = row_list[i][j]
 			outfile.dataProvider().changeAttributeValues({i: row_dict})
 		
-		qgis.addVectorLayer(savename, name[:-4], "ogr")
+		qgis.addVectorLayer(savename, name, "ogr")
 	
 	return message
 	

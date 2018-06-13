@@ -1501,6 +1501,10 @@ class TuPlot(QDockWidget, Ui_tuflowqgis_TuPlot):
 		menu.addAction(exportCsv_action)
 		menu.addAction(setAxis_action)
 		menu.addAction(setLabels_action)
+		if self.locationDrop.currentText() == 'Check Downstream Integrity':
+			selectPaths_action = QAction('Select Networks in Current Path(s) in Map Window', menu)
+			selectPaths_action.triggered.connect(self.selectPaths)
+			menu.addAction(selectPaths_action)
 		menu.popup(self.plotWdg.mapToGlobal(pos))
 		
 	def showMenuSelElements(self, pos):
@@ -1881,6 +1885,7 @@ class TuPlot(QDockWidget, Ui_tuflowqgis_TuPlot):
 		yTitle = None
 		xTitle2 = None
 		yTitle2 = None
+		units = None
 		try:
 			for i, res in enumerate(self.res):
 				if i == 0:
@@ -2327,6 +2332,7 @@ class TuPlot(QDockWidget, Ui_tuflowqgis_TuPlot):
 					if not compatible or not found:
 						xTitle2 = None
 		elif self.is_intTool:
+			units = self.profileIntTool.units
 			xTitle = 'Chainage ({0})'.format(units) if units is not None else 'Chainage'
 			yTitle = 'Elevation ({0} RL)'.format(units) if units is not None else 'Elevation'
 			self.IDList.clear()

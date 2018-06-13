@@ -28,6 +28,7 @@ from PyQt4.QtGui import *
 from qgis.core import *
 import processing
 import glob
+from datetime import datetime, timedelta
 from tuflowqgis_library import *
 from tuflowqgis_TuPlot import *
 import TUFLOW_longprofile
@@ -2169,6 +2170,7 @@ class tuflowqgis_check_1d_integrity_dialog(QDialog, Ui_check1dIntegrity):
 
 
 	def run(self):
+		startTime = datetime.now()
 		self.check1dIntegrity.accept()  # destroy dialog window
 		# Get inputs
 		if self.iface.mapCanvas().mapUnits() == 0:
@@ -2361,12 +2363,16 @@ class tuflowqgis_check_1d_integrity_dialog(QDialog, Ui_check1dIntegrity):
 			                                                                           dns_conn=correctDirectionByContinuity)
 			correctDirectionContLog, correctDirectionContType, correctDirectionContPoint = \
 				correctPipeDirectionFromConnections(lineDict, dsLines)
+		finishTime = datetime.now()
+		computationTime = finishTime - startTime
 		# Output
 		if outMsg or outTxt:
 			if outMsg:
 				results = '###############\n# 1D Integrity Output  #\n###############\n'
 			else:
 				results = '#######################\n# 1D Integrity Output #\n#######################\n'
+			results += '\nComputation Time: {0:.0f} mins {1:.0f} secs\n'.format(computationTime.total_seconds() / 60,
+			                                                                    computationTime.total_seconds() % 60)
 			if checkLine:
 				results += '\n' + r'\\ Unsnapped Lines \\' + '\n\n'
 				if len(unsnappedLines) == 0:
