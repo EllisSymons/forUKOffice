@@ -1891,7 +1891,7 @@ class TuPlot(QDockWidget, Ui_tuflowqgis_TuPlot):
 				else:
 					if res.units.lower() == 'metric' and units != 'm':
 						units = None
-					elif res.units.lower != 'metric' and units != 'ft':
+					elif res.units.lower() != 'metric' and units != 'ft':
 						units = None
 		except:
 			units = None
@@ -2830,7 +2830,7 @@ class TuPlot(QDockWidget, Ui_tuflowqgis_TuPlot):
 											self.subplot.hold(True)
 											if 'flow' in typename.lower():
 												yTitle = 'Flow ({0}$^3$/s)'.format(units) if units is not None else 'Flow'
-											elif 'velocit' in typename.lower():
+											elif 'velocities' in typename.lower():
 												yTitle = 'Velocity ({0}/s)'.format(
 													units) if units is not None else 'Velocity'
 											elif 'level' in typename.lower():
@@ -2845,71 +2845,6 @@ class TuPlot(QDockWidget, Ui_tuflowqgis_TuPlot):
 							yTitle = None
 						elif len(typenames) == 2 and not ('US Levels' in typenames and 'DS Levels' in typenames):
 							yTitle = None
-					# add median data
-					if calc_median:
-						try:
-							argsort = max_vals.argsort()
-							med_rnk = int(nRes / 2)  # +1 not requried as python uses 0 rank
-							self.lwStatus.insertItem(0, 'For {0} results using rank {1} for median'.format(
-								nRes, med_rnk + 1))
-							med_ind = argsort[med_rnk]
-							res = self.res[med_ind]
-							if res.formatVersion == 1:
-								self.lwStatus.insertItem(0, 'ERROR - Median not valid for Pre 2016 results')
-							elif res.formatVersion == 2:
-								name = res.displayname
-								ydataid = self.IDs[0]  # only works for 1 ID
-								typename = typenames[0]  # and 1 data type
-								dom = self.Doms[0]
-								source = self.Source_Att[0].upper()
-								found, ydata, message = res.getTSData(ydataid, dom, typename, 'Geom')
-								if not found:
-									self.lwStatus.insertItem(0, 'ERROR - Extracting median data.')
-								else:
-									xdata = res.times
-									label = 'Median - {0}'.format(name)
-									a, = self.subplot.plot(xdata, ydata, color='black', linewidth=3,
-									                       linestyle=':')
-									self.artists.append(a)
-									self.labels.append(label)
-						except:
-							self.lwStatus.insertItem(0, 'ERROR - Adding Median data, skipping')
-					# add mean data (2017-06-AD)
-					if calc_mean:
-						try:
-							argsort = max_vals.argsort()
-							meanVal = max_vals.mean()
-							ms = numpy.sort(max_vals)
-							if meanAbove:
-								ms_ind = ms.searchsorted(meanVal, side='right')
-							else:
-								ms_ind = (numpy.abs(ms - meanVal)).argmin()
-							mean_ind = argsort[ms_ind]
-							self.lwStatus.insertItem(0,
-							                         'Mean value is {0}, rank index is {1}'.format(meanVal,
-							                                                                       ms_ind + 1))
-							res = self.res[mean_ind]
-							if res.formatVersion == 1:
-								self.lwStatus.insertItem(0, 'ERROR - Mean not valid for Pre 2016 results')
-							elif res.formatVersion == 2:
-								name = res.displayname
-								ydataid = self.IDs[0]  # only works for 1 ID
-								typename = typenames[0]  # and 1 data type
-								dom = self.Doms[0]
-								source = self.Source_Att[0].upper()
-								found, ydata, message = res.getTSData(ydataid, dom, typename, 'Geom')
-								if not found:
-									self.lwStatus.insertItem(0, 'ERROR - Extracting median data.')
-								else:
-									xdata = res.times
-									label = 'Mean - {0}'.format(name)
-									a, = self.subplot.plot(xdata, ydata, color='blue', linewidth=3,
-									                       linestyle=':')
-									self.artists.append(a)
-									self.labels.append(label)
-						except:
-							self.lwStatus.insertItem(0, 'ERROR - Adding Mean data, skipping')
-									
 					# AXIS 2
 					#xdata = res.getXData()
 					if (self.cb2ndAxis.isChecked()): # if not checked not dual axis needed
@@ -2970,17 +2905,6 @@ class TuPlot(QDockWidget, Ui_tuflowqgis_TuPlot):
 													label = res.displayname + ": " + ydataid + " ("+dom+") - " + typename +" (Axis 2)"
 												else:
 													label = ydataid + " ("+dom+") - " + typename +" (Axis 2)"
-											#tmp_xmin=min(xdata)
-											#xmin = min(xmin,tmp_xmin)
-											#tmp_xmax=max(xdata)
-											#xmax = max(xmax,tmp_xmax)
-											#tmp_ymin=min(ydata)
-											#ymin = min(ymin,tmp_ymin)
-											#tmp_ymax=max(ydata)
-											#ymax = max(ymax,tmp_ymax)
-											
-											#self.subplot.set_xbound(lower=xmin, upper=xmax)
-											#self.subplot.set_ybound(lower=ymin, upper=ymax)
 											if len(xdata)==len(ydata):
 												a2, = self.axis2.plot(xdata, ydata, marker='x')
 												self.artists.append(a2)
@@ -2989,7 +2913,7 @@ class TuPlot(QDockWidget, Ui_tuflowqgis_TuPlot):
 												if 'flow' in typename.lower():
 													yTitle2 = 'Flow ({0}$^3$/s)'.format(
 														units) if units is not None else 'Flow'
-												elif 'velocit' in typename.lower():
+												elif 'velocities' in typename.lower():
 													yTitle2 = 'Velocity ({0}/s)'.format(
 														units) if units is not None else 'Velocity'
 												elif 'level' in typename.lower():
@@ -2999,6 +2923,11 @@ class TuPlot(QDockWidget, Ui_tuflowqgis_TuPlot):
 													yTitle = None
 											else:
 												self.lwStatus.insertItem(0,'ERROR - Number of x and y data points doesnt match')
+					if len(typenames2) > 1:
+						if len(typenames2) > 2:
+							yTitle2 = None
+						elif len(typenames2) == 2 and not ('US Levels' in typenames2 and 'DS Levels' in typenames2):
+							yTitle2 = None
 					#add time if time enabled
 					if plot_current_time and nres_used==len(reslist): #only add time for last active result so it shows last in legend
 						for x in range(0, self.listTime.count()):
@@ -3016,11 +2945,71 @@ class TuPlot(QDockWidget, Ui_tuflowqgis_TuPlot):
 									#self.subplot.hold(True)
 								except:
 									self.lwStatus.insertItem(0,'Unable to add current time')
-					if len(typenames2) > 1:
-						if len(typenames2) > 2:
-							yTitle2 = None
-						elif len(typenames2) == 2 and not ('US Levels' in typenames2 and 'DS Levels' in typenames2):
-							yTitle2 = None
+					
+				# add median data
+				if calc_median:
+					try:
+						argsort = max_vals.argsort()
+						med_rnk = int(nRes / 2)  # +1 not requried as python uses 0 rank
+						self.lwStatus.insertItem(0, 'For {0} results using rank {1} for median'.format(
+							nRes, med_rnk + 1))
+						med_ind = argsort[med_rnk]
+						res = self.res[med_ind]
+						if res.formatVersion == 1:
+							self.lwStatus.insertItem(0, 'ERROR - Median not valid for Pre 2016 results')
+						elif res.formatVersion == 2:
+							name = res.displayname
+							ydataid = self.IDs[0]  # only works for 1 ID
+							typename = typenames[0]  # and 1 data type
+							dom = self.Doms[0]
+							source = self.Source_Att[0].upper()
+							found, ydata, message = res.getTSData(ydataid, dom, typename, 'Geom')
+							if not found:
+								self.lwStatus.insertItem(0, 'ERROR - Extracting median data.')
+							else:
+								xdata = res.times
+								label = 'Median - {0}'.format(name)
+								a, = self.subplot.plot(xdata, ydata, color='black', linewidth=3,
+								                       linestyle=':')
+								self.artists.append(a)
+								self.labels.append(label)
+					except:
+						self.lwStatus.insertItem(0, 'ERROR - Adding Median data, skipping')
+				# add mean data (2017-06-AD)
+				if calc_mean:
+					try:
+						argsort = max_vals.argsort()
+						meanVal = max_vals.mean()
+						ms = numpy.sort(max_vals)
+						if meanAbove:
+							ms_ind = ms.searchsorted(meanVal, side='right')
+						else:
+							ms_ind = (numpy.abs(ms - meanVal)).argmin()
+						mean_ind = argsort[ms_ind]
+						self.lwStatus.insertItem(0,
+						                         'Mean value is {0}, rank index is {1}'.format(meanVal,
+						                                                                       ms_ind + 1))
+						res = self.res[mean_ind]
+						if res.formatVersion == 1:
+							self.lwStatus.insertItem(0, 'ERROR - Mean not valid for Pre 2016 results')
+						elif res.formatVersion == 2:
+							name = res.displayname
+							ydataid = self.IDs[0]  # only works for 1 ID
+							typename = typenames[0]  # and 1 data type
+							dom = self.Doms[0]
+							source = self.Source_Att[0].upper()
+							found, ydata, message = res.getTSData(ydataid, dom, typename, 'Geom')
+							if not found:
+								self.lwStatus.insertItem(0, 'ERROR - Extracting median data.')
+							else:
+								xdata = res.times
+								label = 'Mean - {0}'.format(name)
+								a, = self.subplot.plot(xdata, ydata, color='blue', linewidth=3,
+								                       linestyle=':')
+								self.artists.append(a)
+								self.labels.append(label)
+					except:
+						self.lwStatus.insertItem(0, 'ERROR - Adding Mean data, skipping')
 			# Hydraulic properties______________________________________________________________________
 			elif loc == "Hydraulic Properties":
 				yTitle = 'Elevation ({0} RL)'.format(units) if units is not None else 'Elevation'
