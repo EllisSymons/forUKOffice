@@ -2268,11 +2268,8 @@ class tuflowqgis_check_1d_integrity_dialog(QDialog, Ui_check1dIntegrity):
 			                                                                           dns_conn=getDnsConn)  # Get unsnapped line vertices
 			if autoSnap:
 				editedLines, returnLogL = moveVertices(lineLyrs, closestVLines, searchRadius, units)  # perform auto snap routine
-				lineDict2, lineDrape = getVertices(lineLyrs, dem)  # reassess snapping
-				unsnappedLines2, unsnappedLineNames2, closestVLines2, dsLines2 = checkSnapping(assessment='lines',
-				                                                                               lines=lineDict2,
-				                                                                               points=pointDict,
-				                                                                               dns_conn=getDnsConn)  # reassess snapping
+				if checkPoint:
+					lineDict, lineDrape = getVertices(lineLyrs, dem)
 		# Start Point Check Section
 		if checkPoint:
 			if len(lineDict) == 0:
@@ -2282,22 +2279,10 @@ class tuflowqgis_check_1d_integrity_dialog(QDialog, Ui_check1dIntegrity):
 				                                                                           points=pointDict,
 				                                                                           dns_conn=getDnsConn)
 			pointDict, pointDrape = getVertices(pointLyrs, dem)
-			if checkLine and autoSnap:  # Check if line layer has been edited
-				unsnappedPoints, closestVPoints = checkSnapping(assessment='points', lines=lineDict2,
-				                                                points=pointDict)  # Get unsnapped points
-			else:
-				unsnappedPoints, closestVPoints = checkSnapping(assessment='points', lines=lineDict,
-				                                                points=pointDict)  # Get unsnapped points
+			unsnappedPoints, closestVPoints = checkSnapping(assessment='points', lines=lineDict,
+				                                            points=pointDict)  # Get unsnapped points
 			if autoSnap:
 				editedPoints, returnLogP = moveVertices(pointLyrs, closestVPoints, searchRadius, units)
-				pointDict2, pointDrape = getVertices(pointLyrs, dem)  # reassess snapping
-				if checkLine and autoSnap:  # Check if line layer has been edited
-					unsnappedPoints2, closestVPoints2 = checkSnapping(assessment='points', lines=lineDict2,
-					                                                  points=pointDict2)  # Get unsnapped points
-				else:
-					unsnappedPoints2, closestVPoints2 = checkSnapping(assessment='points', lines=lineDict,
-					                                                  points=pointDict2)  # Get unsnapped points
-		# Start check downstream connections
 		if getDnsConn:
 			if len(startElem) == 0:
 				return
@@ -2372,7 +2357,9 @@ class tuflowqgis_check_1d_integrity_dialog(QDialog, Ui_check1dIntegrity):
 			else:
 				results = '#######################\n# 1D Integrity Output #\n#######################\n'
 			results += '\nComputation Time: {0:.0f} mins {1:.0f} secs\n'.format(computationTime.total_seconds() / 60,
-			                                                                    computationTime.total_seconds() % 60)
+			                                                                    computationTime.total_seconds() % 60) \
+				if computationTime.total_seconds() >= 60 else '\nComputation Time: {0:.1f} secs\n'.format(
+				computationTime.total_seconds())
 			if checkLine:
 				results += '\n' + r'\\ Unsnapped Lines \\' + '\n\n'
 				if len(unsnappedLines) == 0:
@@ -2385,12 +2372,12 @@ class tuflowqgis_check_1d_integrity_dialog(QDialog, Ui_check1dIntegrity):
 						results += '\n' + r'\\ Auto Snap Lines \\' + '\n\nNone\n'
 					else:
 						results += '\n' + r'\\ Auto Snap Lines \\' + '\n\n{0}\n'.format(returnLogL)
-					results += '\n' + r'\\ Reassessment of Unsnapped Lines \\' + '\n\n'
-					if len(unsnappedLines2) == 0:
-						results += 'None\n'
-					else:
-						for line in unsnappedLines2:
-							results += '{0}\n'.format(line)
+					#results += '\n' + r'\\ Reassessment of Unsnapped Lines \\' + '\n\n'
+					#if len(unsnappedLines2) == 0:
+					#	results += 'None\n'
+					#else:
+					#	for line in unsnappedLines2:
+					#		results += '{0}\n'.format(line)
 			if checkPoint:
 				results += '\n' + r'\\ Unsnapped Nodes \\' + '\n\n'
 				if len(unsnappedPoints) == 0:
@@ -2403,12 +2390,12 @@ class tuflowqgis_check_1d_integrity_dialog(QDialog, Ui_check1dIntegrity):
 						results += '\n' + r'\\ Auto Snap Points \\' + '\n\nNone\n'
 					else:
 						results += '\n' + r'\\ Auto Snap Points \\' + '\n\n{0}\n'.format(returnLogP)
-					results += '\n' + r'\\ Reassessment of Unsnapped Nodes \\' + '\n\n'
-					if len(unsnappedPoints2) == 0:
-						results += 'None\n'
-					else:
-						for node in unsnappedPoints2:
-							results += '{0}\n'.format(node)
+					#results += '\n' + r'\\ Reassessment of Unsnapped Nodes \\' + '\n\n'
+					#if len(unsnappedPoints2) == 0:
+					#	results += 'None\n'
+					#else:
+					#	for node in unsnappedPoints2:
+					#		results += '{0}\n'.format(node)
 			if getDnsConn:
 				results += '\n' + r'\\ Downstream Connections \\' + '\n\n'
 				results += longProfile.log
@@ -2437,26 +2424,16 @@ class tuflowqgis_check_1d_integrity_dialog(QDialog, Ui_check1dIntegrity):
 			if checkPoint:
 				for layer in pointLyrs:
 					for f in layer.getFeatures():
-						if autoSnap:
-							if f.attributes()[0] in unsnappedPoints2:
-								fid = f.id()
-								layer.select(fid)
-						else:
-							if f.attributes()[0] in unsnappedPoints:
-								fid = f.id()
-								layer.select(fid)
+						if f.attributes()[0] in unsnappedPoints:
+							fid = f.id()
+							layer.select(fid)
 			# select lines
 			if checkLine:
 				for layer in lineLyrs:
 					for f in layer.getFeatures():
-						if autoSnap:
-							if f.attributes()[0] in unsnappedLineNames2:
-								fid = f.id()
-								layer.select(fid)
-						else:
-							if f.attributes()[0] in unsnappedLineNames:
-								fid = f.id()
-								layer.select(fid)
+						if f.attributes()[0] in unsnappedLineNames:
+							fid = f.id()
+							layer.select(fid)
 			if getDnsConn:
 				names = longProfile.log.split('\n')
 				for n in names:
@@ -2522,8 +2499,6 @@ class tuflowqgis_check_1d_integrity_dialog(QDialog, Ui_check1dIntegrity):
 			# lines
 			if autoSnap:
 				if checkLine:
-					unsnappedLines = unsnappedLines2
-					lineDict = lineDict2
 					loggedEdits = returnLogL.split('\n')
 					for i, line in enumerate(editedLines):
 						id, node = line.split('==')
@@ -2534,8 +2509,6 @@ class tuflowqgis_check_1d_integrity_dialog(QDialog, Ui_check1dIntegrity):
 						feat.setAttributes(['Line Snapping Edit', 'Moved Line Vertex: {0}'.format(loggedEdits[i])])
 						messageFeats.append(feat)
 				if checkPoint:
-					unsnappedPoints = unsnappedPoints2
-					pointDict = pointDict2
 					loggedEdits = returnLogP.split('\n')
 					for i, point in enumerate(editedPoints):
 						vertex = pointDict[point][0][0]
