@@ -2248,6 +2248,7 @@ class tuflowqgis_check_1d_integrity_dialog(QDialog, Ui_check1dIntegrity):
 			outTxt = True
 		if self.outPLayer_cb.isChecked():
 			outLyr = True
+		toolTimes = []
 		lineLyrs = []
 		lineDict = {}
 		for i in range(self.lineLyrs_lw.count()):
@@ -2259,43 +2260,131 @@ class tuflowqgis_check_1d_integrity_dialog(QDialog, Ui_check1dIntegrity):
 		taLyrs = []
 		for i in range(self.taLyrs_lw.count()):
 			taLyrs.append(tuflowqgis_find_layer(self.taLyrs_lw.item(i).text()))
-		import pydevd
-		pydevd.settrace('localhost', port=53100, stdoutToServer=True, stderrToServer=True)
 		# Start Line Check section
 		if checkLine:
+			toolStart = datetime.now()
 			lineDict, lineDrape = getVertices(lineLyrs, dem)
+			toolEnd = datetime.now()
+			toolTime = toolEnd - toolStart
+			toolTimes.append('Get Line Vertices: {0:.0f} mins {1:.0f} secs\n'.format(toolTime.total_seconds() / 60,
+			                                                                    toolTime.total_seconds() % 60) if
+			                 toolTime.total_seconds() >= 60 else 'Get Line Vertices: {0:.1f} secs\n'.format(
+				toolTime.total_seconds()))
+			toolStart = datetime.now()
 			unsnappedLines, unsnappedLineNames, closestVLines, dsLines = checkSnapping(assessment='lines',
-			                                                                           lines=lineDict,
+			                                                                           lines=lineDict, line_layers=lineLyrs,
 			                                                                           points=pointDict,
 			                                                                           dns_conn=getDnsConn)  # Get unsnapped line vertices
+			toolEnd = datetime.now()
+			toolTime = toolEnd - toolStart
+			toolTimes.append('Check Line Snapping: {0:.0f} mins {1:.0f} secs\n'.format(toolTime.total_seconds() / 60,
+			                                                                    toolTime.total_seconds() % 60) if
+			                 toolTime.total_seconds() >= 60 else 'Check Line Snapping: {0:.1f} secs\n'.format(
+				toolTime.total_seconds()))
 			if autoSnap:
+				toolStart = datetime.now()
 				editedLines, returnLogL = moveVertices(lineLyrs, closestVLines, searchRadius, units)  # perform auto snap routine
+				toolEnd = datetime.now()
+				toolTime = toolEnd - toolStart
+				toolTimes.append('Snapping Lines: {0:.0f} mins {1:.0f} secs\n'.format(toolTime.total_seconds() / 60,
+				                                                                      toolTime.total_seconds() % 60) if
+				                 toolTime.total_seconds() >= 60 else 'Snapping Lines: {0:.1f} secs\n'.format(
+					toolTime.total_seconds()))
 				if checkPoint:
+					toolStart = datetime.now()
 					lineDict, lineDrape = getVertices(lineLyrs, dem)
+					toolEnd = datetime.now()
+					toolTime = toolEnd - toolStart
+					toolTimes.append('Re-Collecting Line Vertices for Points analysis: {0:.0f} mins {1:.0f} secs\n'.format(toolTime.total_seconds() /
+					                                                                      60,
+					                                                                      toolTime.total_seconds() %
+					                                                                      60) if
+					                 toolTime.total_seconds() >= 60 else 'Re-Collecting Line Vertices for Points analysis: {0:.1f} secs\n'.format(
+						toolTime.total_seconds()))
 		# Start Point Check Section
 		if checkPoint:
 			if len(lineDict) == 0:
+				toolStart = datetime.now()
 				lineDict, lineDrape = getVertices(lineLyrs, dem)
-				unsnappedLines, unsnappedLineNames, closestVLines, dsLines = checkSnapping(assessment='lines',
-				                                                                           lines=lineDict,
-				                                                                           points=pointDict,
-				                                                                           dns_conn=getDnsConn)
+				toolEnd = datetime.now()
+				toolTime = toolEnd - toolStart
+				toolTimes.append('Get Line Vertices: {0:.0f} mins {1:.0f} secs\n'.format(toolTime.total_seconds() / 60,
+				                                                                         toolTime.total_seconds() %
+				                                                                         60) if
+				                 toolTime.total_seconds() >= 60 else 'Get Line Vertices: {0:.1f} secs\n'.format(
+					toolTime.total_seconds()))
+			toolStart = datetime.now()
 			pointDict, pointDrape = getVertices(pointLyrs, dem)
-			unsnappedPoints, closestVPoints = checkSnapping(assessment='points', lines=lineDict,
+			toolEnd = datetime.now()
+			toolTime = toolEnd - toolStart
+			toolTimes.append('Get Point Vertices: {0:.0f} mins {1:.0f} secs\n'.format(toolTime.total_seconds() / 60,
+			                                                                         toolTime.total_seconds() %
+			                                                                         60) if
+			                 toolTime.total_seconds() >= 60 else 'Get Point Vertices: {0:.1f} secs\n'.format(
+				toolTime.total_seconds()))
+			toolStart = datetime.now()
+			unsnappedPoints, closestVPoints = checkSnapping(assessment='points', lines=lineDict, line_layers=lineLyrs,
 				                                            points=pointDict)  # Get unsnapped points
+			toolTimes.append('Check Point Snapping: {0:.0f} mins {1:.0f} secs\n'.format(toolTime.total_seconds() / 60,
+			                                                                           toolTime.total_seconds() %
+			                                                                           60) if
+			                 toolTime.total_seconds() >= 60 else 'Check Point Snapping: {0:.1f} secs\n'.format(
+				toolTime.total_seconds()))
 			if autoSnap:
+				toolStart = datetime.now()
 				editedPoints, returnLogP = moveVertices(pointLyrs, closestVPoints, searchRadius, units)
+				toolEnd = datetime.now()
+				toolTime = toolEnd - toolStart
+				toolTimes.append('Snapping Points: {0:.0f} mins {1:.0f} secs\n'.format(toolTime.total_seconds() / 60,
+				                                                                      toolTime.total_seconds() % 60) if
+				                 toolTime.total_seconds() >= 60 else 'Snapping Points: {0:.1f} secs\n'.format(
+					toolTime.total_seconds()))
 		if getDnsConn:
 			if len(startElem) == 0:
 				return
+			toolStart = datetime.now()
 			lineDict, lineDrape = getVertices(lineLyrs, dem)
+			toolEnd = datetime.now()
+			toolTime = toolEnd - toolStart
+			toolTimes.append('Get Line Vertices: {0:.0f} mins {1:.0f} secs\n'.format(toolTime.total_seconds() / 60,
+			                                                                         toolTime.total_seconds() %
+			                                                                         60) if
+			                 toolTime.total_seconds() >= 60 else 'Get Line Vertices: {0:.1f} secs\n'.format(
+				toolTime.total_seconds()))
 			if len(pointLyrs) > 0:
+				toolStart = datetime.now()
 				pointDict, pointDrape = getVertices(pointLyrs, dem)
+				toolEnd = datetime.now()
+				toolTime = toolEnd - toolStart
+				toolTimes.append('Get Point Vertices: {0:.0f} mins {1:.0f} secs\n'.format(toolTime.total_seconds() /
+				                                                                          60,
+				                                                                          toolTime.total_seconds() %
+				                                                                          60) if
+				                 toolTime.total_seconds() >= 60 else 'Get Point Vertices: {0:.1f} secs\n'.format(
+					toolTime.total_seconds()))
+			toolStart = datetime.now()
 			unsnappedLines, unsnappedLineNames, closestVLines, dsLines = checkSnapping(lines=lineDict,
-			                                                                           points=pointDict,
+			                                                                           points=pointDict, line_layers=lineLyrs,
 			                                                                           dns_conn=getDnsConn)
+			toolEnd = datetime.now()
+			toolTime = toolEnd - toolStart
+			toolTimes.append('Check Line and Point Snapping: {0:.0f} mins {1:.0f} secs\n'.format(toolTime.total_seconds() / 60,
+			                                                                           toolTime.total_seconds() %
+			                                                                           60) if
+			                 toolTime.total_seconds() >= 60 else 'Check Line and Point Snapping: {0:.1f} secs\n'.format(
+				toolTime.total_seconds()))
 			if len(taLyrs) > 0:
+				toolStart = datetime.now()
 				dsLines = getElevFromTa(lineDict, dsLines, lineLyrs, taLyrs)
+				toolEnd = datetime.now()
+				toolTime = toolEnd - toolStart
+				toolTimes.append(
+					'Get Elevations from Table Files: {0:.0f} mins {1:.0f} secs\n'.format(toolTime.total_seconds() / 60,
+					                                                                    toolTime.total_seconds() %
+					                                                                    60) if
+					toolTime.total_seconds() >= 60 else 'Get Elevations from Table Files: {0:.1f} secs\n'.format(
+						toolTime.total_seconds()))
+			toolStart = datetime.now()
 			longProfile = TUFLOW_longprofile.DownstreamConnectivity(dsLines, startElem, lineLyrs, angleLimit,
 			                                                        lineDrape, plotCoverDepth, lineDict, units)
 			longProfile.getBranches()
@@ -2311,49 +2400,156 @@ class tuflowqgis_check_1d_integrity_dialog(QDialog, Ui_check1dIntegrity):
 					self.dockOpened = True
 					self.resdock = TuPlot(self.iface, profile_integerity_tool=longProfile)
 					self.iface.addDockWidget(Qt.RightDockWidgetArea, self.resdock)
+			toolEnd = datetime.now()
+			toolTime = toolEnd - toolStart
+			toolTimes.append(
+				'Collecting Long Section: {0:.0f} mins {1:.0f} secs\n'.format(toolTime.total_seconds() / 60,
+				                                                                      toolTime.total_seconds() %
+				                                                                      60) if
+				toolTime.total_seconds() >= 60 else 'Collecting Long Section: {0:.1f} secs\n'.format(
+					toolTime.total_seconds()))
 		# Check network continuity
 		if continuityCheck:
 			continuityLog = ''
 			continuityError = []
+			toolStart = datetime.now()
 			lineDict, lineDrape = getVertices(lineLyrs, dem)
+			toolEnd = datetime.now()
+			toolTime = toolEnd - toolStart
+			toolTimes.append('Get Line Vertices: {0:.0f} mins {1:.0f} secs\n'.format(toolTime.total_seconds() / 60,
+			                                                                         toolTime.total_seconds() %
+			                                                                         60) if
+			                 toolTime.total_seconds() >= 60 else 'Get Line Vertices: {0:.1f} secs\n'.format(
+				toolTime.total_seconds()))
 			if len(pointLyrs) > 0:
+				toolStart = datetime.now()
 				pointDict, pointDrape = getVertices(pointLyrs, dem)
+				toolEnd = datetime.now()
+				toolTime = toolEnd - toolStart
+				toolTimes.append('Get Point Vertices: {0:.0f} mins {1:.0f} secs\n'.format(toolTime.total_seconds() /
+				                                                                          60,
+				                                                                          toolTime.total_seconds() %
+				                                                                          60) if
+				                 toolTime.total_seconds() >= 60 else 'Get Point Vertices: {0:.1f} secs\n'.format(
+					toolTime.total_seconds()))
+			toolStart = datetime.now()
 			unsnappedLines, unsnappedLineNames, closestVLines, dsLines = checkSnapping(lines=lineDict,
-																					     points=pointDict,
+																					     points=pointDict, line_layers=lineLyrs,
 																					     dns_conn=continuityCheck)
+			toolEnd = datetime.now()
+			toolTime = toolEnd - toolStart
+			toolTimes.append(
+				'Check Line and Point Snapping: {0:.0f} mins {1:.0f} secs\n'.format(toolTime.total_seconds() / 60,
+				                                                                    toolTime.total_seconds() %
+				                                                                    60) if
+				toolTime.total_seconds() >= 60 else 'Check Line and Point Snapping: {0:.1f} secs\n'.format(
+					toolTime.total_seconds()))
 			if len(taLyrs) > 0:
+				toolStart = datetime.now()
 				dsLines = getElevFromTa(lineDict, dsLines, lineLyrs, taLyrs)
+				toolEnd = datetime.now()
+				toolTime = toolEnd - toolStart
+				toolTimes.append(
+					'Get Elevations from Table Files: {0:.0f} mins {1:.0f} secs\n'.format(toolTime.total_seconds() /
+					                                                                      60,
+					                                                                      toolTime.total_seconds() %
+					                                                                      60) if
+					toolTime.total_seconds() >= 60 else 'Get Elevations from Table Files: {0:.1f} secs\n'.format(
+						toolTime.total_seconds()))
+			toolStart = datetime.now()
 			continuityLog, continiuityWarningTypes, continuityError = checkNetworkContinuity(lineDict, dsLines,
 			                                                                                 lineDrape, angleLimit,
 			                                                                                 coverLimit,
 			                                                                                 [checkArea, checkGradient,
 			                                                                                  checkAngle, checkCover],
 			                                                                                 units)
+			toolEnd = datetime.now()
+			toolTime = toolEnd - toolStart
+			toolTimes.append(
+				'Check Continuity: {0:.0f} mins {1:.0f} secs\n'.format(toolTime.total_seconds() /
+				                                                                      60,
+				                                                                      toolTime.total_seconds() %
+				                                                                      60) if
+				toolTime.total_seconds() >= 60 else 'Check Continuity: {0:.1f} secs\n'.format(
+					toolTime.total_seconds()))
 		# Correct Network Direction
 		if correctDirectionByGradient:
+			toolStart = datetime.now()
 			lineDict, lineDrape = getVertices(lineLyrs, dem)
+			toolEnd = datetime.now()
+			toolTime = toolEnd - toolStart
+			toolTimes.append('Get Line Vertices: {0:.0f} mins {1:.0f} secs\n'.format(toolTime.total_seconds() / 60,
+			                                                                         toolTime.total_seconds() %
+			                                                                         60) if
+			                 toolTime.total_seconds() >= 60 else 'Get Line Vertices: {0:.1f} secs\n'.format(
+				toolTime.total_seconds()))
+			toolStart = datetime.now()
 			correctDirectionGradLog, correctDirectionGradType, correctDirectionGradPoint = \
 				correctPipeDirectionByInvert(lineLyrs, lineDict, units)
+			toolEnd = datetime.now()
+			toolTime = toolEnd - toolStart
+			toolTimes.append('Correct Line Direction by Invert: {0:.0f} mins {1:.0f} secs\n'.format(toolTime.total_seconds() / 60,
+			                                                                         toolTime.total_seconds() %
+			                                                                         60) if
+			                 toolTime.total_seconds() >= 60 else 'Correct Line Direction by Invert: {0:.1f} secs\n'.format(
+				toolTime.total_seconds()))
 		if correctDirectionByContinuity:
+			toolStart = datetime.now()
 			lineDict, lineDrape = getVertices(lineLyrs, dem)
+			toolEnd = datetime.now()
+			toolTime = toolEnd - toolStart
+			toolTimes.append('Get Line Vertices: {0:.0f} mins {1:.0f} secs\n'.format(toolTime.total_seconds() / 60,
+			                                                                         toolTime.total_seconds() %
+			                                                                         60) if
+			                 toolTime.total_seconds() >= 60 else 'Get Line Vertices: {0:.1f} secs\n'.format(
+				toolTime.total_seconds()))
 			if len(pointLyrs) > 0:
+				toolStart = datetime.now()
 				pointDict, pointDrape = getVertices(pointLyrs, dem)
+				toolEnd = datetime.now()
+				toolTime = toolEnd - toolStart
+				toolTimes.append('Get Point Vertices: {0:.0f} mins {1:.0f} secs\n'.format(toolTime.total_seconds() /
+				                                                                          60,
+				                                                                          toolTime.total_seconds() %
+				                                                                          60) if
+				                 toolTime.total_seconds() >= 60 else 'Get Point Vertices: {0:.1f} secs\n'.format(
+					toolTime.total_seconds()))
+			toolStart = datetime.now()
 			unsnappedLines, unsnappedLineNames, closestVLines, dsLines = checkSnapping(lines=lineDict,
-			                                                                           points=pointDict,
+			                                                                           points=pointDict, line_layers=lineLyrs,
 			                                                                           dns_conn=correctDirectionByContinuity)
+			toolEnd = datetime.now()
+			toolTime = toolEnd - toolStart
+			toolTimes.append(
+				'Check Line and Point Snapping: {0:.0f} mins {1:.0f} secs\n'.format(toolTime.total_seconds() / 60,
+				                                                                    toolTime.total_seconds() %
+				                                                                    60) if
+				toolTime.total_seconds() >= 60 else 'Check Line and Point Snapping: {0:.1f} secs\n'.format(
+					toolTime.total_seconds()))
+			toolStart = datetime.now()
 			correctDirectionContLog, correctDirectionContType, correctDirectionContPoint = \
 				correctPipeDirectionFromConnections(lineDict, dsLines)
+			toolEnd = datetime.now()
+			toolTime = toolEnd - toolStart
+			toolTimes.append(
+				'Correct Line Direction by Continuity: {0:.0f} mins {1:.0f} secs\n'.format(toolTime.total_seconds() / 60,
+				                                                                       toolTime.total_seconds() %
+				                                                                       60) if
+				toolTime.total_seconds() >= 60 else 'Correct Line Direction by Continuity: {0:.1f} secs\n'.format(
+					toolTime.total_seconds()))
 		finishTime = datetime.now()
 		computationTime = finishTime - startTime
 		# Output
 		if outMsg or outTxt:
 			if outMsg:
-				results = '###############\n# 1D Integrity Output  #\n###############\n'
+				results = '###############\n# 1D Integrity Output  #\n###############\n\n'
 			else:
-				results = '#######################\n# 1D Integrity Output #\n#######################\n'
-			results += '\nComputation Time: {0:.0f} mins {1:.0f} secs\n'.format(computationTime.total_seconds() / 60,
+				results = '#######################\n# 1D Integrity Output #\n#######################\n\n'
+			for toolTime in toolTimes:
+				results += toolTime
+			results += '\nTotal Computation Time: {0:.0f} mins {1:.0f} secs\n'.format(computationTime.total_seconds() / 60,
 			                                                                    computationTime.total_seconds() % 60) \
-				if computationTime.total_seconds() >= 60 else '\nComputation Time: {0:.1f} secs\n'.format(
+				if computationTime.total_seconds() >= 60 else '\nTotal Computation Time: {0:.1f} secs\n'.format(
 				computationTime.total_seconds())
 			if checkLine:
 				results += '\n' + r'\\ Unsnapped Lines \\' + '\n\n'

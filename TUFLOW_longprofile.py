@@ -1,6 +1,7 @@
 # coding=utf-8
 import sys
 import numpy as np
+from qgis.core import NULL
 from tuflowqgis_library import *
 sys.path.append(r'C:\Program Files\JetBrains\PyCharm 2018.1\debug-eggs')
 sys.path.append(r'C:\Program Files\JetBrains\PyCharm 2018.1\helpers\pydev')
@@ -204,7 +205,16 @@ class DownstreamConnectivity():
 				else:
 					angle = 0
 				if typ.lower() == 'r':
-					area = float(no) * width * height
+					if width != NULL:
+						if height != NULL:
+							if no != NULL:
+								area = float(no) * width * height
+							else:
+								area = width * height
+						else:
+							area = 0
+					else:
+						area = 0
 					if self.coverLimit is not None:
 						groundCh = self.lineDrape[name][1]
 						ground = self.lineDrape[name][2]
@@ -221,7 +231,13 @@ class DownstreamConnectivity():
 								self.warningInformation.append([network[0], warningChainage])
 								break
 				elif typ.lower() == 'c':
-					area = float(no) * (width / 2) ** 2 * 3.14
+					if width != NULL:
+						if no != NULL:
+							area = float(no) * (width / 2) ** 2 * 3.14
+						else:
+							area = (width / 2) ** 2 * 3.14
+					else:
+						area = 0
 					if self.coverLimit is not None:
 						groundCh = self.lineDrape[name][1]
 						ground = self.lineDrape[name][2]
@@ -412,7 +428,13 @@ class DownstreamConnectivity():
 								o = []
 								cd = []
 								if t.lower() == 'r':
-									a = float(n) * w * h
+									if w != NULL and h != NULL:
+										if n != NULL:
+											a = float(n) * w * h
+										else:
+											a = w * h
+									else:
+										a = 0
 									if self.coverLimit is not None:
 										gc = self.lineDrape[na][1]
 										gr = self.lineDrape[na][2]
@@ -432,7 +454,13 @@ class DownstreamConnectivity():
 													skip_insffC = True
 												break
 								elif t.lower() == 'c':
-									a = float(n) * (w / 2) ** 2 * 3.14
+									if w != NULL:
+										if n != NULL:
+											a = float(n) * (w / 2) ** 2 * 3.14
+										else:
+											a = (w / 2) ** 2 * 3.14
+									else:
+										a = 0
 									if self.coverLimit is not None:
 										gc = self.lineDrape[na][1]
 										gr = self.lineDrape[na][2]

@@ -1146,6 +1146,7 @@ def checkSnapping(**kwargs):
 	dnsConn = False
 	lineDict = kwargs['lines']  # will need lines no matter what
 	lineDict_len = len(lineDict)
+	lineLyrs = kwargs['line_layers']
 	if 'dns_conn' in kwargs.keys():
 		if kwargs['dns_conn']:
 			dnsConn = True  # force script to loop through all pipes to get all dns connections
@@ -1173,7 +1174,9 @@ def checkSnapping(**kwargs):
 	unsnapped_names = []  # list of unsnapped vertices names (for lines)
 	snappedUpstream = []  # list of snapped upstream vertices
 	snappedDownstream = []  # list of snapped downstream vertices
-	# Check to see if line is snapped to another line at both ends
+	maxFeatureCount = 0
+	mostFeaturedLyr = lineLyrs[0]
+	# Check to see if line is snapped to another line
 	if checkLine:
 		for lName, lParam in lineDict.items():
 			lLoc = lParam[0]  # vertices
@@ -1196,80 +1199,49 @@ def checkSnapping(**kwargs):
 			found_dns = False
 			minDist1 = 99999
 			minDist2 = 99999
-			for i, (lName2, lParam2) in enumerate(sorted(lineDict.items())):  # sort dict so x connectors are assessed first
-				lLoc2 = lParam2[0]
-				lLyr2 = lParam2[2]
-				lFid2 = lParam2[1]
-				idFld2 = lLyr2.fields()[0]
-				typFld2 = lLyr2.fields()[1]
-				feature2 = lParam2[5]
-				if foundU and foundD and not dnsConn:
-					break
-				vu2 = lLoc2[0]
-				vd2 = lLoc2[1]
-				if lName == lName2:
-					continue
-				if vu == vu2 or vu == vd2 or vd == vu2 or vd == vd2:
-					if lName not in dsNwk.keys():
-						dsNwk[lName] = [[], [], [], [], [], []]  # dsNwk name, us and ds invert, outflow angle, joining nwk dns, upstream network, upstream network to upstream network
-					if 'connector' in lName:
-						if vu == vu2:  # X Connector is entering side channel
-							foundU = True
-							snappedUpstream.append(lName)
-							snappedUpstream.append(lName2)
-							found_dns = True
-							xIn = True
-							if lName not in xIns:
-								xIns.append(lName)
-							if lName not in dsNwk.keys():
-								dsNwk[lName] = [[lName2]]
-							else:
-								dsNwk[lName][0].append(lName2)
-							if len(dsNwk[lName]) < 2:
-								dsNwk[lName].append([lUsInv, lDsInv])
-							if len(dsNwk[lName]) < 3:
-								dsNwk[lName].append([])
-							if xIns_indices:  # remove since we now know xIn is True
-								for xIns_i in xIns_indices:
-									dsNwk[lName][0].pop(xIns_i)
-						elif vd == vu2 and not xIn:  # X connector is leaving side channel
-							foundD = True
-							snappedDownstream.append(lName)
-							snappedUpstream.append(lName2)
-							found_dns = True
-							if lName not in dsNwk.keys():
-								dsNwk[lName] = [[lName2]]
-							else:
-								dsNwk[lName][0].append(lName2)
-							if len(dsNwk[lName]) < 2:
-								dsNwk[lName].append([lUsInv, lDsInv])
-							if len(dsNwk[lName]) < 3:
-								dsNwk[lName].append([])
-							xIns_indices.append(xIns_index)
-							xIns_index += 1
-						elif vu == vd2 and not xIn:
-							foundU = True
-							snappedUpstream.append(lName)
-							snappedDownstream.append(lName2)
-							dsNwk[lName][4].append(lName2)
-							xIns_indices.append(xIns_index)
-							xIns_index += 1
-						elif vd == vd2 and xIn:  # upstream network
-							foundD = True
-							snappedDownstream.append(lName)
-							snappedDownstream.append(lName2)
-							dsNwk[lName][4].append(lName2)
-						elif vd == vd2:
-							foundD = True
-							snappedDownstream.append(lName)
-							snappedDownstream.append(lName2)
-					elif 'connector' in lName2:  # end normal nwk connected to end X conn
-						if lName2 in xIns:  # entering side channel
-							if vd == vd2:
-								foundD = True
+			# Create a buffer object to loop through nearby features
+			bufferDist = 10
+			xmin = min((vu[0] - bufferDist), (vd[0] - bufferDist))
+			xmax = max((vu[0] + bufferDist), (vd[0] + bufferDist))
+			ymin = min((vu[1] - bufferDist), (vd[1] - bufferDist))
+			ymax = max((vu[1] + bufferDist), (vd[1] + bufferDist))
+			rectangle = QgsRectangle(xmin, ymin, xmax, ymax)
+			request = QgsFeatureRequest().setFilterRect(rectangle)
+			# cycle through nearby features to see if anything is snapped
+			for lyr in lineLyrs:
+				for i, feature2 in enumerate(lyr.getFeatures(request)):
+					if feature2.attributes()[0] != NULL:
+						lName2 = feature2.attributes()[0]
+					else:
+						for name, param in lineDict.items():
+							if feature2 == param[5]:
+								lName2 = name
+								break
+					lParam2 = lineDict[lName2]
+					lLoc2 = lParam2[0]
+					lLyr2 = lParam2[2]
+					lFid2 = lParam2[1]
+					idFld2 = lLyr2.fields()[0]
+					typFld2 = lLyr2.fields()[1]
+					feature2 = lParam2[5]
+					if foundU and foundD and not dnsConn:
+						break
+					vu2 = lLoc2[0]
+					vd2 = lLoc2[1]
+					if lName == lName2:
+						continue
+					if vu == vu2 or vu == vd2 or vd == vu2 or vd == vd2:
+						if lName not in dsNwk.keys():
+							dsNwk[lName] = [[], [], [], [], [], []]  # dsNwk name, us and ds invert, outflow angle, joining nwk dns, upstream network, upstream network to upstream network
+						if 'connector' in lName:
+							if vu == vu2:  # X Connector is entering side channel
+								foundU = True
+								snappedUpstream.append(lName)
+								snappedUpstream.append(lName2)
 								found_dns = True
-								snappedDownstream.append(lName)
-								snappedDownstream.append(lName2)
+								xIn = True
+								if lName not in xIns:
+									xIns.append(lName)
 								if lName not in dsNwk.keys():
 									dsNwk[lName] = [[lName2]]
 								else:
@@ -1278,111 +1250,162 @@ def checkSnapping(**kwargs):
 									dsNwk[lName].append([lUsInv, lDsInv])
 								if len(dsNwk[lName]) < 3:
 									dsNwk[lName].append([])
-							elif vd == vu2:
+								if xIns_indices:  # remove since we now know xIn is True
+									for xIns_i in xIns_indices:
+										dsNwk[lName][0].pop(xIns_i)
+							elif vd == vu2 and not xIn:  # X connector is leaving side channel
 								foundD = True
 								snappedDownstream.append(lName)
 								snappedUpstream.append(lName2)
-							elif vu == vu2:  # upstream network
+								found_dns = True
+								if lName not in dsNwk.keys():
+									dsNwk[lName] = [[lName2]]
+								else:
+									dsNwk[lName][0].append(lName2)
+								if len(dsNwk[lName]) < 2:
+									dsNwk[lName].append([lUsInv, lDsInv])
+								if len(dsNwk[lName]) < 3:
+									dsNwk[lName].append([])
+								xIns_indices.append(xIns_index)
+								xIns_index += 1
+							elif vu == vd2 and not xIn:
 								foundU = True
 								snappedUpstream.append(lName)
-								snappedUpstream.append(lName2)
+								snappedDownstream.append(lName2)
 								dsNwk[lName][4].append(lName2)
-							elif vu == vd2:
-								foundU = True
-								snappedUpstream.append(lName)
+								xIns_indices.append(xIns_index)
+								xIns_index += 1
+							elif vd == vd2 and xIn:  # upstream network
+								foundD = True
+								snappedDownstream.append(lName)
 								snappedDownstream.append(lName2)
-						else:  # leaving side channel
-							if vd == vu2:
+								dsNwk[lName][4].append(lName2)
+							elif vd == vd2:
+								foundD = True
+								snappedDownstream.append(lName)
+								snappedDownstream.append(lName2)
+						elif 'connector' in lName2:  # end normal nwk connected to end X conn
+							if lName2 in xIns:  # entering side channel
+								if vd == vd2:
+									foundD = True
+									found_dns = True
+									snappedDownstream.append(lName)
+									snappedDownstream.append(lName2)
+									if lName not in dsNwk.keys():
+										dsNwk[lName] = [[lName2]]
+									else:
+										dsNwk[lName][0].append(lName2)
+									if len(dsNwk[lName]) < 2:
+										dsNwk[lName].append([lUsInv, lDsInv])
+									if len(dsNwk[lName]) < 3:
+										dsNwk[lName].append([])
+								elif vd == vu2:
+									foundD = True
+									snappedDownstream.append(lName)
+									snappedUpstream.append(lName2)
+								elif vu == vu2:  # upstream network
+									foundU = True
+									snappedUpstream.append(lName)
+									snappedUpstream.append(lName2)
+									dsNwk[lName][4].append(lName2)
+								elif vu == vd2:
+									foundU = True
+									snappedUpstream.append(lName)
+									snappedDownstream.append(lName2)
+							else:  # leaving side channel
+								if vd == vu2:
+									foundD = True
+									found_dns = True
+									snappedDownstream.append(lName)
+									snappedUpstream.append(lName2)
+									if lName not in dsNwk.keys():
+										dsNwk[lName] = [[lName2]]
+									else:
+										dsNwk[lName][0].append(lName2)
+									if len(dsNwk[lName]) < 2:
+										dsNwk[lName].append([lUsInv, lDsInv])
+									if len(dsNwk[lName]) < 3:
+										dsNwk[lName].append([])
+								elif vd == vd2:  # end vertex to end vertex
+									foundD = True
+									snappedDownstream.append(lName)
+									snappedDownstream.append(lName2)
+									dsNwk[lName][3].append(lName2)
+								elif vu == vu2:
+									foundU = True
+									snappedUpstream.append(lName)
+									snappedUpstream.append(lName2)
+								elif vu == vd2:  # upstream network
+									foundU = True
+									snappedUpstream.append(lName)
+									snappedDownstream.append(lName2)
+									dsNwk[lName][4].append(lName2)
+						else:  # normal connection
+							if vd == vu2:  # end vertex connected to fist vertex i.e. found a dns nwk
 								foundD = True
 								found_dns = True
 								snappedDownstream.append(lName)
 								snappedUpstream.append(lName2)
-								if lName not in dsNwk.keys():
-									dsNwk[lName] = [[lName2]]
-								else:
-									dsNwk[lName][0].append(lName2)
-								if len(dsNwk[lName]) < 2:
-									dsNwk[lName].append([lUsInv, lDsInv])
-								if len(dsNwk[lName]) < 3:
-									dsNwk[lName].append([])
-							elif vd == vd2:  # end vertex to end vertex
+								dsNwk[lName][0].append(lName2)
+								if len(dsNwk[lName][1]) == 0:
+									dsNwk[lName][1].append(lUsInv)
+									dsNwk[lName][1].append(lDsInv)
+								polyline = feature.geometry().asPolyline()
+								polyline2 = feature2.geometry().asPolyline()
+								point1 = [polyline[-2][0], polyline[-2][1]]
+								point2 = [polyline[-1][0], polyline[-1][1]]
+								point3 = [polyline2[0][0], polyline2[0][1]]
+								point4 = [polyline2[1][0], polyline2[1][1]]
+								geom1 = [polyline[-2], polyline[-1]]
+								geom2 = [polyline2[0], polyline2[1]]
+								angle = getAngle(geom1, geom2)
+								dsNwk[lName][2].append(angle)
+							elif vd == vd2:  # end vertex connected to an end vertex
 								foundD = True
 								snappedDownstream.append(lName)
 								snappedDownstream.append(lName2)
 								dsNwk[lName][3].append(lName2)
-							elif vu == vu2:
-								foundU = True
-								snappedUpstream.append(lName)
-								snappedUpstream.append(lName2)
-							elif vu == vd2:  # upstream network
+							elif vu == vd2:  # start vertex connected to an end vertex i.e. found an ups nwk
 								foundU = True
 								snappedUpstream.append(lName)
 								snappedDownstream.append(lName2)
 								dsNwk[lName][4].append(lName2)
-					else:  # normal connection
-						if vd == vu2:  # end vertex connected to fist vertex i.e. found a dns nwk
-							foundD = True
-							found_dns = True
-							snappedDownstream.append(lName)
-							snappedUpstream.append(lName2)
-							dsNwk[lName][0].append(lName2)
-							if len(dsNwk[lName][1]) == 0:
-								dsNwk[lName][1].append(lUsInv)
-								dsNwk[lName][1].append(lDsInv)
-							point1 = [feature.geometry().asPolyline()[-2][0], feature.geometry().asPolyline()[-2][1]]
-							point2 = [feature.geometry().asPolyline()[-1][0], feature.geometry().asPolyline()[-1][1]]
-							point3 = [feature2.geometry().asPolyline()[0][0], feature2.geometry().asPolyline()[0][1]]
-							point4 = [feature2.geometry().asPolyline()[1][0], feature2.geometry().asPolyline()[1][1]]
-							geom1 = [feature.geometry().asPolyline()[-2], feature.geometry().asPolyline()[-1]]
-							geom2 = [feature2.geometry().asPolyline()[0], feature2.geometry().asPolyline()[1]]
-							angle = getAngle(geom1, geom2)
-							dsNwk[lName][2].append(angle)
-						elif vd == vd2:  # end vertex connected to an end vertex
-							foundD = True
-							snappedDownstream.append(lName)
-							snappedDownstream.append(lName2)
-							dsNwk[lName][3].append(lName2)
-						elif vu == vd2:  # start vertex connected to an end vertex i.e. found an ups nwk
-							foundU = True
-							snappedUpstream.append(lName)
-							snappedDownstream.append(lName2)
-							dsNwk[lName][4].append(lName2)
-						elif vu == vu2:  # start vertex connected to a start vertex
-							foundU = True
-							snappedUpstream.append(lName)
-							snappedUpstream.append(lName2)
-							dsNwk[lName][5].append(lName2)
-					continue
-				else:
-					dist1a = ((vu2[0] - vu[0]) ** 2 + (vu2[1] - vu[1]) ** 2) ** 0.5  # distance upstream vertex
-					dist1b = ((vd2[0] - vu[0]) ** 2 + (vd2[1] - vu[1]) ** 2) ** 0.5  # distance upstream vertex
-					dist2a = ((vu2[0] - vd[0]) ** 2 + (vu2[1] - vd[1]) ** 2) ** 0.5  # distance downstream vertex
-					dist2b = ((vd2[0] - vd[0]) ** 2 + (vd2[1] - vd[1]) ** 2) ** 0.5  # distance downstream vertex
-					minDist1 = min(minDist1, dist1a, dist1b)
-					minDist2 = min(minDist2, dist2a, dist2b)
-					if minDist1 == dist1a or minDist1 == dist1b:
-						name = lName2
-						if minDist1 == dist1a:
-							v1 = vu2
-							node1 = 0
-						else:
-							v1 = vd2
-							node1 = 1
-					if minDist2 == dist2a or minDist2 == dist2b:
-						name = lName2
-						if minDist2 == dist2a:
-							v2 = vu2
-							node2 = 0
-						else:
-							v2 = vd2
-							node2 = 1
-			if i + 1 == lineDict_len and dnsConn and not found_dns:
+							elif vu == vu2:  # start vertex connected to a start vertex
+								foundU = True
+								snappedUpstream.append(lName)
+								snappedUpstream.append(lName2)
+								dsNwk[lName][5].append(lName2)
+						continue
+					else:
+						dist1a = ((vu2[0] - vu[0]) ** 2 + (vu2[1] - vu[1]) ** 2) ** 0.5  # distance upstream vertex
+						dist1b = ((vd2[0] - vu[0]) ** 2 + (vd2[1] - vu[1]) ** 2) ** 0.5  # distance upstream vertex
+						dist2a = ((vu2[0] - vd[0]) ** 2 + (vu2[1] - vd[1]) ** 2) ** 0.5  # distance downstream vertex
+						dist2b = ((vd2[0] - vd[0]) ** 2 + (vd2[1] - vd[1]) ** 2) ** 0.5  # distance downstream vertex
+						minDist1 = min(minDist1, dist1a, dist1b)
+						minDist2 = min(minDist2, dist2a, dist2b)
+						if minDist1 == dist1a or minDist1 == dist1b:
+							name = lName2
+							if minDist1 == dist1a:
+								v1 = vu2
+								node1 = 0
+							else:
+								v1 = vd2
+								node1 = 1
+						if minDist2 == dist2a or minDist2 == dist2b:
+							name = lName2
+							if minDist2 == dist2a:
+								v2 = vu2
+								node2 = 0
+							else:
+								v2 = vd2
+								node2 = 1
+			if dnsConn and not found_dns:
 				if lName not in dsNwk.keys():
 					dsNwk[lName] = [[], [], [], [], [], []]
 				if len(dsNwk[lName][1]) == 0:
 					dsNwk[lName][1].append(lUsInv)
 					dsNwk[lName][1].append(lDsInv)
-			if i + 1 == lineDict_len and (not foundU or not foundD):
+			if not foundU or not foundD:
 				if lName not in dsNwk.keys():
 					dsNwk[lName] = [[], [], [], [], [], []]
 				if len(dsNwk[lName][1]) == 0:
@@ -1404,59 +1427,78 @@ def checkSnapping(**kwargs):
 		for pName, pParam in pointDict.items():  # loop through all points
 			pLoc = pParam[0]
 			pFid = pParam[1]
-			lyr = pParam[2]
+			pLyr = pParam[2]
 			feature = pParam[5]
 			pUsInv = pParam[3][0]
 			pDsInv = pParam[3][1]
 			found = False
 			minDist = 99999
-			for i, (lName, lParam) in enumerate(lineDict.items()):  # loop through all lines
-				lLoc = lParam[0]
-				lFid = lParam[1]
-				lUsInv = lParam[3][0]
-				lDsInv = lParam[3][1]
-				if found and not dnsConn:
-					break
-				vu = lLoc[0]
-				vd = lLoc[1]
-				if vu == pLoc[0] or vd == pLoc[0]:
-					found = True
-					if dnsConn:
-						if vu == pLoc[0]:
-							if lUsInv == -99999:
-								if pDsInv != -99999:
-									usInv = pDsInv
+			# Create a buffer object to loop through nearby features
+			bufferDist = 10
+			xmin = pLoc[0][0] - bufferDist
+			xmax = pLoc[0][0] + bufferDist
+			ymin = pLoc[0][1] - bufferDist
+			ymax = pLoc[0][1] + bufferDist
+			rectangle = QgsRectangle(xmin, ymin, xmax, ymax)
+			request = QgsFeatureRequest().setFilterRect(rectangle)
+			# cycle through nearby features to see if anything is snapped
+			for lyr in lineLyrs:
+				for i, feature2 in enumerate(lyr.getFeatures(request)):
+					if feature2.attributes()[0] != NULL:
+						lName = feature2.attributes()[0]
+					else:
+						for name, param in lineDict.items():
+							if feature2 == param[5]:
+								lName = name
+								break
+					lParam = lineDict[lName]
+					lLoc = lParam[0]
+					lFid = lParam[1]
+					lUsInv = lParam[3][0]
+					lDsInv = lParam[3][1]
+					if found and not dnsConn:
+						break
+					vu = lLoc[0]
+					vd = lLoc[1]
+					if vu == pLoc[0] or vd == pLoc[0]:
+						found = True
+						if dnsConn:
+							if vu == pLoc[0]:
+								if lUsInv == -99999:
+									if pDsInv != -99999:
+										usInv = pDsInv
+									else:
+										usInv = -99999
 								else:
-									usInv = -99999
-							else:
-								usInv = lUsInv
-							dsNwk[lName][1][0] = usInv
-						elif vd == pLoc[0]:
-							if lDsInv == -99999:
-								if pDsInv != -99999:
-									dsInv = pDsInv
+									usInv = lUsInv
+								dsNwk[lName][1][0] = usInv
+							elif vd == pLoc[0]:
+								if lDsInv == -99999:
+									if pDsInv != -99999:
+										dsInv = pDsInv
+									else:
+										dsInv = -99999
 								else:
-									dsInv = -99999
-							else:
-								dsInv = lDsInv
-							dsNwk[lName][1][1] = dsInv
-					continue
-				else:
-					dist1 = ((vu[0] - pLoc[0][0]) ** 2 + (vu[1] - pLoc[0][1]) ** 2) ** 0.5
-					dist2 = ((vd[0] - pLoc[0][0]) ** 2 + (vd[1] - pLoc[0][1]) ** 2) ** 0.5
-					minDist = min(minDist, dist1, dist2)
-					if minDist == dist1 or minDist == dist2:
-						if minDist == dist1:
-							v = vu
-							name = lName
-							node = 0
-						elif minDist == dist2:
-							v = vd
-							name = lName
-							node = 1
-			if i + 1 == lineDict_len and not found:
+									dsInv = lDsInv
+								dsNwk[lName][1][1] = dsInv
+						continue
+					else:
+						dist1 = ((vu[0] - pLoc[0][0]) ** 2 + (vu[1] - pLoc[0][1]) ** 2) ** 0.5
+						dist2 = ((vd[0] - pLoc[0][0]) ** 2 + (vd[1] - pLoc[0][1]) ** 2) ** 0.5
+						minDist = min(minDist, dist1, dist2)
+						if minDist == dist1 or minDist == dist2:
+							if minDist == dist1:
+								v = vu
+								name = lName
+								node = 0
+							elif minDist == dist2:
+								v = vd
+								name = lName
+								node = 1
+			#if i + 1 == lineDict_len and not found:
+			if not found:
 				unsnapped.append(pName)
-				closestV['{0}'.format(pName)] = [lyr, pFid, '{0}=={1}'.format(name, node), v, minDist, feature]
+				closestV['{0}'.format(pName)] = [pLyr, pFid, '{0}=={1}'.format(name, node), v, minDist, feature]
 		if not dnsConn:
 			return unsnapped, closestV
 		else:
@@ -1487,63 +1529,62 @@ def moveVertices(lyrs, vertices_dict, dist, units):
 	{name: [[dns network channels], [us invert, ds invert], [other connecting channels]]}
 	:return: string of logged moves
 	"""
-	
+
 	editedV = []  # for processing
 	movedV = []  # for logging
 	node = None
 	log = ''
-	for lyr in lyrs:
+	for id, param in vertices_dict.items():
+		lyr = param[0]
 		lyr.startEditing()
-		for id, param in vertices_dict.items():
-			if lyr == param[0]:
-				if id not in editedV:
-					if param[4] <= dist:
-						if len(id.split('==')) > 1:
-							name, node = id.split('==')
-						else:
-							name = id
-						feature = param[5]
-						fid = param[1]
-						id2 = param[2]
-						name2, node2 = id2.split('==')
-						v = param[3]
-						if node is None or node == '0':
-							lyr.moveVertex(v[0], v[1], fid, 0)
-						else:
-							#for feature in lyr.getFeatures():  # QGIS 3 has the ability to select by FID rather than loop
-							#	if feature.id() == fid:
-							vertices = feature.geometry().asPolyline()
-							lastVertex = len(vertices) - 1
-							lyr.moveVertex(v[0], v[1], fid, lastVertex)
-						editedV.append(id)
-						editedV.append(id2)
-						movedV.append(id)
-						if node is None:
-							log += 'Moved {0} {5:.4f}{6} to {1} {4} ({2:.4f}, {3:.4f})\n'.format(name, name2, v[0],
-																								  v[1],
-																								  'upstream' if node2
-																												== '0'
-																								  else 'downstream',
-																								  param[4], units)
-						elif node == '0':
-							log += 'Moved {0} upstream {5:.4f}{6} to {1} {4} ({2:.4f}, {3:.4f})\n'.format(name, name2,
-																										   v[0],
-																										   v[1],
-																										   'upstream'
-																										   if node2 == '0'
-																										   else
-																										   'downstream',
-																										   param[4], units)
-						else:
-							log += 'Moved {0} downstream {5:.4f}{6} to {1} {4} ({2:.4f}, {3:.4f})\n'.format(name,
-																											 name2,
-																											 v[0],
-																											 v[1],
-																											 'upstream' if
-																											 node2 ==
-																											 '0' else
-																											 'downstream',
-																											 param[4], units)
+		if id not in editedV:
+			if param[4] <= dist:
+				if len(id.split('==')) > 1:
+					name, node = id.split('==')
+				else:
+					name = id
+				feature = param[5]
+				fid = param[1]
+				id2 = param[2]
+				name2, node2 = id2.split('==')
+				v = param[3]
+				if node is None or node == '0':
+					lyr.moveVertex(v[0], v[1], fid, 0)
+				else:
+					#for feature in lyr.getFeatures():  # QGIS 3 has the ability to select by FID rather than loop
+					#	if feature.id() == fid:
+					vertices = feature.geometry().asPolyline()
+					lastVertex = len(vertices) - 1
+					lyr.moveVertex(v[0], v[1], fid, lastVertex)
+				editedV.append(id)
+				editedV.append(id2)
+				movedV.append(id)
+				if node is None:
+					log += 'Moved {0} {5:.4f}{6} to {1} {4} ({2:.4f}, {3:.4f})\n'.format(name, name2, v[0],
+																						  v[1],
+																						  'upstream' if node2
+																										== '0'
+																						  else 'downstream',
+																						  param[4], units)
+				elif node == '0':
+					log += 'Moved {0} upstream {5:.4f}{6} to {1} {4} ({2:.4f}, {3:.4f})\n'.format(name, name2,
+																								   v[0],
+																								   v[1],
+																								   'upstream'
+																								   if node2 == '0'
+																								   else
+																								   'downstream',
+																								   param[4], units)
+				else:
+					log += 'Moved {0} downstream {5:.4f}{6} to {1} {4} ({2:.4f}, {3:.4f})\n'.format(name,
+																									 name2,
+																									 v[0],
+																									 v[1],
+																									 'upstream' if
+																									 node2 ==
+																									 '0' else
+																									 'downstream',
+																									 param[4], units)
 		lyr.commitChanges()
 
 	return movedV, log
@@ -1789,14 +1830,7 @@ def checkNetworkContinuity(lineDict, dsLines, lineDrape, angleLimit, coverLimit,
 			fid = lineDict[name][1]
 			idFld = lyr.fields()[0]
 			typFld = lyr.fields()[1]
-			if '__connector' in name:
-				filter = '"{0}" = \'{1}\' OR "{0}" = \'{2}\''.format(typFld.name(), 'X', 'x')
-			else:
-				filter = '"{0}" = \'{1}\''.format(idFld.name(), name)
-			request = QgsFeatureRequest().setFilterExpression(filter)
-			for f in lyr.getFeatures(request):
-				if f.id() == fid:
-					feature = f
+			feature = lineDict[name][5]
 			midVertex = getNetworkMidLocation(feature)
 			usArea = 0
 			dsArea = 0
@@ -1807,9 +1841,17 @@ def checkNetworkContinuity(lineDict, dsLines, lineDrape, angleLimit, coverLimit,
 				width = feature.attributes()[13]
 				height = feature.attributes()[14]
 				if type.lower() == 'c':
-					usArea = no * 3.14 * (width / 2) ** 2
+					if width != NULL:
+						if no != NULL:
+							usArea = no * 3.14 * (width / 2) ** 2
+						else:
+							usArea = 3.14 * (width / 2) ** 2
 				elif type.lower() == 'r':
-					usArea = no * width * height
+					if width != NULL:
+						if no != NULL:
+							usArea = no * width * height
+						else:
+							usArea = width * height
 			# check for x connectors
 			for dnsName in dnsNames[:]:
 				if 'connector' in dnsName:
@@ -1820,20 +1862,23 @@ def checkNetworkContinuity(lineDict, dsLines, lineDrape, angleLimit, coverLimit,
 				dnsType = lineDict[dnsName][4]
 				dnsLyr = lineDict[dnsName][2]
 				dnsFid = lineDict[dnsName][1]
-				idFld = dnsLyr.fields()[0]
-				filter = '"{0}" = \'{1}\''.format(idFld.name(), dnsName)
-				request = QgsFeatureRequest().setFilterExpression(filter)
-				for f in dnsLyr.getFeatures(request):
-					if f.id() == dnsFid:
-						dnsFeature = f
+				dnsFeature = lineDict[dnsName][5]
 				if dnsType.lower() == 'c' or dnsType.lower() == 'r':
 					dnsNo = dnsFeature.attributes()[15]
 					dnsWidth = dnsFeature.attributes()[13]
 					dnsHeight = dnsFeature.attributes()[14]
 					if dnsType.lower() == 'c':
-						dsArea += dnsNo * 3.14 * (dnsWidth / 2) ** 2
+						if dnsWidth != NULL:
+							if dnsNo != NULL:
+								dsArea += dnsNo * 3.14 * (dnsWidth / 2) ** 2
+							else:
+								dsArea += 3.14 * (dnsWidth / 2) ** 2
 					elif dnsType.lower() == 'r':
-						dsArea += dnsNo * dnsWidth * dnsHeight
+						if dnsWidth != NULL:
+							if dnsNo != NULL:
+								dsArea += dnsNo * dnsWidth * dnsHeight
+							else:
+								dsArea += dnsWidth * dnsHeight
 				if dsLines[dnsName][1][0] != -99999:
 					dnsUsInvert = min(dnsUsInvert, dsLines[dnsName][1][0])
 				if dsLines[dnsName][1][1] != -99999:
@@ -1947,12 +1992,7 @@ def correctPipeDirectionFromConnections(lineDict, dsLines):
 			if len(dsDsNwks) > 0 and len(usUsNwks) > 0 and len(dsNwks) == 0 and len(usNwks) == 0:
 				lyr = lineDict[name][2]
 				fid = lineDict[name][1]
-				idFld = lyr.fields()[0]
-				filter = '"{0}" = \'{1}\''.format(idFld.name(), name)
-				request = QgsFeatureRequest().setFilterExpression(filter)
-				for f in lyr.getFeatures(request):
-					if f.id() == fid:
-						feature = f
+				feature = lineDict[name][5]
 				midVertex = getNetworkMidLocation(feature)
 				geom = feature.geometry().asPolyline()
 				reversedGeom = geom[::-1]
