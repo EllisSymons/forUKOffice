@@ -2259,6 +2259,8 @@ class tuflowqgis_check_1d_integrity_dialog(QDialog, Ui_check1dIntegrity):
 		taLyrs = []
 		for i in range(self.taLyrs_lw.count()):
 			taLyrs.append(tuflowqgis_find_layer(self.taLyrs_lw.item(i).text()))
+		import pydevd
+		pydevd.settrace('localhost', port=53100, stdoutToServer=True, stderrToServer=True)
 		# Start Line Check section
 		if checkLine:
 			lineDict, lineDrape = getVertices(lineLyrs, dem)
@@ -2330,15 +2332,8 @@ class tuflowqgis_check_1d_integrity_dialog(QDialog, Ui_check1dIntegrity):
 		# Correct Network Direction
 		if correctDirectionByGradient:
 			lineDict, lineDrape = getVertices(lineLyrs, dem)
-			if len(pointLyrs) > 0:
-				pointDict, pointDrape = getVertices(pointLyrs, dem)
-			unsnappedLines, unsnappedLineNames, closestVLines, dsLines = checkSnapping(lines=lineDict,
-			                                                                           points=pointDict,
-			                                                                           dns_conn=correctDirectionByGradient)
-			if len(taLyrs) > 0:
-				dsLines = getElevFromTa(lineDict, dsLines, lineLyrs, taLyrs)
 			correctDirectionGradLog, correctDirectionGradType, correctDirectionGradPoint = \
-				correctPipeDirectionByInvert(lineDict, dsLines, units)
+				correctPipeDirectionByInvert(lineLyrs, lineDict, units)
 		if correctDirectionByContinuity:
 			lineDict, lineDrape = getVertices(lineLyrs, dem)
 			if len(pointLyrs) > 0:
@@ -2372,12 +2367,6 @@ class tuflowqgis_check_1d_integrity_dialog(QDialog, Ui_check1dIntegrity):
 						results += '\n' + r'\\ Auto Snap Lines \\' + '\n\nNone\n'
 					else:
 						results += '\n' + r'\\ Auto Snap Lines \\' + '\n\n{0}\n'.format(returnLogL)
-					#results += '\n' + r'\\ Reassessment of Unsnapped Lines \\' + '\n\n'
-					#if len(unsnappedLines2) == 0:
-					#	results += 'None\n'
-					#else:
-					#	for line in unsnappedLines2:
-					#		results += '{0}\n'.format(line)
 			if checkPoint:
 				results += '\n' + r'\\ Unsnapped Nodes \\' + '\n\n'
 				if len(unsnappedPoints) == 0:
@@ -2390,12 +2379,6 @@ class tuflowqgis_check_1d_integrity_dialog(QDialog, Ui_check1dIntegrity):
 						results += '\n' + r'\\ Auto Snap Points \\' + '\n\nNone\n'
 					else:
 						results += '\n' + r'\\ Auto Snap Points \\' + '\n\n{0}\n'.format(returnLogP)
-					#results += '\n' + r'\\ Reassessment of Unsnapped Nodes \\' + '\n\n'
-					#if len(unsnappedPoints2) == 0:
-					#	results += 'None\n'
-					#else:
-					#	for node in unsnappedPoints2:
-					#		results += '{0}\n'.format(node)
 			if getDnsConn:
 				results += '\n' + r'\\ Downstream Connections \\' + '\n\n'
 				results += longProfile.log
