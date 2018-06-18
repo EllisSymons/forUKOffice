@@ -25,6 +25,7 @@ except AttributeError:
 
 class Ui_check1dIntegrity(object):
     def setupUi(self, check1dIntegrity):
+        self.check1dIntegrity = check1dIntegrity
         check1dIntegrity.setObjectName(_fromUtf8("check1dIntegrity"))
         check1dIntegrity.resize(675, 902)
         check1dIntegrity.setFocusPolicy(QtCore.Qt.NoFocus)
