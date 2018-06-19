@@ -1139,7 +1139,7 @@ def checkSnapping(**kwargs):
 	:return: dict of closest line vertex for unsnapped points and lines {name: [origin lyr, origin fid, closest vertex name, closest vertex coords, closest vertex dist]}
 	:return: dict of downstream channels for lines if dnsConn is True {name: [[dns network channels], [us invert, ds invert], [other connecting channels]]}
 	"""
-	
+
 	# determine which snapping check is being performed
 	checkPoint = False
 	checkLine = False
@@ -1199,8 +1199,9 @@ def checkSnapping(**kwargs):
 			found_dns = False
 			minDist1 = 99999
 			minDist2 = 99999
+			name = None
 			# Create a buffer object to loop through nearby features
-			bufferDist = 10
+			bufferDist = 25
 			xmin = min((vu[0] - bufferDist), (vd[0] - bufferDist))
 			xmax = max((vu[0] + bufferDist), (vd[0] + bufferDist))
 			ymin = min((vu[1] - bufferDist), (vd[1] - bufferDist))
@@ -1415,10 +1416,12 @@ def checkSnapping(**kwargs):
 					unsnapped_names.append(lName)
 				if not foundU:
 					unsnapped.append('{0} upstream'.format(lName))
-					closestV['{0}==0'.format(lName)] = [lLyr, lFid, '{0}=={1}'.format(name, node1), v1, minDist1, feature]
+					if name is None:
+						closestV['{0}==0'.format(lName)] = [lLyr, lFid, '{0}=={1}'.format(name, node1), v1, minDist1, feature]
 				if not foundD:
 					unsnapped.append('{0} downstream'.format(lName))
-					closestV['{0}==1'.format(lName)] = [lLyr, lFid, '{0}=={1}'.format(name, node2), v2, minDist2, feature]
+					if name is None:
+						closestV['{0}==1'.format(lName)] = [lLyr, lFid, '{0}=={1}'.format(name, node2), v2, minDist2, feature]
 		if not checkPoint:
 			return unsnapped, unsnapped_names, closestV, dsNwk
 	
@@ -1434,7 +1437,7 @@ def checkSnapping(**kwargs):
 			found = False
 			minDist = 99999
 			# Create a buffer object to loop through nearby features
-			bufferDist = 10
+			bufferDist = 25
 			xmin = pLoc[0][0] - bufferDist
 			xmax = pLoc[0][0] + bufferDist
 			ymin = pLoc[0][1] - bufferDist

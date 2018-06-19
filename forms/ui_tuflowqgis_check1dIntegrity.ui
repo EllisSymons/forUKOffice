@@ -784,10 +784,16 @@
               </property>
              </widget>
             </item>
-            <item row="0" column="3">
-             <widget class="QSpinBox" name="angle_sb">
+            <item row="4" column="0" colspan="3">
+             <widget class="QComboBox" name="name1d_combo">
               <property name="enabled">
                <bool>false</bool>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>225</width>
+                <height>16777215</height>
+               </size>
               </property>
               <property name="font">
                <font>
@@ -795,19 +801,10 @@
                 <bold>false</bold>
                </font>
               </property>
-              <property name="minimum">
-               <number>1</number>
-              </property>
-              <property name="maximum">
-               <number>360</number>
-              </property>
-              <property name="value">
-               <number>90</number>
-              </property>
              </widget>
             </item>
-            <item row="0" column="0" colspan="3">
-             <widget class="QLabel" name="label_9">
+            <item row="2" column="0" colspan="3">
+             <widget class="QLabel" name="label_3">
               <property name="enabled">
                <bool>false</bool>
               </property>
@@ -818,14 +815,20 @@
                </font>
               </property>
               <property name="text">
-               <string>Flag Network Connection Angles less than:</string>
+               <string>Starting at elements:</string>
               </property>
              </widget>
             </item>
-            <item row="0" column="4">
-             <widget class="QLabel" name="label_18">
+            <item row="4" column="4">
+             <widget class="QPushButton" name="removeStartNwk_button">
               <property name="enabled">
                <bool>false</bool>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>50</width>
+                <height>16777215</height>
+               </size>
               </property>
               <property name="font">
                <font>
@@ -834,23 +837,7 @@
                </font>
               </property>
               <property name="text">
-               <string>degrees</string>
-              </property>
-             </widget>
-            </item>
-            <item row="6" column="4">
-             <widget class="QLabel" name="label_17">
-              <property name="enabled">
-               <bool>false</bool>
-              </property>
-              <property name="font">
-               <font>
-                <weight>50</weight>
-                <bold>false</bold>
-               </font>
-              </property>
-              <property name="text">
-               <string>map units</string>
+               <string>Remove</string>
               </property>
              </widget>
             </item>
@@ -904,57 +891,6 @@
               </property>
              </widget>
             </item>
-            <item row="12" column="2" colspan="5">
-             <widget class="QComboBox" name="dem_combo">
-              <property name="enabled">
-               <bool>false</bool>
-              </property>
-              <property name="maximumSize">
-               <size>
-                <width>200</width>
-                <height>16777215</height>
-               </size>
-              </property>
-              <property name="font">
-               <font>
-                <weight>50</weight>
-                <bold>false</bold>
-               </font>
-              </property>
-             </widget>
-            </item>
-            <item row="2" column="0" colspan="3">
-             <widget class="QLabel" name="label_3">
-              <property name="enabled">
-               <bool>false</bool>
-              </property>
-              <property name="font">
-               <font>
-                <weight>50</weight>
-                <bold>false</bold>
-               </font>
-              </property>
-              <property name="text">
-               <string>Starting at elements:</string>
-              </property>
-             </widget>
-            </item>
-            <item row="10" column="0" colspan="2">
-             <widget class="QLabel" name="label_15">
-              <property name="enabled">
-               <bool>false</bool>
-              </property>
-              <property name="font">
-               <font>
-                <weight>50</weight>
-                <bold>false</bold>
-               </font>
-              </property>
-              <property name="text">
-               <string>DEM</string>
-              </property>
-             </widget>
-            </item>
             <item row="6" column="0" colspan="2">
              <widget class="QCheckBox" name="getGroundElev_cb">
               <property name="enabled">
@@ -971,7 +907,29 @@
               </property>
              </widget>
             </item>
-            <item row="12" column="0" colspan="2">
+            <item row="0" column="3">
+             <widget class="QSpinBox" name="angle_sb">
+              <property name="enabled">
+               <bool>false</bool>
+              </property>
+              <property name="font">
+               <font>
+                <weight>50</weight>
+                <bold>false</bold>
+               </font>
+              </property>
+              <property name="minimum">
+               <number>1</number>
+              </property>
+              <property name="maximum">
+               <number>360</number>
+              </property>
+              <property name="value">
+               <number>90</number>
+              </property>
+             </widget>
+            </item>
+            <item row="13" column="0" colspan="2">
              <widget class="QCheckBox" name="plotDsConn_cb">
               <property name="enabled">
                <bool>false</bool>
@@ -984,6 +942,38 @@
               </property>
               <property name="text">
                <string>Plot output in TUPLOT</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="4">
+             <widget class="QLabel" name="label_18">
+              <property name="enabled">
+               <bool>false</bool>
+              </property>
+              <property name="font">
+               <font>
+                <weight>50</weight>
+                <bold>false</bold>
+               </font>
+              </property>
+              <property name="text">
+               <string>degrees</string>
+              </property>
+             </widget>
+            </item>
+            <item row="6" column="4">
+             <widget class="QLabel" name="label_17">
+              <property name="enabled">
+               <bool>false</bool>
+              </property>
+              <property name="font">
+               <font>
+                <weight>50</weight>
+                <bold>false</bold>
+               </font>
+              </property>
+              <property name="text">
+               <string>map units</string>
               </property>
              </widget>
             </item>
@@ -1009,16 +999,10 @@
               </property>
              </widget>
             </item>
-            <item row="4" column="4">
-             <widget class="QPushButton" name="removeStartNwk_button">
+            <item row="0" column="0" colspan="3">
+             <widget class="QLabel" name="label_9">
               <property name="enabled">
                <bool>false</bool>
-              </property>
-              <property name="maximumSize">
-               <size>
-                <width>50</width>
-                <height>16777215</height>
-               </size>
               </property>
               <property name="font">
                <font>
@@ -1027,18 +1011,34 @@
                </font>
               </property>
               <property name="text">
-               <string>Remove</string>
+               <string>Flag Network Connection Angles less than:</string>
               </property>
              </widget>
             </item>
-            <item row="4" column="0" colspan="3">
-             <widget class="QComboBox" name="name1d_combo">
+            <item row="11" column="0">
+             <widget class="QLabel" name="label_15">
+              <property name="enabled">
+               <bool>false</bool>
+              </property>
+              <property name="font">
+               <font>
+                <weight>50</weight>
+                <bold>false</bold>
+               </font>
+              </property>
+              <property name="text">
+               <string>DEM</string>
+              </property>
+             </widget>
+            </item>
+            <item row="11" column="1">
+             <widget class="QComboBox" name="dem_combo">
               <property name="enabled">
                <bool>false</bool>
               </property>
               <property name="maximumSize">
                <size>
-                <width>225</width>
+                <width>200</width>
                 <height>16777215</height>
                </size>
               </property>
