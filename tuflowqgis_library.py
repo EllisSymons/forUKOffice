@@ -1385,7 +1385,7 @@ def checkSnapping(**kwargs):
 						minDist1 = min(minDist1, dist1a, dist1b)
 						minDist2 = min(minDist2, dist2a, dist2b)
 						if minDist1 == dist1a or minDist1 == dist1b:
-							name = lName2
+							name1 = lName2
 							if minDist1 == dist1a:
 								v1 = vu2
 								node1 = 0
@@ -1393,7 +1393,7 @@ def checkSnapping(**kwargs):
 								v1 = vd2
 								node1 = 1
 						if minDist2 == dist2a or minDist2 == dist2b:
-							name = lName2
+							name2 = lName2
 							if minDist2 == dist2a:
 								v2 = vu2
 								node2 = 0
@@ -1417,11 +1417,11 @@ def checkSnapping(**kwargs):
 				if not foundU:
 					unsnapped.append('{0} upstream'.format(lName))
 					if name is None:
-						closestV['{0}==0'.format(lName)] = [lLyr, lFid, '{0}=={1}'.format(name, node1), v1, minDist1, feature]
+						closestV['{0}==0'.format(lName)] = [lLyr, lFid, '{0}=={1}'.format(name1, node1), v1, minDist1, feature]
 				if not foundD:
 					unsnapped.append('{0} downstream'.format(lName))
 					if name is None:
-						closestV['{0}==1'.format(lName)] = [lLyr, lFid, '{0}=={1}'.format(name, node2), v2, minDist2, feature]
+						closestV['{0}==1'.format(lName)] = [lLyr, lFid, '{0}=={1}'.format(name2, node2), v2, minDist2, feature]
 		if not checkPoint:
 			return unsnapped, unsnapped_names, closestV, dsNwk
 	
