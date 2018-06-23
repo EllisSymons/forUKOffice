@@ -15,6 +15,7 @@ class DownstreamConnectivity():
 	"""
 	
 	def __init__(self, dsLines, startLines, inLyrs, angleLimit, lineDrape, coverLimit, lineDict, units):
+		self.bug = False
 		self.dsLines = dsLines  # dictionary {name: [[dns network channels], [us invert, ds invert], [angle], [dns-dns connected channels], [upsnetworks}, [ups-ups channels]]
 		self.startLines = startLines  # list of initial starting lines for plotting
 		self.inLyrs = inLyrs  # list of nwk line layers
@@ -112,7 +113,7 @@ class DownstreamConnectivity():
 		
 		:return: void
 		"""
-		
+
 		# Clear branch variables
 		self.bType = []
 		self.bName = []
@@ -353,11 +354,12 @@ class DownstreamConnectivity():
 								if i in b:
 									already = True
 								elif i2 in b:
-									if dns_nwk == dns_nwk2:
-										branches[j].append(i)
-										already = True
+									if dns_nwk != 'DOWNSTREAM NODE':
+										if dns_nwk == dns_nwk2:
+											branches[j].append(i)
+											already = True
 							if not already:
-								if dns_nwk == dns_nwk2:
+								if dns_nwk == dns_nwk2 and dns_nwk != 'DOWNSTREAM NODE':
 									branches.append([i, i2])
 								else:
 									branches.append([i])
@@ -754,23 +756,24 @@ class DownstreamConnectivity():
 		todosSplit = [None] * len(upsBranches)  # todosSplits are where on the path the split occurred
 		# loop through adding and removing todos until there are none left
 		while todos:
-			counter = 0
 			dns = False
 			todo = todos[0]
 			todoPath = todosPath[0]
 			todoSplit = todosSplit[0]
 			if todoPath is None:
 				path = []
+				counter = 0
 			else:
 				path = self.paths[todoPath][:todoSplit+1]
+				counter = len(path)
 			while not dns:
 				# loop through until downtream is reached
 				index = self.branchName.index(todo)
 				next = self.dnsBranches[index]
 				if len(next) > 1:
 					todos += next[1:]
-					todosPath.append(pathCounter)
-					todosSplit.append(counter)
+					todosPath += [pathCounter] * len(next[1:])
+					todosSplit += [counter] * len(next[1:])
 				next = next[0]
 				if next is None:
 					dns = True
@@ -860,7 +863,7 @@ class DownstreamConnectivity():
 			self.pathsInsffCover.append(pathsInsffCover)
 			self.pathsWarningChainage.append(pathsWarningChainage)
 	
-	def addX(self, ind, start):
+	def addX(self, ind, start, insertInd):
 		"""
 		Create X values path for plotting.
 
@@ -888,9 +891,9 @@ class DownstreamConnectivity():
 			else:
 				x.append(length)
 				x.append(length)
-		self.pathsX.insert(ind, x)
+		self.pathsX.insert(insertInd, x)
 		
-	def addInv(self, ind):
+	def addInv(self, ind, insertInd):
 		"""
 		Create Y values for the nwk inverts
 		
@@ -921,9 +924,9 @@ class DownstreamConnectivity():
 				invert.append(np.nan)
 			else:
 				invert.append(self.dsInvert[j][k])
-		self.pathsInvert.insert(ind, invert)
-		self.pathsUsInvert.insert(ind, usInvert)
-		self.pathsDsInvert.insert(ind, dsInvert)
+		self.pathsInvert.insert(insertInd, invert)
+		self.pathsUsInvert.insert(insertInd, usInvert)
+		self.pathsDsInvert.insert(insertInd, dsInvert)
 	
 	def addGround(self, ind, xInd):
 		"""
@@ -942,8 +945,8 @@ class DownstreamConnectivity():
 				groundX.append(x + ch)
 				ground.append(self.pathsGround[ind][i][j])
 			x += ch
-		self.pathsGroundX.insert(ind, groundX)
-		self.pathsGroundY.insert(ind, ground)
+		self.pathsGroundX.insert(xInd, groundX)
+		self.pathsGroundY.insert(xInd, ground)
 		
 	def addPipes(self, ind, xInd):
 		"""
@@ -998,8 +1001,8 @@ class DownstreamConnectivity():
 				areas.append(area)
 			else:
 				pipes.append([])
-		self.pathsPipe.insert(ind, pipes)
-		self.pathsArea.insert(ind, areas)
+		self.pathsPipe.insert(xInd, pipes)
+		self.pathsArea.insert(xInd, areas)
 		
 	def addFlags(self, ind, xInd):
 		"""
@@ -1073,11 +1076,11 @@ class DownstreamConnectivity():
 				insffC[0].append(x)
 				insffC[1].append(y)
 				count += 1
-		self.pathsPlotAdvG.insert(ind, advG)
-		self.pathsPlotAdvI.insert(ind, advI)
-		self.pathsPlotDecA.insert(ind, decA)
-		self.pathsPlotSharpA.insert(ind, sharpA)
-		self.pathsPlotInCover.insert(ind, insffC)
+		self.pathsPlotAdvG.insert(xInd, advG)
+		self.pathsPlotAdvI.insert(xInd, advI)
+		self.pathsPlotDecA.insert(xInd, decA)
+		self.pathsPlotSharpA.insert(xInd, sharpA)
+		self.pathsPlotInCover.insert(xInd, insffC)
 		
 	def getPlotFormat(self):
 		"""
@@ -1094,7 +1097,6 @@ class DownstreamConnectivity():
 		pathsLen = self.pathsLen[:]  # create a copy of the variable for looping
 		usedPathNwks = []
 		usedPathInds = []
-
 		while pathsLen:
 			found = False
 			commonNwk = None
@@ -1120,11 +1122,11 @@ class DownstreamConnectivity():
 				s = existPathX - currentPathX  # start path X value
 			else:
 				s = 0  # starting chainage if there is no common pipes
-			self.addX(pathInd, s)
 			usedPathInds.append(pathInd)
 			seq = sorted(usedPathInds)
 			pathInd3 = seq.index(pathInd)
-			self.addInv(pathInd)
+			self.addX(pathInd, s, pathInd3)
+			self.addInv(pathInd, pathInd3)
 			if self.coverLimit is not None:
 				self.addGround(pathInd, pathInd3)
 			self.addPipes(pathInd, pathInd3)

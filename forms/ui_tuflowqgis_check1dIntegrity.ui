@@ -1031,7 +1031,7 @@
               </property>
              </widget>
             </item>
-            <item row="11" column="1">
+            <item row="11" column="1" colspan="3">
              <widget class="QComboBox" name="dem_combo">
               <property name="enabled">
                <bool>false</bool>

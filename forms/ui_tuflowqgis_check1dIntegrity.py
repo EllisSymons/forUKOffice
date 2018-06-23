@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'ui_tuflowqgis_check1dIntegrity.ui'
 #
-# Created: Tue Jun 19 10:31:14 2018
+# Created: Wed Jun 20 08:50:30 2018
 #      by: PyQt4 UI code generator 4.10.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -521,7 +521,7 @@ class Ui_check1dIntegrity(object):
         font.setWeight(50)
         self.dem_combo.setFont(font)
         self.dem_combo.setObjectName(_fromUtf8("dem_combo"))
-        self.gridLayout_3.addWidget(self.dem_combo, 11, 1, 1, 1)
+        self.gridLayout_3.addWidget(self.dem_combo, 11, 1, 1, 3)
         self.gridLayout_7.addWidget(self.groupBox_3, 1, 0, 1, 1)
         self.gridLayout_7.setRowStretch(0, 1)
         self.gridLayout_7.setRowStretch(3, 1)
@@ -531,6 +531,7 @@ class Ui_check1dIntegrity(object):
         self.gridLayout_8.addWidget(self.scrollArea, 0, 0, 1, 1)
 
         self.retranslateUi(check1dIntegrity)
+        self.buttonBox.rejected.connect(check1dIntegrity.reject)
         QtCore.QMetaObject.connectSlotsByName(check1dIntegrity)
 
     def retranslateUi(self, check1dIntegrity):

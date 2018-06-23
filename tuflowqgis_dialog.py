@@ -1055,8 +1055,7 @@ class tuflowqgis_extract_arr2016_dialog(QDialog, Ui_tuflowqgis_arr2016):
 		# Set up Input Catchment File ComboBox
 		for name, layer in QgsMapLayerRegistry.instance().mapLayers().iteritems():
 				if layer.type() == QgsMapLayer.VectorLayer:
-					if layer.dataProvider().geometryType() == QGis.WKBPoint \
-					or layer.dataProvider().geometryType() == QGis.WKBPolygon:
+					if layer == 0 or layer.geometryType() == 2:
 						self.comboBox_inputCatchment.addItem(layer.name())
 							
 		layerName = unicode(self.comboBox_inputCatchment.currentText())
@@ -2363,9 +2362,8 @@ class tuflowqgis_check_1d_integrity_dialog(QDialog, Ui_check1dIntegrity):
 				                 toolTime.total_seconds() >= 60 else 'Get Point Vertices: {0:.1f} secs\n'.format(
 					toolTime.total_seconds()))
 			toolStart = datetime.now()
-			unsnappedLines, unsnappedLineNames, closestVLines, dsLines = checkSnapping(lines=lineDict,
-			                                                                           points=pointDict, line_layers=lineLyrs,
-			                                                                           dns_conn=getDnsConn)
+			unsnappedLines, unsnappedLineNames, closestVLines, dsLines = \
+				checkSnappingFlowTrace(lines=lineDict, points=pointDict, line_layers=lineLyrs, point_layers=pointLyrs, dns_conn=getDnsConn, start_lines=startElem)
 			toolEnd = datetime.now()
 			toolTime = toolEnd - toolStart
 			toolTimes.append('Check Line and Point Snapping: {0:.0f} mins {1:.0f} secs\n'.format(toolTime.total_seconds() / 60,

@@ -905,8 +905,9 @@ class TuPlot(QDockWidget, Ui_tuflowqgis_TuPlot):
 			self.selected_layer = None
 		if self.cLayer is not None:
 			if self.cLayer.isValid():
-				QObject.connect(self.cLayer,SIGNAL("selectionChanged()"),self.select_changed)
-				self.selected_layer = self.cLayer
+				if self.cLayer.type() == QgsMapLayer.VectorLayer:
+					QObject.connect(self.cLayer,SIGNAL("selectionChanged()"),self.select_changed)
+					self.selected_layer = self.cLayer
 		self.refresh()
 		
 	def select_changed(self):
@@ -1826,9 +1827,11 @@ class TuPlot(QDockWidget, Ui_tuflowqgis_TuPlot):
 			for nwk in self.profileIntTool.pathsNwks[pInd]:
 				if type(nwk) == list:
 					for n in nwk:
-						selectionNwks.append(n)
+						if n not in selectionNwks:
+							selectionNwks.append(n)
 				else:
-					selectionNwks.append(nwk)
+					if nwk not in selectionNwks:
+						selectionNwks.append(nwk)
 		for lyr in self.profileIntTool.inLyrs:
 			id = lyr.fields()[0].name()
 			filter = ''
