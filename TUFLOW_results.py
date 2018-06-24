@@ -1435,12 +1435,12 @@ class ResData():
 				error = True
 				message = 'ERROR - No energy level data loaded.'
 				return error, message
-			for h_ind in self.LP.H_nd_index:
+			for i, h_ind in enumerate(self.LP.H_nd_index):
 				if i == 0:
-					self.LP.Edata.append(self.Data_1D.E.Values[t_ind,h_ind])
+					self.LP.Edata.append(max(self.Data_1D.E.Values[t_ind,h_ind], self.LP.chan_inv[2*i]))
 				elif i < len(self.LP.H_nd_index) - 1:
 					self.LP.Edata.append(max(self.Data_1D.E.Values[t_ind,h_ind], self.LP.chan_inv[2*i-1]))
-					self.LP.Edata.append(self.Data_1D.E.Values[t_ind,h_ind])
+					self.LP.Edata.append(max(self.Data_1D.E.Values[t_ind,h_ind], self.LP.chan_inv[2*i]))
 				else:
 					self.LP.Edata.append(max(self.Data_1D.E.Values[t_ind,h_ind], self.LP.chan_inv[2*i-1]))
 		else:
