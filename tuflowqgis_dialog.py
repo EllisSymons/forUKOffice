@@ -1080,8 +1080,8 @@ class tuflowqgis_extract_arr2016_dialog(QDialog, Ui_tuflowqgis_arr2016):
 		# Set up MAR and Static Value box
 		self.mar_staticValue.setEnabled(False)
 		
-		QObject.connect(self.commandLinkButton_BOMconditions, SIGNAL("clicked()"), self.open_BOMconditions)
-		QObject.connect(self.commandLinkButton_BOMcaveat, SIGNAL("clicked()"), self.open_BOMcaveat)
+		#QObject.connect(self.commandLinkButton_BOMconditions, SIGNAL("clicked()"), self.open_BOMconditions)
+		#QObject.connect(self.commandLinkButton_BOMcaveat, SIGNAL("clicked()"), self.open_BOMcaveat)
 		QObject.connect(self.comboBox_inputCatchment, SIGNAL("currentIndexChanged(int)"), self.catchmentLayer_changed)
 		QObject.connect(self.pushButton_browse, SIGNAL("clicked()"), self.browse_outFolder)
 		QObject.connect(self.checkBox_aepAll, SIGNAL("clicked()"), self.aep_all)
