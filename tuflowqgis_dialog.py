@@ -171,10 +171,12 @@ class tuflowqgis_import_empty_tf_dialog(QDialog, Ui_tuflowqgis_import_empty):
 		if error:
 			QMessageBox.information( self.iface.mainWindow(),"Error", "Error Loading Settings: "+message)
 		
-		
-		if self.tfsettings.combined.base_dir:
-			#self.emptydir.setText(self.tfsettings.combined.base_dir+"\\TUFLOW\\model\\gis\\empty")
-			self.emptydir.setText(os.path.join(self.tfsettings.combined.base_dir,"TUFLOW","model","gis","empty"))
+		basepath = self.tfsettings.combined.base_dir
+		if basepath:
+			path_split = basepath.split('\\')
+			if path_split[-1].lower() == 'tuflow':
+				basepath = '\\'.join(path_split[:-1])
+			self.emptydir.setText(os.path.join(basepath,"TUFLOW","model","gis","empty"))
 		else:
 			self.emptydir.setText("ERROR - Project not loaded")
 		
@@ -628,6 +630,9 @@ class tuflowqgis_configure_tf_dialog(QDialog, Ui_tuflowqgis_configure_tf):
 	def run(self):
 		tf_prj = unicode(self.form_crsID.displayText()).strip()
 		basedir = unicode(self.outdir.displayText()).strip()
+		path_split = basedir.split('\\')
+		if path_split[-1].lower() == 'tuflow':
+			basedir = '\\'.join(path_split[:-1])
 		tfexe = unicode(self.TUFLOW_exe.displayText()).strip()
 		
 		#Save Project Settings
