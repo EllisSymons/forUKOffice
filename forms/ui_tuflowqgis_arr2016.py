@@ -2179,6 +2179,8 @@ class Ui_tuflowqgis_arr2016(object):
         self.gridLayout_11.addWidget(self.scrollArea, 0, 0, 1, 1)
 
         self.retranslateUi(tuflowqgis_arr2016)
+        self.buttonBox.accepted.connect(tuflowqgis_arr2016.accept)
+        self.buttonBox.rejected.connect(tuflowqgis_arr2016.reject)
         QtCore.QMetaObject.connectSlotsByName(tuflowqgis_arr2016)
 
     def retranslateUi(self, tuflowqgis_arr2016):
