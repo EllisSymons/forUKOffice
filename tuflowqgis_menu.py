@@ -34,6 +34,7 @@ from tuflowqgis_dialog import *
 # Import the code for the 1D results viewer
 from tuflowqgis_TuPlot import *
 from TuPLOT_external import *
+from tuflowqgis_bridge_editor import *
 
 #par
 from tuflowqgis_library import tuflowqgis_apply_check_tf
@@ -202,6 +203,11 @@ class tuflowqgis_menu:
 		self.check_1d_integrity_action = QAction("Check 1D Network Integrity (beta)", self.iface.mainWindow())
 		self.check_1d_integrity_action.triggered.connect(self.check_1d_integrity)
 		self.iface.addPluginToMenu("&TUFLOW", self.check_1d_integrity_action)
+
+		# Bridge Editor
+		self.open_bridge_editor_action = QAction("Bridge Editor (beta)", self.iface.mainWindow())
+		self.open_bridge_editor_action.triggered.connect(self.open_bridge_editor)
+		self.iface.addPluginToMenu("&TUFLOW", self.open_bridge_editor_action)
 		
 		#Init classes variables
 		self.dockOpened = False		#remember for not reopening dock if there's already one opened
@@ -432,3 +438,17 @@ class tuflowqgis_menu:
 						self.dialog.exec_()
 					else:
 						openGisFromTcf(inFileName, self.iface)
+
+
+	def open_bridge_editor(self):
+		self.bridgeEditor = bridgeEditor(self.iface)
+		self.iface.addDockWidget(Qt.RightDockWidgetArea, self.bridgeEditor)
+		# if self.resdockOpened == False:
+		#if self.bridgeEditorOpened:
+		#	self.resdock.qgis_connect()
+		#	self.resdock.show()
+		#	self.resdock.layerChanged()
+		#else:
+		#	self.dockOpened = True
+		#	self.resdock = TuPlot(self.iface)
+		#	self.iface.addDockWidget(Qt.RightDockWidgetArea, self.resdock)

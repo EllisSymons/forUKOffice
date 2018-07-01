@@ -1,0 +1,603 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>tuflowqgis_BridgeEditor</class>
+ <widget class="QDockWidget" name="tuflowqgis_BridgeEditor">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>943</width>
+    <height>911</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Bridge Editor</string>
+  </property>
+  <widget class="QWidget" name="dockWidgetContents">
+   <layout class="QVBoxLayout" name="verticalLayout">
+    <property name="sizeConstraint">
+     <enum>QLayout::SetDefaultConstraint</enum>
+    </property>
+    <item>
+     <widget class="QTabWidget" name="tabWidget">
+      <property name="autoFillBackground">
+       <bool>true</bool>
+      </property>
+      <property name="currentIndex">
+       <number>0</number>
+      </property>
+      <widget class="QWidget" name="tab">
+       <attribute name="title">
+        <string>Geometry</string>
+       </attribute>
+       <layout class="QVBoxLayout" name="verticalLayout_2">
+        <item>
+         <layout class="QVBoxLayout" name="bridgeEditor_Layout" stretch="7,15,2">
+          <item>
+           <layout class="QHBoxLayout" name="bridgeProperties" stretch="10,5">
+            <item>
+             <layout class="QGridLayout" name="bridgeInputs" rowstretch="0,0,10,10,10,10,10,10,10,10,10,10,10,0" columnstretch="10,10,10,10,0" rowminimumheight="0,0,0,0,0,0,0,0,0,0,0,0,0,0">
+              <item row="12" column="0">
+               <widget class="QLabel" name="label_2">
+                <property name="text">
+                 <string>Zsh Line Width (m)</string>
+                </property>
+               </widget>
+              </item>
+              <item row="11" column="0" colspan="4">
+               <widget class="QLabel" name="label">
+                <property name="font">
+                 <font>
+                  <weight>75</weight>
+                  <bold>true</bold>
+                 </font>
+                </property>
+                <property name="text">
+                 <string>Z Shape Properties</string>
+                </property>
+               </widget>
+              </item>
+              <item row="12" column="1">
+               <widget class="QDoubleSpinBox" name="doubleSpinBox_7"/>
+              </item>
+              <item row="6" column="1">
+               <widget class="QComboBox" name="comboBox_2"/>
+              </item>
+              <item row="5" column="0">
+               <widget class="QLabel" name="label_9">
+                <property name="text">
+                 <string>Pier Thickness (m)</string>
+                </property>
+               </widget>
+              </item>
+              <item row="10" column="0">
+               <widget class="QLabel" name="label_6">
+                <property name="text">
+                 <string>Hand Rail Height (m)</string>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="0" rowspan="2">
+               <widget class="QLabel" name="label_5">
+                <property name="text">
+                 <string>DEM</string>
+                </property>
+               </widget>
+              </item>
+              <item row="4" column="0">
+               <widget class="QLabel" name="label_8">
+                <property name="text">
+                 <string>Number of Piers</string>
+                </property>
+               </widget>
+              </item>
+              <item row="9" column="0">
+               <widget class="QLabel" name="label_10">
+                <property name="text">
+                 <string>Deck Thickness (m)</string>
+                </property>
+               </widget>
+              </item>
+              <item row="8" column="0">
+               <widget class="QLabel" name="label_13">
+                <property name="text">
+                 <string>Deck Elevation (Bottom) m RL</string>
+                </property>
+               </widget>
+              </item>
+              <item row="8" column="1">
+               <widget class="QDoubleSpinBox" name="doubleSpinBox_2"/>
+              </item>
+              <item row="4" column="1">
+               <widget class="QSpinBox" name="spinBox"/>
+              </item>
+              <item row="6" column="0">
+               <widget class="QLabel" name="label_12">
+                <property name="text">
+                 <string>Pier Shape (see pier type tab)</string>
+                </property>
+               </widget>
+              </item>
+              <item row="5" column="1">
+               <widget class="QDoubleSpinBox" name="doubleSpinBox"/>
+              </item>
+              <item row="9" column="1">
+               <widget class="QDoubleSpinBox" name="doubleSpinBox_3"/>
+              </item>
+              <item row="10" column="1">
+               <widget class="QDoubleSpinBox" name="doubleSpinBox_4"/>
+              </item>
+              <item row="7" column="0" colspan="4">
+               <widget class="QLabel" name="label_11">
+                <property name="font">
+                 <font>
+                  <weight>75</weight>
+                  <bold>true</bold>
+                 </font>
+                </property>
+                <property name="text">
+                 <string>Deck</string>
+                </property>
+               </widget>
+              </item>
+              <item row="3" column="0" colspan="4">
+               <widget class="QLabel" name="label_7">
+                <property name="font">
+                 <font>
+                  <weight>75</weight>
+                  <bold>true</bold>
+                 </font>
+                </property>
+                <property name="text">
+                 <string>Piers</string>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="1" rowspan="2" colspan="2">
+               <widget class="QComboBox" name="demComboBox"/>
+              </item>
+              <item row="4" column="2" colspan="2">
+               <widget class="QLabel" name="label_14">
+                <property name="text">
+                 <string>Width From Left (m)</string>
+                </property>
+               </widget>
+              </item>
+              <item row="5" column="2" colspan="2">
+               <widget class="QLabel" name="label_15">
+                <property name="text">
+                 <string>Width From Right (m)</string>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="4" rowspan="2">
+               <widget class="QPushButton" name="pushButton_2">
+                <property name="text">
+                 <string>Use Vector Layer</string>
+                </property>
+                <property name="iconSize">
+                 <size>
+                  <width>15</width>
+                  <height>15</height>
+                 </size>
+                </property>
+               </widget>
+              </item>
+              <item row="8" column="4">
+               <widget class="QRadioButton" name="radioButton">
+                <property name="text">
+                 <string>Drowned</string>
+                </property>
+                <property name="checked">
+                 <bool>true</bool>
+                </property>
+               </widget>
+              </item>
+              <item row="9" column="4">
+               <widget class="QRadioButton" name="radioButton_2">
+                <property name="text">
+                 <string>Pressurised</string>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="3" rowspan="2">
+               <widget class="QPushButton" name="pushButton">
+                <property name="text">
+                 <string>Draw XSection</string>
+                </property>
+                <property name="iconSize">
+                 <size>
+                  <width>15</width>
+                  <height>15</height>
+                 </size>
+                </property>
+               </widget>
+              </item>
+              <item row="10" column="4">
+               <widget class="QSpinBox" name="spinBox_2"/>
+              </item>
+              <item row="4" column="4">
+               <widget class="QDoubleSpinBox" name="doubleSpinBox_5"/>
+              </item>
+              <item row="8" column="2" rowspan="2" colspan="2">
+               <widget class="QLabel" name="label_17">
+                <property name="text">
+                 <string>Flow at Deck</string>
+                </property>
+               </widget>
+              </item>
+              <item row="5" column="4">
+               <widget class="QDoubleSpinBox" name="doubleSpinBox_6"/>
+              </item>
+              <item row="10" column="2" colspan="2">
+               <widget class="QLabel" name="label_16">
+                <property name="text">
+                 <string>Hand Rail Blockage</string>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="0">
+               <widget class="QLabel" name="label_32">
+                <property name="text">
+                 <string>Bridge Name (Optional)</string>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="1" colspan="3">
+               <widget class="QLineEdit" name="lineEdit_15"/>
+              </item>
+              <item row="0" column="4">
+               <widget class="QPushButton" name="pushButton_5">
+                <property name="text">
+                 <string>Save</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </item>
+            <item>
+             <layout class="QGridLayout" name="bridgeTables">
+              <item row="0" column="0">
+               <widget class="QTabWidget" name="tabWidget_2">
+                <property name="currentIndex">
+                 <number>0</number>
+                </property>
+                <widget class="QWidget" name="tab_6">
+                 <attribute name="title">
+                  <string>XSection</string>
+                 </attribute>
+                 <layout class="QHBoxLayout" name="horizontalLayout">
+                  <item>
+                   <widget class="QTableWidget" name="XSectionTable">
+                    <property name="font">
+                     <font>
+                      <pointsize>7</pointsize>
+                     </font>
+                    </property>
+                    <property name="columnCount">
+                     <number>2</number>
+                    </property>
+                    <column>
+                     <property name="text">
+                      <string>Offset</string>
+                     </property>
+                    </column>
+                    <column>
+                     <property name="text">
+                      <string>Elevation</string>
+                     </property>
+                    </column>
+                   </widget>
+                  </item>
+                 </layout>
+                </widget>
+                <widget class="QWidget" name="tab_7">
+                 <attribute name="title">
+                  <string>Piers</string>
+                 </attribute>
+                </widget>
+                <widget class="QWidget" name="tab_8">
+                 <attribute name="title">
+                  <string>Deck</string>
+                 </attribute>
+                </widget>
+                <widget class="QWidget" name="tab_9">
+                 <attribute name="title">
+                  <string>Hand Rails</string>
+                 </attribute>
+                </widget>
+               </widget>
+              </item>
+             </layout>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <layout class="QGridLayout" name="gridLayout_3">
+            <item row="0" column="0">
+             <widget class="QFrame" name="frame_for_plot_2">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="minimumSize">
+               <size>
+                <width>150</width>
+                <height>0</height>
+               </size>
+              </property>
+              <property name="frameShape">
+               <enum>QFrame::StyledPanel</enum>
+              </property>
+              <property name="frameShadow">
+               <enum>QFrame::Raised</enum>
+              </property>
+              <layout class="QVBoxLayout" name="verticalLayout_10">
+               <property name="rightMargin">
+                <number>9</number>
+               </property>
+               <item>
+                <layout class="QGridLayout" name="gridLayout_5">
+                 <item row="0" column="0">
+                  <widget class="QPushButton" name="pbUpdate">
+                   <property name="text">
+                    <string>UPDATE PLOT</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="0" column="1">
+                  <widget class="QCheckBox" name="cbShowLegend_2">
+                   <property name="text">
+                    <string>Legend</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="0" column="2">
+                  <widget class="QCheckBox" name="cbLegendUL_2">
+                   <property name="text">
+                    <string>UL</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="0" column="3">
+                  <widget class="QCheckBox" name="cbLegendUR_2">
+                   <property name="text">
+                    <string>UR</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="0" column="4">
+                  <widget class="QCheckBox" name="cbLegendLL_2">
+                   <property name="text">
+                    <string>LL</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="0" column="5">
+                  <widget class="QCheckBox" name="cbLegendLR_2">
+                   <property name="text">
+                    <string>LR</string>
+                   </property>
+                  </widget>
+                 </item>
+                </layout>
+               </item>
+              </layout>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <widget class="QFrame" name="frame_for_toolbar">
+            <property name="frameShape">
+             <enum>QFrame::StyledPanel</enum>
+            </property>
+            <property name="frameShadow">
+             <enum>QFrame::Raised</enum>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+       </layout>
+      </widget>
+      <widget class="QWidget" name="tab_2">
+       <attribute name="title">
+        <string>Output</string>
+       </attribute>
+       <widget class="QWidget" name="gridLayoutWidget_2">
+        <property name="geometry">
+         <rect>
+          <x>0</x>
+          <y>0</y>
+          <width>581</width>
+          <height>517</height>
+         </rect>
+        </property>
+        <layout class="QGridLayout" name="gridLayout_4">
+         <item row="2" column="0">
+          <widget class="QLabel" name="label_23">
+           <property name="text">
+            <string>dZ</string>
+           </property>
+          </widget>
+         </item>
+         <item row="11" column="0">
+          <widget class="QLabel" name="label_26">
+           <property name="text">
+            <string>Layer 3 Depth</string>
+           </property>
+          </widget>
+         </item>
+         <item row="12" column="0">
+          <widget class="QLabel" name="label_27">
+           <property name="text">
+            <string>Layer 3 % Blockage</string>
+           </property>
+          </widget>
+         </item>
+         <item row="9" column="0">
+          <widget class="QLabel" name="label_18">
+           <property name="text">
+            <string>Layer 2 % Blockage</string>
+           </property>
+          </widget>
+         </item>
+         <item row="8" column="0">
+          <widget class="QLabel" name="label_19">
+           <property name="text">
+            <string>Layer 2 Depth</string>
+           </property>
+          </widget>
+         </item>
+         <item row="10" column="0">
+          <widget class="QLabel" name="label_28">
+           <property name="text">
+            <string>Layer 2 FLC</string>
+           </property>
+          </widget>
+         </item>
+         <item row="7" column="0">
+          <widget class="QLabel" name="label_20">
+           <property name="text">
+            <string>Layer 1 FLC</string>
+           </property>
+          </widget>
+         </item>
+         <item row="6" column="0">
+          <widget class="QLabel" name="label_21">
+           <property name="text">
+            <string>Layer 1 % Blockage</string>
+           </property>
+          </widget>
+         </item>
+         <item row="5" column="0">
+          <widget class="QLabel" name="label_22">
+           <property name="text">
+            <string>Layer 1 Obvert</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="1">
+          <widget class="QLineEdit" name="lineEdit"/>
+         </item>
+         <item row="3" column="1">
+          <widget class="QLineEdit" name="lineEdit_3"/>
+         </item>
+         <item row="4" column="1">
+          <widget class="QLineEdit" name="lineEdit_4"/>
+         </item>
+         <item row="5" column="1">
+          <widget class="QLineEdit" name="lineEdit_5"/>
+         </item>
+         <item row="7" column="1">
+          <widget class="QLineEdit" name="lineEdit_7"/>
+         </item>
+         <item row="6" column="1">
+          <widget class="QLineEdit" name="lineEdit_6"/>
+         </item>
+         <item row="13" column="1">
+          <widget class="QLineEdit" name="lineEdit_13"/>
+         </item>
+         <item row="11" column="1">
+          <widget class="QLineEdit" name="lineEdit_11"/>
+         </item>
+         <item row="10" column="1">
+          <widget class="QLineEdit" name="lineEdit_10"/>
+         </item>
+         <item row="2" column="1">
+          <widget class="QLineEdit" name="lineEdit_2"/>
+         </item>
+         <item row="12" column="1">
+          <widget class="QLineEdit" name="lineEdit_12"/>
+         </item>
+         <item row="8" column="1">
+          <widget class="QLineEdit" name="lineEdit_8"/>
+         </item>
+         <item row="9" column="1">
+          <widget class="QLineEdit" name="lineEdit_9"/>
+         </item>
+         <item row="13" column="0">
+          <widget class="QLabel" name="label_4">
+           <property name="text">
+            <string>Layer 3 FLC</string>
+           </property>
+          </widget>
+         </item>
+         <item row="17" column="0" colspan="2">
+          <widget class="QPushButton" name="pushButton_4">
+           <property name="text">
+            <string>Auto Create 2d_lfcsh layer</string>
+           </property>
+          </widget>
+         </item>
+         <item row="14" column="0">
+          <widget class="QLabel" name="label_29">
+           <property name="text">
+            <string/>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="0">
+          <widget class="QLabel" name="label_24">
+           <property name="text">
+            <string>Shape Width</string>
+           </property>
+          </widget>
+         </item>
+         <item row="15" column="0">
+          <widget class="QLabel" name="label_30">
+           <property name="text">
+            <string>Empty Directory</string>
+           </property>
+          </widget>
+         </item>
+         <item row="16" column="0" colspan="2">
+          <widget class="QLineEdit" name="lineEdit_14"/>
+         </item>
+         <item row="4" column="0">
+          <widget class="QLabel" name="label_25">
+           <property name="text">
+            <string>Shape Options</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="0">
+          <widget class="QLabel" name="label_3">
+           <property name="text">
+            <string>Invert</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="0">
+          <widget class="QPushButton" name="pushButton_3">
+           <property name="text">
+            <string>Update</string>
+           </property>
+          </widget>
+         </item>
+         <item row="7" column="2">
+          <widget class="QLabel" name="label_31">
+           <property name="text">
+            <string>Based on Hydraulics of Bridge Waterways (FHWA, 1978)</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </widget>
+      <widget class="QWidget" name="tab_3">
+       <attribute name="title">
+        <string>Pier Arrangement Types</string>
+       </attribute>
+      </widget>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
