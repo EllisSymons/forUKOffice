@@ -125,6 +125,12 @@ class tuflowqgis_menu:
 		self.run_menu.addAction(self.run_tuflow_action)
 		
 		#top level in menu
+		# Reload Data Added ES 16/07/18
+		icon = QIcon(os.path.dirname(__file__) + "/icons/reload_data.png")
+		self.reload_data_action = QAction(icon, "Reload Data", self.iface.mainWindow())
+		self.reload_data_action.triggered.connect(self.reload_data)
+		self.iface.addToolBarIcon(self.reload_data_action)
+		self.iface.addPluginToMenu("&TUFLOW", self.reload_data_action)
 		# TuPlot
 		icon = QIcon(os.path.dirname(__file__) + "/icons/results.png")
 		self.view_1d_results_action = QAction(icon, "TuPlot", self.iface.mainWindow())
@@ -272,6 +278,17 @@ class tuflowqgis_menu:
 #			self.iface.addDockWidget( Qt.RightDockWidgetArea, self.dock )
 #			self.dockOpened = True
 		
+	def reload_data(self):
+		try:
+			if QGis.QGIS_VERSION_INT >= 211:
+				layer = self.iface.mapCanvas().currentLayer()
+				layer.dataProvider().forceReload()
+				layer.triggerRepaint()
+			else:
+				QMessageBox.information(self.iface.mainWindow, 'Message', 'Reload tool is not compatible with QGIS version 2.10 or lower')
+		except:
+			pass
+	
 	def results_1d(self):
 		#if self.resdockOpened == False:
 		if self.dockOpened:

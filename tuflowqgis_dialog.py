@@ -1439,16 +1439,16 @@ class tuflowqgis_extract_arr2016_dialog(QDialog, Ui_tuflowqgis_arr2016):
 				logfile.write(err)
 				logfile.close()
 			except:
-				try:
-					proc = subprocess.Popen(sys_args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-					out, err = proc.communicate()
-					logfile.write(out)
-					logfile.write(err)
-					logfile.close()
-				except:
-					proc = subprocess.Popen(sys_args)
-					error = True
-					logfile.close()
+				#try:
+				#	proc = subprocess.Popen(sys_args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+				#	out, err = proc.communicate()
+				#	logfile.write(out)
+				#	logfile.write(err)
+				#	logfile.close()
+				#except:
+				proc = subprocess.Popen(sys_args)
+				error = True
+				logfile.close()
 		if error:
 			QMessageBox.information(self.iface.mainWindow(), "Error", 'Process Complete. Error writing log file.')
 		else:
@@ -1874,7 +1874,7 @@ class tuflowqgis_check_1d_integrity_dialog(QDialog, Ui_check1dIntegrity):
 		self.iface = iface
 		self.dockOpened = dockOpened
 		self.resdock = resdock
-		
+		self.project = QgsProject.instance()
 		self.setupUi(self)
 		
 		# Set up input line and point layer combobox
@@ -1913,6 +1913,29 @@ class tuflowqgis_check_1d_integrity_dialog(QDialog, Ui_check1dIntegrity):
 		self.addLine_button.clicked.connect(self.toggleStartElement)
 		self.getGroundElev_cb.clicked.connect(self.toggleDemSel)
 		self.buttonBox.accepted.connect(self.preRunCheck)
+		
+		# Populate List Boxes with saved project values
+		try:
+			saveLineLyrs = self.project.readListEntry('TUFLOW', 'line_layers')[0]
+			for lyr in saveLineLyrs:
+				if tuflowqgis_find_layer(lyr) is not None:
+					self.lineLyrs_lw.addItem(lyr)
+		except:
+			pass
+		try:
+			savePointLyrs = self.project.readListEntry('TUFLOW', 'point_layers')[0]
+			for lyr in savePointLyrs:
+				if tuflowqgis_find_layer(lyr) is not None:
+					self.pointLyrs_lw.addItem(lyr)
+		except:
+			pass
+		try:
+			saveTableLyrs = self.project.readListEntry('TUFLOW', 'table_layers')[0]
+			for lyr in saveTableLyrs:
+				if tuflowqgis_find_layer(lyr) is not None:
+					self.taLyrs_lw.addItem(lyr)
+		except:
+			pass
 	
 	def addLyr(self, combo, lw):
 		inLyrs = []
@@ -2090,6 +2113,22 @@ class tuflowqgis_check_1d_integrity_dialog(QDialog, Ui_check1dIntegrity):
 			for gb in args:
 				gb.setChecked(False)
 	
+	def saveInputLayers(self):
+		saveLineLyrs = []
+		for i in range(self.lineLyrs_lw.count()):
+			saveLineLyrs.append(self.lineLyrs_lw.item(i).text())
+		self.project.writeEntry("TUFLOW", "line_layers", saveLineLyrs)
+		
+		savePointLyrs = []
+		for i in range(self.pointLyrs_lw.count()):
+			savePointLyrs.append(self.pointLyrs_lw.item(i).text())
+		self.project.writeEntry("TUFLOW", "point_layers", savePointLyrs)
+		
+		saveTableLyrs = []
+		for i in range(self.taLyrs_lw.count()):
+			saveTableLyrs.append(self.taLyrs_lw.item(i).text())
+		self.project.writeEntry("TUFLOW", "table_layers", saveTableLyrs)
+	
 	def checkLayerType(self, lyr):
 		error = False
 		message = ''
@@ -2174,6 +2213,7 @@ class tuflowqgis_check_1d_integrity_dialog(QDialog, Ui_check1dIntegrity):
 
 
 	def run(self):
+		self.saveInputLayers()
 		startTime = datetime.now()
 		self.check1dIntegrity.accept()  # destroy dialog window
 		# Get inputs

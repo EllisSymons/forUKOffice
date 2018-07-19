@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'ui_tuflowqgis_TuPlot.ui'
 #
-# Created: Sat Jun 30 17:33:03 2018
+# Created: Wed May 09 12:25:59 2018
 #      by: PyQt4 UI code generator 4.10.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -212,7 +212,7 @@ class Ui_tuflowqgis_TuPlot(object):
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.IDList.sizePolicy().hasHeightForWidth())
         self.IDList.setSizePolicy(sizePolicy)
-        self.IDList.setMinimumSize(QtCore.QSize(5, 0))
+        self.IDList.setMinimumSize(QtCore.QSize(10, 0))
         self.IDList.setMaximumSize(QtCore.QSize(200, 160))
         self.IDList.setSelectionMode(QtGui.QAbstractItemView.ExtendedSelection)
         self.IDList.setObjectName(_fromUtf8("IDList"))
@@ -221,7 +221,7 @@ class Ui_tuflowqgis_TuPlot(object):
         self.label6.setObjectName(_fromUtf8("label6"))
         self.gridLayout_2.addWidget(self.label6, 2, 0, 1, 1)
         self.listTime = QtGui.QListWidget(self.tab_1)
-        self.listTime.setMinimumSize(QtCore.QSize(5, 0))
+        self.listTime.setMinimumSize(QtCore.QSize(10, 0))
         self.listTime.setMaximumSize(QtCore.QSize(200, 16777215))
         self.listTime.setObjectName(_fromUtf8("listTime"))
         self.gridLayout_2.addWidget(self.listTime, 3, 0, 1, 1)
@@ -229,7 +229,6 @@ class Ui_tuflowqgis_TuPlot(object):
         self.label.setObjectName(_fromUtf8("label"))
         self.gridLayout_2.addWidget(self.label, 4, 0, 1, 1)
         self.lwStatus = QtGui.QListWidget(self.tab_1)
-        self.lwStatus.setMinimumSize(QtCore.QSize(5, 0))
         self.lwStatus.setMaximumSize(QtCore.QSize(200, 16777215))
         self.lwStatus.setObjectName(_fromUtf8("lwStatus"))
         self.gridLayout_2.addWidget(self.lwStatus, 5, 0, 1, 1)
