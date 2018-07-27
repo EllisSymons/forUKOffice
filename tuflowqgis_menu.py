@@ -34,7 +34,7 @@ from tuflowqgis_dialog import *
 # Import the code for the 1D results viewer
 from tuflowqgis_TuPlot import *
 from TuPLOT_external import *
-from tuflowqgis_bridge_editor import *
+from tuflowqgis_bridge_gui import *
 
 #par
 from tuflowqgis_library import tuflowqgis_apply_check_tf
@@ -458,14 +458,5 @@ class tuflowqgis_menu:
 
 
 	def open_bridge_editor(self):
-		self.bridgeEditor = bridgeEditor(self.iface)
-		self.iface.addDockWidget(Qt.RightDockWidgetArea, self.bridgeEditor)
-		# if self.resdockOpened == False:
-		#if self.bridgeEditorOpened:
-		#	self.resdock.qgis_connect()
-		#	self.resdock.show()
-		#	self.resdock.layerChanged()
-		#else:
-		#	self.dockOpened = True
-		#	self.resdock = TuPlot(self.iface)
-		#	self.iface.addDockWidget(Qt.RightDockWidgetArea, self.resdock)
+		self.bridgeGui = bridgeGui(self.iface)
+		self.iface.addDockWidget(Qt.RightDockWidgetArea, self.bridgeGui)

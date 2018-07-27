@@ -658,7 +658,7 @@
           <widget class="QLineEdit" name="invert"/>
          </item>
          <item row="18" column="0" colspan="2">
-          <widget class="QPushButton" name="pushButton_4">
+          <widget class="QPushButton" name="pbCreateLayer">
            <property name="text">
             <string>Auto Create 2d_lfcsh layer</string>
            </property>
@@ -705,14 +705,14 @@
           </widget>
          </item>
          <item row="19" column="0" colspan="2">
-          <widget class="QPushButton" name="pushButton">
+          <widget class="QPushButton" name="pbUpdateLayer">
            <property name="text">
             <string>Update Existing 2d_lfcsh layer with new bridge / attributes</string>
            </property>
           </widget>
          </item>
          <item row="20" column="0" colspan="2">
-          <widget class="QPushButton" name="pushButton_2">
+          <widget class="QPushButton" name="pbIncrementLayer">
            <property name="text">
             <string>Increment and Update Existing 2d_lfcsh layer</string>
            </property>
@@ -833,6 +833,23 @@
          <item row="14" column="1">
           <widget class="QLineEdit" name="comment"/>
          </item>
+         <item row="17" column="2">
+          <widget class="QLineEdit" name="runId"/>
+         </item>
+         <item row="16" column="2">
+          <widget class="QLabel" name="label_43">
+           <property name="text">
+            <string>Run ID</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="2">
+          <widget class="QLabel" name="label_44">
+           <property name="text">
+            <string/>
+           </property>
+          </widget>
+         </item>
         </layout>
        </widget>
       </widget>
@@ -939,12 +956,12 @@
   <tabstop>shapeOptions</tabstop>
   <tabstop>dz</tabstop>
   <tabstop>layer3Depth</tabstop>
-  <tabstop>pushButton_4</tabstop>
+  <tabstop>pbCreateLayer</tabstop>
   <tabstop>layer2Block</tabstop>
   <tabstop>layer2Depth</tabstop>
   <tabstop>pbUpdateAttributes</tabstop>
-  <tabstop>pushButton</tabstop>
-  <tabstop>pushButton_2</tabstop>
+  <tabstop>pbUpdateLayer</tabstop>
+  <tabstop>pbIncrementLayer</tabstop>
   <tabstop>statusLog</tabstop>
  </tabstops>
  <resources>

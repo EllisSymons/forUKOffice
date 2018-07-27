@@ -63,6 +63,7 @@ class tuflowqgis_increment_dialog(QDialog, Ui_tuflowqgis_increment):
 		fname = ''
 		fpath = None
 		self.curr_file = None
+		self.outname = None
 		
 		if cLayer:
 			cName = cLayer.name()
@@ -135,8 +136,11 @@ class tuflowqgis_increment_dialog(QDialog, Ui_tuflowqgis_increment):
 		layer = tuflowqgis_find_layer(layername)
 		outname = unicode(self.outfilename.displayText()).strip()
 		if not outname[-4:].upper() == '.SHP':
+			self.outname = outname
 			outname = outname+'.shp'
 			QMessageBox.information( self.iface.mainWindow(),"Information", "Appending .shp to filename.")
+		else:
+			self.outname = outname[:-4]
 		outfolder = unicode(self.outfolder.displayText()).strip()
 		savename = os.path.join(outfolder,outname)
 		if savename == self.curr_file:

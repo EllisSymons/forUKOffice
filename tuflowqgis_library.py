@@ -1926,9 +1926,9 @@ def findAllRasterLyrs():
 	
 	:return: list of open raster layers
 	"""
-	
+
 	rasterLyrs = []
-	for name, search_layer in QgsMapLayerRegistry.instance().mapLayers().iteritems():
+	for name, search_layer in QgsMapLayerRegistry.instance().mapLayers().items():
 		if search_layer.type() == 1:
 			rasterLyrs.append(search_layer.name())
 			

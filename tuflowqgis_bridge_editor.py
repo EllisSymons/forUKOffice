@@ -13,25 +13,29 @@ from matplotlib.patches import Polygon
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg
 import numpy
 from tuflowqgis_settings import TF_Settings
-from tuflowqgis_library import lineToPoints, getRasterValue, findAllRasterLyrs, tuflowqgis_find_layer
+from tuflowqgis_library import lineToPoints, getRasterValue, findAllRasterLyrs, tuflowqgis_find_layer, tuflowqgis_import_empty_tf
+from tuflowqgis_dialog import tuflowqgis_increment_dialog
 from canvas_event import canvasEvent
 from Pier_Losses import lookupPierLoss
 sys.path.append(os.path.dirname(os.path.abspath(__file__)) + "/forms")
-from ui_tuflowqgis_bridge_editor import Ui_tuflowqgis_BridgeEditor
+#from ui_tuflowqgis_bridge_editor import Ui_tuflowqgis_BridgeEditor
 # Debug using PyCharm
 sys.path.append(r'C:\Program Files\JetBrains\PyCharm 2018.1\debug-eggs')
 sys.path.append(r'C:\Program Files\JetBrains\PyCharm 2018.1\helpers\pydev')
 
-class bridgeEditor(QDockWidget, Ui_tuflowqgis_BridgeEditor):
+#class bridgeEditor(QDockWidget, Ui_tuflowqgis_BridgeEditor):
+class bridgeEditor():
 
-    def __init__(self, iface, **kwargs):
-        QDockWidget.__init__(self)
-        self.wdg = Ui_tuflowqgis_BridgeEditor.__init__(self)
-        self.setupUi(self)
+    def __init__(self, bridge, iface, **kwargs):
+        #QDockWidget.__init__(self)
+        #self.wdg = Ui_tuflowqgis_BridgeEditor.__init__(self)
+        #self.setupUi(self)
+        self.updated = False
+        self.bridge = bridge
         self.iface = iface
         self.canvas = self.iface.mapCanvas()
-        self.connected = False
-        self.cursorTrackingConnected = False
+        self.connected = False  # signal connections
+        self.cursorTrackingConnected = False  # temp polyline signals
         self.xSectionOffset = []  # XSection offset values
         self.pierOffset = []  # list of pier offsets [[pier 1 offset], [pier 2 offset]]
         self.pierRowHeaders = []  # list of pier row names
@@ -42,9 +46,38 @@ class bridgeEditor(QDockWidget, Ui_tuflowqgis_BridgeEditor):
         self.obverts = []  # list of obvert values aligning with xSectionOffset list
         self.area = 0  # area under bridge deck
         self.pierArea = 0  # area of piers in waterway
+        self.layer = None  # QgsVectorLayer - layer created by tool
+        self.feat = None  # QgsFeature layer
+        self.variableGeom = False  # True means a point layer will have to be used
         self.initialisePlot()
         self.qgis_connect()
-        self.populateDems()
+        #self.populateDems()
+        self.populateAttributes()
+        
+        # Save data
+        # save tables
+        self.saved_xSectionTable = None
+        self.saved_deckTable = None
+        self.saved_pierTable = None
+        # save spinboxes
+        self.saved_xSectionRowCount = None
+        self.saved_deckRowCount = None
+        self.saved_pierRowCount = None
+        # save input boxes
+        self.saved_bridgeName = None
+        self.saved_deckElevationBottom = None
+        self.saved_deckThickness = None
+        self.saved_handRailDepth = None
+        self.saved_handRailFls = None
+        self.saved_handRailBlockage = None
+        self.saved_rbDrowned = None
+        self.saved_pierNo = None
+        self.saved_pierWidth = None
+        self.saved_pierWidthLeft = None
+        self.saved_pierGap = None
+        self.saved_pierShape = None
+        self.saved_zLineWidth = None
+        self.saved_enforceInTerrain = None
         
         # Get empty TUFLOW folder
         self.tfsettings = TF_Settings()
@@ -57,10 +90,17 @@ class bridgeEditor(QDockWidget, Ui_tuflowqgis_BridgeEditor):
             path_split = basepath.split('\\')
             if path_split[-1].lower() == 'tuflow':
                 basepath = '\\'.join(path_split[:-1])
-            self.emptydir.setText(os.path.join(basepath, "TUFLOW", "model", "gis", "empty"))
+            self.bridge.emptydir.setText(os.path.join(basepath, "TUFLOW", "model", "gis", "empty"))
         else:
-            self.emptydir.setText("ERROR - Project not loaded")
-
+            self.bridge.emptydir.setText("ERROR - Project not loaded")
+            
+        # Get loaded bridge editor data
+        if 'loaded_data' in kwargs.keys():
+            self.loadedBridge = kwargs['loaded_data']
+            #self.loadData()
+        else:
+            self.loadedBridge = None
+		    
     def __del__(self):
         self.qgis_disconnect()
 
@@ -72,22 +112,29 @@ class bridgeEditor(QDockWidget, Ui_tuflowqgis_BridgeEditor):
         """
         
         if not self.connected:
-            self.pbUpdate.clicked.connect(self.updatePlot)
-            self.pbUpdatePierData.clicked.connect(self.updatePierTable)
-            self.pbUpdateDeckData.clicked.connect(self.updateDeckTable)
-            self.pbUseMapWindowSel.clicked.connect(self.getCurrSel)
-            self.pbDrawXsection.clicked.connect(self.useTempPolyline)
-            self.pbClearXsection.clicked.connect(self.clearXsection)
-            self.pbUpdateAttributes.clicked.connect(self.updateAttributes)
-            self.iface.currentLayerChanged.connect(self.populateDems)
-            self.xSectionRowCount.valueChanged.connect(lambda: self.tableRowCountChanged(self.xSectionRowCount, self.xSectionTable))
-            self.deckRowCount.valueChanged.connect(lambda: self.tableRowCountChanged(self.deckRowCount, self.deckTable))
-            self.pierRowCount.valueChanged.connect(lambda: self.tableRowCountChanged(self.pierRowCount, self.pierTable))
+            # canvas interactions
+            #self.canvas.layersChanged.connect(self.populateDems)
+            # push buttons
+            self.bridge.pbUpdate.clicked.connect(self.updatePlot)
+            self.bridge.pbUpdatePierData.clicked.connect(self.updatePierTable)
+            self.bridge.pbUpdateDeckData.clicked.connect(self.updateDeckTable)
+            self.bridge.pbUseMapWindowSel.clicked.connect(self.getCurrSel)
+            self.bridge.pbDrawXsection.clicked.connect(self.useTempPolyline)
+            self.bridge.pbClearXsection.clicked.connect(self.clearXsection)
+            self.bridge.pbUpdateAttributes.clicked.connect(self.updateAttributes)
+            self.bridge.pbCreateLayer.clicked.connect(self.createLayer)
+            self.bridge.pbUpdateLayer.clicked.connect(self.updateLayer)
+            self.bridge.pbIncrementLayer.clicked.connect(self.incrementLayer)
+            # Spin boxes
+            self.bridge.xSectionRowCount.valueChanged.connect(lambda: self.tableRowCountChanged(self.bridge.xSectionRowCount, self.bridge.xSectionTable))
+            self.bridge.deckRowCount.valueChanged.connect(lambda: self.tableRowCountChanged(self.bridge.deckRowCount, self.bridge.deckTable))
+            self.bridge.pierRowCount.valueChanged.connect(lambda: self.tableRowCountChanged(self.bridge.pierRowCount, self.bridge.pierTable))
+            # Right Click (Context) Menus
             self.plotWdg.setContextMenuPolicy(Qt.CustomContextMenu)
             self.plotWdg.customContextMenuRequested.connect(self.showMenu)
-            self.xSectionTableRowHeaders = self.xSectionTable.verticalHeader()
-            self.pierTableRowHeaders = self.pierTable.verticalHeader()
-            self.deckTableRowHeaders = self.deckTable.verticalHeader()
+            self.xSectionTableRowHeaders = self.bridge.xSectionTable.verticalHeader()
+            self.pierTableRowHeaders = self.bridge.pierTable.verticalHeader()
+            self.deckTableRowHeaders = self.bridge.deckTable.verticalHeader()
             self.xSectionTableRowHeaders.setContextMenuPolicy(Qt.CustomContextMenu)
             self.deckTableRowHeaders.setContextMenuPolicy(Qt.CustomContextMenu)
             self.pierTableRowHeaders.setContextMenuPolicy(Qt.CustomContextMenu)
@@ -102,19 +149,26 @@ class bridgeEditor(QDockWidget, Ui_tuflowqgis_BridgeEditor):
         
         :return: void
         """
-        
+
         if self.connected:
-            self.pbUpdate.clicked.disconnect(self.updatePlot)
-            self.pbUpdatePierData.clicked.disconnect(self.updatePierTable)
-            self.pbUpdateDeckData.clicked.disconnect(self.updateDeckTable)
-            self.pbUseMapWindowSel.clicked.disconnect(self.getCurrSel)
-            self.pbDrawXsection.clicked.disconnect(self.useTempPolyline)
-            self.pbClearXsection.clicked.disconnect(self.clearXsection)
-            self.pbUpdateAttributes.clicked.disconnect(self.updateAttributes)
-            self.iface.currentLayerChanged.disconnect(self.populateDems)
-            self.xSectionRowCount.valueChanged.disconnect(lambda: self.tableRowCountChanged(self.xSectionRowCount, self.xSectionTable))
-            self.deckRowCount.valueChanged.disconnect(lambda: self.tableRowCountChanged(self.deckRowCount, self.deckTable))
-            self.pierRowCount.valueChanged.disconnect(lambda: self.tableRowCountChanged(self.pierRowCount, self.pierTable))
+            # canvas interactions
+            #self.canvas.layersChanged.disconnect(self.populateDems)
+            # push buttons
+            self.bridge.pbUpdate.clicked.disconnect(self.updatePlot)
+            self.bridge.pbUpdatePierData.clicked.disconnect(self.updatePierTable)
+            self.bridge.pbUpdateDeckData.clicked.disconnect(self.updateDeckTable)
+            self.bridge.pbUseMapWindowSel.clicked.disconnect(self.getCurrSel)
+            self.bridge.pbDrawXsection.clicked.disconnect(self.useTempPolyline)
+            self.bridge.pbClearXsection.clicked.disconnect(self.clearXsection)
+            self.bridge.pbUpdateAttributes.clicked.disconnect(self.updateAttributes)
+            self.bridge.pbCreateLayer.clicked.connect(self.createLayer)
+            self.bridge.pbUpdateLayer.clicked.connect(self.updateLayer)
+            self.bridge.pbIncrementLayer.clicked.connect(self.incrementLayer)
+            # Spin boxes
+            self.bridge.xSectionRowCount.valueChanged.disconnect(lambda: self.tableRowCountChanged(self.bridge.xSectionRowCount, self.bridge.xSectionTable))
+            self.bridge.deckRowCount.valueChanged.disconnect(lambda: self.tableRowCountChanged(self.bridge.deckRowCount, self.bridge.deckTable))
+            self.bridge.pierRowCount.valueChanged.disconnect(lambda: self.tableRowCountChanged(self.bridge.pierRowCount, self.bridge.pierTable))
+            # Right Click (Context) Menus
             self.plotWdg.customContextMenuRequested.disconnect(self.showMenu)
             self.xSectionTableRowHeaders.customContextMenuRequested.disconnect(self.showXsectionTableMenu)
             self.deckTableRowHeaders.customContextMenuRequested.disconnect(self.showDeckTableMenu)
@@ -129,11 +183,11 @@ class bridgeEditor(QDockWidget, Ui_tuflowqgis_BridgeEditor):
         """
         
         # Initialise ui packing
-        self.layout = self.frame_for_plot_2.layout()
-        minsize = self.minimumSize()
-        maxsize = self.maximumSize()
-        self.setMinimumSize(minsize)
-        self.setMaximumSize(maxsize)
+        self.layout = self.bridge.frame_for_plot_2.layout()
+        minsize = self.bridge.minimumSize()
+        maxsize = self.bridge.maximumSize()
+        self.bridge.setMinimumSize(minsize)
+        self.bridge.setMaximumSize(maxsize)
         self.iface.mapCanvas().setRenderFlag(True)
         # Initialise plotting parameters
         self.artists = []
@@ -151,12 +205,12 @@ class bridgeEditor(QDockWidget, Ui_tuflowqgis_BridgeEditor):
         sizePolicy.setVerticalStretch(0)
         canvas.setSizePolicy(sizePolicy)
         self.plotWdg = canvas
-        self.gridLayout_3.addWidget(self.plotWdg)
+        self.bridge.gridLayout_3.addWidget(self.plotWdg)
         if matplotlib.__version__ < 1.5:
             mpltoolbar = matplotlib.backends.backend_qt4agg.NavigationToolbar2QTAgg(self.plotWdg,
-                                                                                    self.frame_for_toolbar)
+                                                                                    self.bridge.frame_for_toolbar)
         else:
-            mpltoolbar = matplotlib.backends.backend_qt4agg.NavigationToolbar2QT(self.plotWdg, self.frame_for_toolbar)
+            mpltoolbar = matplotlib.backends.backend_qt4agg.NavigationToolbar2QT(self.plotWdg, self.bridge.frame_for_toolbar)
         lstActions = mpltoolbar.actions()
         mpltoolbar.removeAction(lstActions[7])  # remove customise subplot
         # create curve
@@ -185,25 +239,113 @@ class bridgeEditor(QDockWidget, Ui_tuflowqgis_BridgeEditor):
         axe1.tick_params(axis="both", which="minor", direction="out", length=5, width=1, bottom=True, top=False,
                          left=True, right=False)
 
-    def populateDems(self):
+    def populateAttributes(self):
         """
-        Find all QgsRasterLayer in map window and populates dropdown box
+        Populate the attributes in the bridge editor from  feature
         
-        :return: void populated dropdown box
+        :return:
         """
         
-        dem = self.demComboBox.currentText()
-        self.demComboBox.clear()
-        rasterLyrs = findAllRasterLyrs()
-        if len(rasterLyrs) > 0:
-            demIndex = None
-            for i, raster in enumerate(rasterLyrs):
-                self.demComboBox.addItem(raster)
-                if raster == dem:
-                    demIndex = i
-            if demIndex is not None:
-                self.demComboBox.setCurrentIndex(demIndex)
+        if self.feat is None:
+            lyr = self.canvas.currentLayer()
+            if lyr.type() == 0:  # QgsVectorLayer
+                feat = lyr.selectedFeatures()
+                if len(feat) > 0:
+                    self.bridge.invert.setText('{0}'.format(feat[0].attributes()[0]))
+                    self.bridge.dz.setText('{0}'.format(feat[0].attributes()[1]))
+                    self.bridge.shapeWidth.setText('{0}'.format(feat[0].attributes()[2]))
+                    self.bridge.shapeOptions.setText('{0}'.format(feat[0].attributes()[3]))
+                    self.bridge.layer1Block.setText('{0}'.format(feat[0].attributes()[4]))
+                    self.bridge.layer1Obv.setText('{0}'.format(feat[0].attributes()[5]))
+                    self.bridge.layer1Flc.setText('{0}'.format(feat[0].attributes()[6]))
+                    self.bridge.layer2Depth.setText('{0}'.format(feat[0].attributes()[7]))
+                    self.bridge.layer2Block.setText('{0}'.format(feat[0].attributes()[8]))
+                    self.bridge.layer2Flc.setText('{0}'.format(feat[0].attributes()[9]))
+                    self.bridge.layer3Depth.setText('{0}'.format(feat[0].attributes()[10]))
+                    self.bridge.layer3Block.setText('{0}'.format(feat[0].attributes()[11]))
+                    self.bridge.layer3Flc.setText('{0}'.format(feat[0].attributes()[12]))
+                    self.bridge.comment.setText('{0}'.format(feat[0].attributes()[13]))
 
+    def loadEditor(self, editor):
+        self.bridge = editor
+    
+    def saveData(self):
+        # save tables
+        x = []
+        y = []
+        for i in range(self.bridge.xSectionTable.rowCount()):
+            x.append(self.bridge.xSectionTable.item(i, 0).text())
+            y.append(self.bridge.xSectionTable.item(i, 1).text())
+        self.saved_xSectionTable = [x, y]
+        x = []
+        y = []
+        for i in range(self.bridge.deckTable.rowCount()):
+            x.append(self.bridge.deckTable.item(i, 0).text())
+            y.append(self.bridge.deckTable.item(i, 1).text())
+        self.saved_deckTable = [x, y]
+        x = []
+        for i in range(self.bridge.pierTable.rowCount()):
+            x.append(self.bridge.pierTable.item(i, 0).text())
+        self.saved_pierTable = x[:]
+        # save spinboxes
+        self.saved_xSectionRowCount = self.bridge.xSectionRowCount.value()
+        self.saved_deckRowCount = self.bridge.deckRowCount.value()
+        self.saved_pierRowCount = self.bridge.pierRowCount.value()
+        # save input boxes
+        self.saved_bridgeName = self.bridge.bridgeName.text()
+        self.saved_deckElevationBottom = self.bridge.deckElevationBottom.value()
+        self.saved_deckThickness = self.bridge.deckThickness.value()
+        self.saved_handRailDepth = self.bridge.handRailDepth.value()
+        self.saved_handRailFlc = self.bridge.handRailFlc.value()
+        self.saved_handRailBlockage = self.bridge.handRailBlockage.value()
+        self.saved_rbDrowned = self.bridge.rbDrowned.isChecked()
+        self.saved_pierNo = self.bridge.pierNo.value()
+        self.saved_pierWidth = self.bridge.pierWidth.value()
+        self.saved_pierWidthLeft = self.bridge.pierWidthLeft.value()
+        self.saved_pierGap = self.bridge.pierGap.value()
+        self.saved_pierShape = self.bridge.pierShape.currentIndex()
+        self.saved_zLineWidth = self.bridge.zLineWidth.value()
+        self.saved_enforceInTerrain = self.bridge.enforceInTerrain.isChecked()
+        
+    def loadData(self):
+        """
+        loads the plot from a previous bridge editor
+
+        :return:
+        """
+
+        # save tables
+        self.bridge.xSectionTable.setRowCount(len(self.saved_xSectionTable[0]))
+        for i in range(self.bridge.xSectionTable.rowCount()):
+            self.bridge.xSectionTable.setItem(i, 0, QTableWidgetItem(self.saved_xSectionTable[0][i]))
+            self.bridge.xSectionTable.setItem(i, 1, QTableWidgetItem(self.saved_xSectionTable[1][i]))
+        self.bridge.deckTable.setRowCount(len(self.saved_deckTable[0]))
+        for i in range(self.bridge.deckTable.rowCount()):
+            self.bridge.deckTable.setItem(i, 0, QTableWidgetItem(self.saved_deckTable[0][i]))
+            self.bridge.deckTable.setItem(i, 1, QTableWidgetItem(self.saved_deckTable[1][i]))
+        self.bridge.pierTable.setRowCount(len(self.saved_pierTable))
+        for i in range(self.bridge.pierTable.rowCount()):
+            self.bridge.pierTable.setItem(i, 0, QTableWidgetItem(self.saved_pierTable[i]))
+        # save spinboxes
+        self.bridge.xSectionRowCount.setValue(self.saved_xSectionRowCount)
+        self.bridge.deckRowCount.setValue(self.saved_deckRowCount)
+        self.bridge.pierRowCount.setValue(self.saved_pierRowCount)
+        # save input boxes
+        self.bridge.bridgeName.setText(self.saved_bridgeName)
+        self.bridge.deckElevationBottom.setValue(self.saved_deckElevationBottom)
+        self.bridge.deckThickness.setValue(self.saved_deckThickness)
+        self.bridge.handRailDepth.setValue(self.saved_handRailDepth)
+        self.bridge.handRailFlc.setValue(self.saved_handRailFlc)
+        self.bridge.handRailBlockage.setValue(self.saved_handRailBlockage)
+        self.bridge.rbDrowned.setChecked(self.saved_rbDrowned)
+        self.bridge.pierNo.setValue(self.saved_pierNo)
+        self.bridge.pierWidth.setValue(self.saved_pierWidth)
+        self.bridge.pierWidthLeft.setValue(self.saved_pierWidthLeft)
+        self.bridge.pierGap.setValue(self.saved_pierGap)
+        self.bridge.pierShape.setCurrentIndex(self.saved_pierShape)
+        self.bridge.zLineWidth.setValue(self.saved_zLineWidth)
+        self.bridge.enforceInTerrain.setChecked(self.saved_enforceInTerrain)
+    
     def getCurrSel(self):
         """
         Get Current Selection
@@ -229,28 +371,28 @@ class bridgeEditor(QDockWidget, Ui_tuflowqgis_BridgeEditor):
         # Check that selected layer is a polyline
         if lyr is not None:
             if lyr.geometryType() != 1:
-                self.statusLog.insertItem(0, 'Error: Layer is not a polyline type')
-                self.statusLabel.setText('Status: Error')
+                self.bridge.statusLog.insertItem(0, 'Error: Layer is not a polyline type')
+                self.bridge.statusLabel.setText('Status: Error')
                 return
             else:
-                self.statusLabel.setText('Status: Successful')
+                self.bridge.statusLabel.setText('Status: Successful')
         # Check number of features selected
         if len(feat) == 0:
-            self.statusLog.insertItem(0, 'Error: No Features Selected')
-            self.statusLabel.setText('Status: Error')
+            self.bridge.statusLog.insertItem(0, 'Error: No Features Selected')
+            self.bridge.statusLabel.setText('Status: Error')
             return
         if len(feat) > 1:
-            self.statusLog.insertItem(0, 'Warning: More than one feature selected - using first selection in {0}'.format(lyr.name()))
-            self.statusLabel.setText('Status: Warning')
+            self.bridge.statusLog.insertItem(0, 'Warning: More than one feature selected - using first selection in {0}'.format(lyr.name()))
+            self.bridge.statusLabel.setText('Status: Warning')
         else:
             #self.statusLog.insertItem(0, 'Message: Draping line in {0}'.format(lyr.name()))
-            self.statusLabel.setText('Status: Successful')
+            self.bridge.statusLabel.setText('Status: Successful')
         feat = feat[0]  # QgsFeature
         # Get DEM for draping
-        dem = tuflowqgis_find_layer(self.demComboBox.currentText())  # QgsRasterLayer
+        dem = tuflowqgis_find_layer(self.bridge.demComboBox.currentText())  # QgsRasterLayer
         if dem is None:
-            self.statusLog.insertItem(0, 'Error: No DEM selected')
-            self.statusLabel.setText('Status: Error')
+            self.bridge.statusLog.insertItem(0, 'Error: No DEM selected')
+            self.bridge.statusLabel.setText('Status: Error')
             return
         else:
             demCellSize = max(dem.rasterUnitsPerPixelX(), dem.rasterUnitsPerPixelY())
@@ -275,6 +417,7 @@ class bridgeEditor(QDockWidget, Ui_tuflowqgis_BridgeEditor):
         self.canvas.scene().removeItem(self.rubberBand)  # Remove previous temp layer
         self.labels = []
         self.subplot.cla()  # clear axis
+        self.feat = None
         # create curve
         self.manageMatplotlibAxe(self.subplot)
         label = "test"
@@ -287,14 +430,29 @@ class bridgeEditor(QDockWidget, Ui_tuflowqgis_BridgeEditor):
         self.fig.tight_layout()
         self.plotWdg.draw()
         # clear tables
-        self.xSectionTable.setRowCount(0)
-        self.deckTable.setRowCount(0)
-        self.pierTable.setRowCount(0)
+        self.bridge.xSectionTable.setRowCount(0)
+        self.bridge.deckTable.setRowCount(0)
+        self.bridge.pierTable.setRowCount(0)
         # clear spinboxes
-        self.xSectionRowCount.setValue(0)
-        self.deckRowCount.setValue(0)
-        self.pierRowCount.setValue(0)
-    
+        self.bridge.xSectionRowCount.setValue(0)
+        self.bridge.deckRowCount.setValue(0)
+        self.bridge.pierRowCount.setValue(0)
+        # clear input boxes
+        self.bridge.bridgeName.setText('')
+        self.bridge.deckElevationBottom.setValue(0)
+        self.bridge.deckThickness.setValue(0)
+        self.bridge.handRailDepth.setValue(0)
+        self.bridge.handRailFlc.setValue(0)
+        self.bridge.handRailBlockage.setValue(0)
+        self.bridge.rbDrowned.setChecked(True)
+        self.bridge.pierNo.setValue(0)
+        self.bridge.pierWidth.setValue(0)
+        self.bridge.pierWidthLeft.setValue(0)
+        self.bridge.pierGap.setValue(0)
+        self.bridge.pierShape.setCurrentIndex(0)
+        self.bridge.zLineWidth.setValue(0)
+        self.bridge.enforceInTerrain.setChecked(False)
+
     def createMemoryLayerFromTempLayer(self):
         """
         Creates a QgsFeature from the QgsPoint vertices in the temp layer
@@ -302,9 +460,9 @@ class bridgeEditor(QDockWidget, Ui_tuflowqgis_BridgeEditor):
         :return:
         """
         
-        feat = QgsFeature()
-        feat.setGeometry(QgsGeometry.fromPolyline(self.points))
-        self.extractXSection(None, [feat])
+        self.feat = QgsFeature()
+        self.feat.setGeometry(QgsGeometry.fromPolyline(self.points))
+        self.extractXSection(None, [self.feat])
     
     def useTempPolyline(self):
         """
@@ -313,6 +471,7 @@ class bridgeEditor(QDockWidget, Ui_tuflowqgis_BridgeEditor):
         :return: void
         """
         
+        self.clearXsection()
         self.canvas.scene().removeItem(self.rubberBand)  # Remove previous temp layer
         self.rubberBand = QgsRubberBand(self.iface.mapCanvas(), False)  # setup rubberband class for drawing
         self.rubberBand.setWidth(2)
@@ -425,13 +584,13 @@ class bridgeEditor(QDockWidget, Ui_tuflowqgis_BridgeEditor):
         :return: void updated table widget with data
         """
 
-        self.xSectionTable.setRowCount(len(self.xSectionOffset))
-        self.xSectionTable.setItem(0, 0, QTableWidgetItem('test'))
+        self.bridge.xSectionTable.setRowCount(len(self.xSectionOffset))
+        self.bridge.xSectionTable.setItem(0, 0, QTableWidgetItem('test'))
         for i, value in enumerate(self.xSectionOffset):
-            self.xSectionTable.setItem(i, 0, QTableWidgetItem(str(value)))
-            self.xSectionTable.setItem(i, 1, QTableWidgetItem(str(self.xSectionElev[i])))
+            self.bridge.xSectionTable.setItem(i, 0, QTableWidgetItem(str(value)))
+            self.bridge.xSectionTable.setItem(i, 1, QTableWidgetItem(str(self.xSectionElev[i])))
         # update spinbox
-        self.xSectionRowCount.setValue(self.xSectionTable.rowCount())
+        self.bridge.xSectionRowCount.setValue(self.bridge.xSectionTable.rowCount())
 
     def updateXsectionData(self):
         """
@@ -443,9 +602,9 @@ class bridgeEditor(QDockWidget, Ui_tuflowqgis_BridgeEditor):
         
         self.xSectionOffset = []
         self.xSectionElev = []
-        for i in range(self.xSectionTable.rowCount()):
-            self.xSectionOffset.append(float(self.xSectionTable.item(i, 0).text()))
-            self.xSectionElev.append(float(self.xSectionTable.item(i, 1).text()))
+        for i in range(self.bridge.xSectionTable.rowCount()):
+            self.xSectionOffset.append(float(self.bridge.xSectionTable.item(i, 0).text()))
+            self.xSectionElev.append(float(self.bridge.xSectionTable.item(i, 1).text()))
             
     def updatePierTable(self):
         """
@@ -460,21 +619,21 @@ class bridgeEditor(QDockWidget, Ui_tuflowqgis_BridgeEditor):
             return
         self.pierOffset = []
         # Set up QTableWidget
-        self.pierTable.setRowCount(self.pierNo.value())
+        self.bridge.pierTable.setRowCount(self.bridge.pierNo.value())
         # Populate values and column headers
         self.pierRowHeaders = []
-        for i in range(1, self.pierNo.value() + 1):
+        for i in range(1, self.bridge.pierNo.value() + 1):
             self.pierRowHeaders.append('Pier {0}'.format(i))
             if i == 1:
-                offset = self.pierWidthLeft.value() + self.pierWidth.value() / 2
+                offset = self.bridge.pierWidthLeft.value() + self.bridge.pierWidth.value() / 2
             else:
-                offset += self.pierWidth.value() + self.pierGap.value()
+                offset += self.bridge.pierWidth.value() + self.bridge.pierGap.value()
             self.pierOffset.append(offset)
-        self.pierTable.setVerticalHeaderLabels(self.pierRowHeaders)
+        self.bridge.pierTable.setVerticalHeaderLabels(self.pierRowHeaders)
         for i, pier in enumerate(self.pierOffset):
-            self.pierTable.setItem(i, 0, QTableWidgetItem(str(pier)))
+            self.bridge.pierTable.setItem(i, 0, QTableWidgetItem(str(pier)))
         # update spinbox
-        self.pierRowCount.setValue(self.pierTable.rowCount())
+        self.bridge.pierRowCount.setValue(self.bridge.pierTable.rowCount())
 
     def createPierPatches(self):
         """
@@ -483,26 +642,26 @@ class bridgeEditor(QDockWidget, Ui_tuflowqgis_BridgeEditor):
         :return: void updates self.pierPatches
         """
         
-        if self.pierTable.item(0, 0) is None:
-            self.statusLog.insertItem(0, 'Warning: No Piers Defined in Table')
-            self.statusLabel.setText('Status: Warning')
+        if self.bridge.pierTable.item(0, 0) is None:
+            self.bridge.statusLog.insertItem(0, 'Warning: No Piers Defined in Table')
+            self.bridge.statusLabel.setText('Status: Warning')
             return
         self.pierPatches = []
-        for i in range(self.pierTable.rowCount()):
+        for i in range(self.bridge.pierTable.rowCount()):
             x = []
             y = []
-            x1 = float(self.pierTable.item(i, 0).text()) - self.pierWidth.value() / 2
-            x2 = float(self.pierTable.item(i, 0).text()) + self.pierWidth.value() / 2
+            x1 = float(self.bridge.pierTable.item(i, 0).text()) - self.bridge.pierWidth.value() / 2
+            x2 = float(self.bridge.pierTable.item(i, 0).text()) + self.bridge.pierWidth.value() / 2
             y1a = self.getGroundAtX(x1)
             y1b = self.getGroundAtX(x2)
             y2a = self.interpolateVLookupObvert(x1)
             y2b = self.interpolateVLookupObvert(x2)
             if y2a <= y1a or y2b <= y1b:
-                self.statusLog.insertItem(0, 'Error: Bridge deck level is lower than ground')
-                self.statusLabel.setText('Status: Error')
+                self.bridge.statusLog.insertItem(0, 'Error: Bridge deck level is lower than ground')
+                self.bridge.statusLabel.setText('Status: Error')
                 return
             else:
-                self.statusLabel.setText('Status: Successful')
+                self.bridge.statusLabel.setText('Status: Successful')
             x.append(x1)
             y.append(y1a)
             iStart = None
@@ -534,7 +693,7 @@ class bridgeEditor(QDockWidget, Ui_tuflowqgis_BridgeEditor):
             y.append(y2a)
             patch = list(zip(x, y))
             self.pierPatches.append(patch)
-        self.statusLabel.setText('Status: Successful')
+        self.bridge.statusLabel.setText('Status: Successful')
             
     def updateDeckTable(self):
         """
@@ -545,14 +704,20 @@ class bridgeEditor(QDockWidget, Ui_tuflowqgis_BridgeEditor):
 
         self.mouseTrackDisconnect()
         # Set up table
-        self.deckTable.setRowCount(2)
+        self.bridge.deckTable.setRowCount(2)
         # Update parameters
-        xmin = self.getXatElevation(self.deckElevationBottom.value(), 1)
-        xmax = self.getXatElevation(self.deckElevationBottom.value(), -1)
-        self.deckTable.setItem(0, 0, QTableWidgetItem(str(xmin)))
-        self.deckTable.setItem(1, 0, QTableWidgetItem(str(xmax)))
-        self.deckTable.setItem(0, 1, QTableWidgetItem(str(self.deckElevationBottom.value())))
-        self.deckTable.setItem(1, 1, QTableWidgetItem(str(self.deckElevationBottom.value())))
+        if self.xSectionElev[0] <= self.bridge.deckElevationBottom.value():
+            xmin = self.xSectionOffset[0]
+        else:
+            xmin = self.getXatElevation(self.bridge.deckElevationBottom.value(), 1)
+        if self.xSectionElev[-1] <= self.bridge.deckElevationBottom.value():
+            xmax = self.xSectionOffset[-1]
+        else:
+            xmax = self.getXatElevation(self.bridge.deckElevationBottom.value(), -1)
+        self.bridge.deckTable.setItem(0, 0, QTableWidgetItem(str(xmin)))
+        self.bridge.deckTable.setItem(1, 0, QTableWidgetItem(str(xmax)))
+        self.bridge.deckTable.setItem(0, 1, QTableWidgetItem(str(self.bridge.deckElevationBottom.value())))
+        self.bridge.deckTable.setItem(1, 1, QTableWidgetItem(str(self.bridge.deckElevationBottom.value())))
         
     def updateDeckOffset(self):
         """
@@ -561,19 +726,25 @@ class bridgeEditor(QDockWidget, Ui_tuflowqgis_BridgeEditor):
         :return:
         """
         
-        if self.deckTable.item(0, 0) is not None:
+        if self.bridge.deckTable.item(0, 0) is not None:
             # first value
-            elevation = float(self.deckTable.item(0, 1).text())
-            offset = self.getXatElevation(elevation, 1)
-            self.deckTable.setItem(0, 0, QTableWidgetItem(str(self.getXatElevation(elevation, 1))))
+            elevation = float(self.bridge.deckTable.item(0, 1).text())
+            if elevation >= self.xSectionElev[0]:
+                offset = self.xSectionOffset[0]
+            else:
+                offset = self.getXatElevation(elevation, 1)
+            self.bridge.deckTable.setItem(0, 0, QTableWidgetItem(str(offset)))
             # last value
-            lastRow = self.deckTable.rowCount() - 1
-            elevation = float(self.deckTable.item(lastRow, 1).text())
-            offset = self.getXatElevation(elevation, -1)
-            self.deckTable.setItem(lastRow, 0, QTableWidgetItem(str(offset)))
+            lastRow = self.bridge.deckTable.rowCount() - 1
+            elevation = float(self.bridge.deckTable.item(lastRow, 1).text())
+            if elevation >= self.xSectionElev[-1]:
+                offset = self.xSectionOffset[-1]
+            else:
+                offset = self.getXatElevation(elevation, -1)
+            self.bridge.deckTable.setItem(lastRow, 0, QTableWidgetItem(str(offset)))
             self.updateObverts()
         # Update spinbox
-        self.deckRowCount.setValue(self.deckTable.rowCount())
+        self.bridge.deckRowCount.setValue(self.bridge.deckTable.rowCount())
             
     def interpolateVLookupObvert(self, x):
         """
@@ -584,9 +755,9 @@ class bridgeEditor(QDockWidget, Ui_tuflowqgis_BridgeEditor):
         """
         
         
-        for i in range(self.deckTable.rowCount()):
-            offset = float(self.deckTable.item(i, 0).text())
-            y = float(self.deckTable.item(i, 1).text())
+        for i in range(self.bridge.deckTable.rowCount()):
+            offset = float(self.bridge.deckTable.item(i, 0).text())
+            y = float(self.bridge.deckTable.item(i, 1).text())
             if i == 0:
                 if offset == x:
                     return y
@@ -609,18 +780,18 @@ class bridgeEditor(QDockWidget, Ui_tuflowqgis_BridgeEditor):
         """
 
         self.obverts = []
-        lastRow = self.deckTable.rowCount() - 1
+        lastRow = self.bridge.deckTable.rowCount() - 1
         for offset in self.xSectionOffset:
-            if offset == float(self.deckTable.item(0, 0).text()):  # equal to the first entry in the deck table
-                self.obverts.append(float(self.deckTable.item(0, 1).text()))
-            elif offset == float(self.deckTable.item(lastRow, 0).text()):  # equal to the last entry in the deck table
-                self.obverts.append(float(self.deckTable.item(lastRow, 1).text()))
-            elif offset > float(self.deckTable.item(0, 0).text()) and offset < float(self.deckTable.item(lastRow, 0).text()):  # in between first and last entry- interpolate
+            if offset == float(self.bridge.deckTable.item(0, 0).text()):  # equal to the first entry in the deck table
+                self.obverts.append(float(self.bridge.deckTable.item(0, 1).text()))
+            elif offset == float(self.bridge.deckTable.item(lastRow, 0).text()):  # equal to the last entry in the deck table
+                self.obverts.append(float(self.bridge.deckTable.item(lastRow, 1).text()))
+            elif offset > float(self.bridge.deckTable.item(0, 0).text()) and offset < float(self.bridge.deckTable.item(lastRow, 0).text()):  # in between first and last entry- interpolate
                 self.obverts.append(self.interpolateVLookupObvert(offset))
-            elif offset > float(self.deckTable.item(lastRow, 0).text()):  # after last entry
-                self.obverts.append(float(self.deckTable.item(lastRow, 1).text()))
+            elif offset > float(self.bridge.deckTable.item(lastRow, 0).text()):  # after last entry
+                self.obverts.append(float(self.bridge.deckTable.item(lastRow, 1).text()))
             else:  # before first entry
-                self.obverts.append(float(self.deckTable.item(0, 1).text()))
+                self.obverts.append(float(self.bridge.deckTable.item(0, 1).text()))
         
     def createDeckPatch(self):
         """
@@ -628,18 +799,19 @@ class bridgeEditor(QDockWidget, Ui_tuflowqgis_BridgeEditor):
         
         :return: void updates self.deckPatch
         """
-        
-        if self.deckTable.item(0, 0) is None:
-            self.statusLog.insertItem(0, 'Warning: No Piers Defined in Table')
-            self.statusLabel.setText('Status: Warning')
+
+        if self.bridge.deckTable.item(0, 0) is None:
+            self.bridge.statusLog.insertItem(0, 'Warning: No Piers Defined in Table')
+            self.bridge.statusLabel.setText('Status: Warning')
             return
         x = []
         y = []
         # Get patch values between upper and lower deck cords on left hand side
-        y1 = float(self.deckTable.item(0, 1).text())  # lower cord on left hand deck limit
-        y2 = y1 + self.deckThickness.value()  # upper cord on left hand deck limit
-        x1 = float(self.deckTable.item(0, 0).text())  # x value of lower cord on left hand deck limit
+        y1 = float(self.bridge.deckTable.item(0, 1).text())  # lower cord on left hand deck limit
+        y2 = y1 + self.bridge.deckThickness.value()  # upper cord on left hand deck limit
+        x1 = float(self.bridge.deckTable.item(0, 0).text())  # x value of lower cord on left hand deck limit
         x2 = self.getXatElevation(y2, 1)  # x value of upper cord on left hand deck limit
+        x2 = x1 if x2 > x1 else x2  # x2 cannot be greater than x1
         x.append(x2)
         y.append(y2)
         iStart = None
@@ -647,9 +819,6 @@ class bridgeEditor(QDockWidget, Ui_tuflowqgis_BridgeEditor):
         # Follow xsection for path between upper and lower cords
         for i, offset in enumerate(self.xSectionOffset):
             if i == 0:
-                if x2 == offset:
-                    x.append(offset)
-                    y.append(self.xSectionElev[i])
                 offsetPrev = offset
                 iPrev = i
             else:
@@ -670,12 +839,10 @@ class bridgeEditor(QDockWidget, Ui_tuflowqgis_BridgeEditor):
         x.append(x1)
         y.append(y1)
         # get patch values along deck bottom
-        iMax = self.deckTable.rowCount() - 1
+        iMax = self.bridge.deckTable.rowCount() - 1
         underDeck = False
         start = False
         for i, xsElev in enumerate(self.xSectionElev):
-            if i == 90:
-                pass
             obvert = self.obverts[i]
             offset = self.xSectionOffset[i]
             if i == 0:
@@ -687,7 +854,7 @@ class bridgeEditor(QDockWidget, Ui_tuflowqgis_BridgeEditor):
                     underDeck = True
                     start = True
                     continue
-            elif offset >= float(self.deckTable.item(iMax, 0).text()):
+            elif offset >= float(self.bridge.deckTable.item(iMax, 0).text()):
                 start = False
             elif xsElev < obvert and xsElevPrev > obvertPrev:
                 underDeck = True
@@ -698,8 +865,6 @@ class bridgeEditor(QDockWidget, Ui_tuflowqgis_BridgeEditor):
                 underDeck = False
                 x.append(self.interpolate(obvert, xsElevPrev, xsElev, offsetPrev, offset))
                 y.append(obvert)
-                #if offset >= float(self.deckTable.item(iMax, 0).text()):
-                #    start = False
             elif xsElev == obvert and xsElevPrev > obvertPrev:
                 underDeck = True
                 start = True
@@ -721,19 +886,17 @@ class bridgeEditor(QDockWidget, Ui_tuflowqgis_BridgeEditor):
             obvertPrev = obvert
             offsetPrev = offset
         # Get patch values between upper and lower deck cords on right hand side
-        y3 = float(self.deckTable.item(iMax, 1).text())  # lower cord on right hand deck limit
-        y4 = y3 + self.deckThickness.value()  # upper cord on right hand deck limit
-        x3 = float(self.deckTable.item(iMax, 0).text())  # x value of lower cord on right hand deck limit
+        y3 = float(self.bridge.deckTable.item(iMax, 1).text())  # lower cord on right hand deck limit
+        y4 = y3 + self.bridge.deckThickness.value()  # upper cord on right hand deck limit
+        x3 = float(self.bridge.deckTable.item(iMax, 0).text())  # x value of lower cord on right hand deck limit
         x4 = self.getXatElevation(y4, -1)  # x value of upper cord on right hand deck limit
+        x4 = x3 if x4 < x3 else x4  # x4 cannot be less than x3
         x.append(x3)
         y.append(y3)
         iStart = None
         iEnd = None
         for i, offset in enumerate(self.xSectionOffset):
             if i == 0:
-                if x3 == offset:
-                    x.append(offset)
-                    y.append(self.xSectionElev[i])
                 offsetPrev = offset
                 iPrev = i
             else:
@@ -758,7 +921,7 @@ class bridgeEditor(QDockWidget, Ui_tuflowqgis_BridgeEditor):
         start = False
         for i in range(len(self.xSectionElev) - 1, 0, -1):
             xsElev = self.xSectionElev[i]
-            obvert = self.obverts[i] + self.deckThickness.value()
+            obvert = self.obverts[i] + self.bridge.deckThickness.value()
             offset = self.xSectionOffset[i]
             if i == len(self.xSectionElev) - 1:
                 xsElevPrev = xsElev
@@ -769,6 +932,8 @@ class bridgeEditor(QDockWidget, Ui_tuflowqgis_BridgeEditor):
                     underDeck = True
                     start = True
                     continue
+            elif offset <= float(self.bridge.deckTable.item(0, 0).text()):
+                start = False
             elif xsElev < obvert and xsElevPrev > obvertPrev:
                 underDeck = True
                 start = True
@@ -778,8 +943,6 @@ class bridgeEditor(QDockWidget, Ui_tuflowqgis_BridgeEditor):
                 underDeck = False
                 x.append(self.interpolate(obvert, xsElevPrev, xsElev, offsetPrev, offset))
                 y.append(obvert)
-                if offset <= float(self.deckTable.item(0, 0).text()):
-                    start = False
             elif xsElev == obvert and xsElevPrev > obvertPrev:
                 underDeck = True
                 start = True
@@ -817,22 +980,22 @@ class bridgeEditor(QDockWidget, Ui_tuflowqgis_BridgeEditor):
         for i, offset in enumerate(self.xSectionOffset):
             if i == 0:
                 if x == offset:
-                    self.statusLabel.setText('Status: Successful')
+                    self.bridge.statusLabel.setText('Status: Successful')
                     return self.xSectionElev[i]
                 xPrev = offset
                 iPrev = i
             else:
                 if x == offset:
-                    self.statusLabel.setText('Status: Successful')
+                    self.bridge.statusLabel.setText('Status: Successful')
                     return self.xSectionElev[i]
                 elif x > xPrev and x < offset:
-                    self.statusLabel.setText('Status: Successful')
+                    self.bridge.statusLabel.setText('Status: Successful')
                     return self.interpolate(x, xPrev, offset, self.xSectionElev[iPrev], self.xSectionElev[i])
                 else:
                     xPrev = offset
                     iPrev = i
-        self.statusLog.insertItem(0, 'Error: Unable to find ground level at pier offset')
-        self.statusLabel.setText('Status: Error')
+        self.bridge.statusLog.insertItem(0, 'Error: Unable to find ground level at pier offset')
+        self.bridge.statusLabel.setText('Status: Error')
         return min(self.xSectionElev)
     
     def getXatElevation(self, z, direction):
@@ -908,9 +1071,9 @@ class bridgeEditor(QDockWidget, Ui_tuflowqgis_BridgeEditor):
         """
         
         # check a deck exists
-        if self.deckTable.item(0, 0) is None:
-            self.statusLog.insertItem(0, 'Warning: Unable to calculate energy loss without bridge deck')
-            self.statusLabel.setText('Status: Warning')
+        if self.bridge.deckTable.item(0, 0) is None:
+            self.bridge.statusLog.insertItem(0, 'Warning: Unable to calculate energy loss without bridge deck')
+            self.bridge.statusLabel.setText('Status: Warning')
             return
         # calculate area
         underDeck = False
@@ -956,7 +1119,7 @@ class bridgeEditor(QDockWidget, Ui_tuflowqgis_BridgeEditor):
             iPrev = i
             obvertPrev = obvert
             offsetPrev = offset
-        self.statusLabel.setText('Status: Successful')
+        self.bridge.statusLabel.setText('Status: Successful')
         
     def calculatePierArea(self):
         """
@@ -966,11 +1129,11 @@ class bridgeEditor(QDockWidget, Ui_tuflowqgis_BridgeEditor):
         """
         
         self.pierArea = 0
-        if self.pierTable.item(0, 0) is None:
+        if self.bridge.pierTable.item(0, 0) is None:
             return
         else:
             for i, pier in enumerate(self.pierPatches):
-                xEnd = float(self.pierTable.item(i, 0).text()) + self.pierWidth.value() / 2
+                xEnd = float(self.bridge.pierTable.item(i, 0).text()) + self.bridge.pierWidth.value() / 2
                 area = 0
                 end = False
                 for j, v in enumerate(pier):
@@ -1046,17 +1209,17 @@ class bridgeEditor(QDockWidget, Ui_tuflowqgis_BridgeEditor):
         :return:
         """
         
-        menu = QMenu(self)
+        menu = QMenu(self.bridge)
         insertRowBefore_action = QAction("Insert Row (before)", menu)
         insertRowAfter_action = QAction("Insert Row (after)", menu)
         deleteRow_action = QAction("Delete Row", menu)
-        insertRowBefore_action.triggered.connect(lambda: self.insertRowBefore(self.pierTable))
-        insertRowAfter_action.triggered.connect(lambda: self.insertRowAfter(self.pierTable))
-        deleteRow_action.triggered.connect(lambda: self.deleteRow(self.pierTable))
+        insertRowBefore_action.triggered.connect(lambda: self.insertRowBefore(self.bridge.pierTable))
+        insertRowAfter_action.triggered.connect(lambda: self.insertRowAfter(self.bridge.pierTable))
+        deleteRow_action.triggered.connect(lambda: self.deleteRow(self.bridge.pierTable))
         menu.addAction(insertRowBefore_action)
         menu.addAction(insertRowAfter_action)
         menu.addAction(deleteRow_action)
-        menu.popup(self.pierTable.mapToGlobal(pos))
+        menu.popup(self.bridge.pierTable.mapToGlobal(pos))
         
     def showDeckTableMenu(self, pos):
         """
@@ -1066,17 +1229,17 @@ class bridgeEditor(QDockWidget, Ui_tuflowqgis_BridgeEditor):
         :return:
         """
         
-        menu = QMenu(self)
+        menu = QMenu(self.bridge)
         insertRowBefore_action = QAction("Insert Row (before)", menu)
         insertRowAfter_action = QAction("Insert Row (after)", menu)
         deleteRow_action = QAction("Delete Row", menu)
-        insertRowBefore_action.triggered.connect(lambda: self.insertRowBefore(self.deckTable))
-        insertRowAfter_action.triggered.connect(lambda: self.insertRowAfter(self.deckTable))
-        deleteRow_action.triggered.connect(lambda: self.deleteRow(self.deckTable))
+        insertRowBefore_action.triggered.connect(lambda: self.insertRowBefore(self.bridge.deckTable))
+        insertRowAfter_action.triggered.connect(lambda: self.insertRowAfter(self.bridge.deckTable))
+        deleteRow_action.triggered.connect(lambda: self.deleteRow(self.bridge.deckTable))
         menu.addAction(insertRowBefore_action)
         menu.addAction(insertRowAfter_action)
         menu.addAction(deleteRow_action)
-        menu.popup(self.pierTable.mapToGlobal(pos))
+        menu.popup(self.bridge.pierTable.mapToGlobal(pos))
         
     def showXsectionTableMenu(self, pos):
         """
@@ -1086,17 +1249,17 @@ class bridgeEditor(QDockWidget, Ui_tuflowqgis_BridgeEditor):
         :return:
         """
         
-        menu = QMenu(self)
+        menu = QMenu(self.bridge)
         insertRowBefore_action = QAction("Insert Row (before)", menu)
         insertRowAfter_action = QAction("Insert Row (after)", menu)
         deleteRow_action = QAction("Delete Row", menu)
-        insertRowBefore_action.triggered.connect(lambda: self.insertRowBefore(self.xSectionTable))
-        insertRowAfter_action.triggered.connect(lambda: self.insertRowAfter(self.xSectionTable))
-        deleteRow_action.triggered.connect(lambda: self.deleteRow(self.xSectionTable))
+        insertRowBefore_action.triggered.connect(lambda: self.insertRowBefore(self.bridge.xSectionTable))
+        insertRowAfter_action.triggered.connect(lambda: self.insertRowAfter(self.bridge.xSectionTable))
+        deleteRow_action.triggered.connect(lambda: self.deleteRow(self.bridge.xSectionTable))
         menu.addAction(insertRowBefore_action)
         menu.addAction(insertRowAfter_action)
         menu.addAction(deleteRow_action)
-        menu.popup(self.pierTable.mapToGlobal(pos))
+        menu.popup(self.bridge.pierTable.mapToGlobal(pos))
         
     def insertRowBefore(self, table):
         """
@@ -1109,39 +1272,39 @@ class bridgeEditor(QDockWidget, Ui_tuflowqgis_BridgeEditor):
         # Get selected row
         currentRow = table.currentRow()
         if currentRow is None:
-            self.statusLog.insertItem(0, 'Error: No row selected')
-            self.statusLabel.setText('Status: Error')
+            self.bridge.statusLog.insertItem(0, 'Error: No row selected')
+            self.bridge.statusLabel.setText('Status: Error')
             return
         # store data
         x = []  # list of strings
         y = []  # list of strings
         for i in range(table.rowCount()):
             x.append(table.item(i, 0).text())
-            if table != self.pierTable:
+            if table != self.bridge.pierTable:
                 y.append(table.item(i, 1).text())
         # add row and populate data
         table.setRowCount(len(x) + 1)
-        if table == self.pierTable:  # populate pier numbering
+        if table == self.bridge.pierTable:  # populate pier numbering
             headers = ['Pier {0}'.format(p) for p in range(1, table.rowCount() + 1)]
             table.setVerticalHeaderLabels(headers)
         for i in range(table.rowCount()):
             if i < currentRow:
                 table.setItem(i, 0, QTableWidgetItem(x[i]))
-                if table != self.pierTable:
+                if table != self.bridge.pierTable:
                     table.setItem(i, 1, QTableWidgetItem(y[i]))
             elif i == currentRow:
                 table.setItem(i, 0, QTableWidgetItem('0'))
-                if table != self.pierTable:
+                if table != self.bridge.pierTable:
                     table.setItem(i, 1, QTableWidgetItem('0'))
             elif i > currentRow:
                 table.setItem(i, 0, QTableWidgetItem(x[i - 1]))
-                if table != self.pierTable:
+                if table != self.bridge.pierTable:
                    table.setItem(i, 1, QTableWidgetItem(y[i - 1]))
         # update class properties for XSection data
-        if table == self.xSectionTable:
+        if table == self.bridge.xSectionTable:
             self.updateXsectionData()
         # Update spinbox
-        dict = {self.xSectionTable: self.xSectionRowCount, self.deckTable: self.deckRowCount, self.pierTable: self.pierRowCount}
+        dict = {self.bridge.xSectionTable: self.bridge.xSectionRowCount, self.bridge.deckTable: self.bridge.deckRowCount, self.bridge.pierTable: self.bridge.pierRowCount}
         spinBox = dict[table]
         spinBox.setValue(table.rowCount())
 
@@ -1156,40 +1319,40 @@ class bridgeEditor(QDockWidget, Ui_tuflowqgis_BridgeEditor):
         # Get selected row
         currentRow = table.currentRow() + 1  # add one so it is inserted after
         if currentRow is None:
-            self.statusLog.insertItem(0, 'Error: No row selected')
-            self.statusLabel.setText('Status: Error')
+            self.bridge.statusLog.insertItem(0, 'Error: No row selected')
+            self.bridge.statusLabel.setText('Status: Error')
             return
         # store data
         x = []  # list of strings
         y = []  # list of strings
         for i in range(table.rowCount()):
             x.append(table.item(i, 0).text())
-            if table != self.pierTable:
+            if table != self.bridge.pierTable:
                 y.append(table.item(i, 1).text())
         # add row and populate data
         table.setRowCount(len(x) + 1)
-        if table == self.pierTable:  # populate pier numbering
+        if table == self.bridge.pierTable:  # populate pier numbering
             headers = ['Pier {0}'.format(p) for p in range(1, table.rowCount() + 1)]
             table.setVerticalHeaderLabels(headers)
         for i in range(table.rowCount()):
             if i < currentRow:
                 table.setItem(i, 0, QTableWidgetItem(x[i]))
-                if table != self.pierTable:
+                if table != self.bridge.pierTable:
                     table.setItem(i, 1, QTableWidgetItem(y[i]))
             elif i == currentRow:
                 table.setItem(i, 0, QTableWidgetItem('0'))
-                if table != self.pierTable:
+                if table != self.bridge.pierTable:
                     table.setItem(i, 1, QTableWidgetItem('0'))
             elif i > currentRow:
                 table.setItem(i, 0, QTableWidgetItem(x[i - 1]))
-                if table != self.pierTable:
+                if table != self.bridge.pierTable:
                     table.setItem(i, 1, QTableWidgetItem(y[i - 1]))
         # update class properties for XSection data
-        if table == self.xSectionTable:
+        if table == self.bridge.xSectionTable:
             self.updateXsectionData()
         # Update spinbox
-        dict = {self.xSectionTable: self.xSectionRowCount, self.deckTable: self.deckRowCount,
-                self.pierTable: self.pierRowCount}
+        dict = {self.bridge.xSectionTable: self.bridge.xSectionRowCount, self.bridge.deckTable: self.bridge.deckRowCount,
+                self.bridge.pierTable: self.bridge.pierRowCount}
         spinBox = dict[table]
         spinBox.setValue(table.rowCount())
     
@@ -1204,34 +1367,34 @@ class bridgeEditor(QDockWidget, Ui_tuflowqgis_BridgeEditor):
         # get selected row
         currentRow = table.currentRow()
         if currentRow is None:
-            self.statusLog.insertItem(0, 'Error: No row selected')
-            self.statusLabel.setText('Status: Error')
+            self.bridge.statusLog.insertItem(0, 'Error: No row selected')
+            self.bridge.statusLabel.setText('Status: Error')
             return
         # store data
         x = []  # list of strings
         y = []  # list of strings
         for i in range(table.rowCount()):
             x.append(table.item(i, 0).text())
-            if table != self.pierTable:
+            if table != self.bridge.pierTable:
                 y.append(table.item(i, 1).text())
         # remove row and populate data
         table.setRowCount(len(x) - 1)
-        if table == self.pierTable:  # populate pier numbering
+        if table == self.bridge.pierTable:  # populate pier numbering
             headers = ['Pier {0}'.format(p) for p in range(1, table.rowCount() - 1)]
             table.setVerticalHeaderLabels(headers)
         x.pop(currentRow)
-        if table != self.pierTable:
+        if table != self.bridge.pierTable:
             y.pop(currentRow)
         for i in range(table.rowCount()):
             table.setItem(i, 0, QTableWidgetItem(x[i]))
-            if table != self.pierTable:
+            if table != self.bridge.pierTable:
                 table.setItem(i, 1, QTableWidgetItem(y[i]))
         # update class properties for XSection data
-        if table == self.xSectionTable:
+        if table == self.bridge.xSectionTable:
             self.updateXsectionData()
         # Update spinbox
-        dict = {self.xSectionTable: self.xSectionRowCount, self.deckTable: self.deckRowCount,
-                self.pierTable: self.pierRowCount}
+        dict = {self.bridge.xSectionTable: self.bridge.xSectionRowCount, self.bridge.deckTable: self.bridge.deckRowCount,
+                self.bridge.pierTable: self.bridge.pierRowCount}
         spinBox = dict[table]
         spinBox.setValue(table.rowCount())
 
@@ -1240,7 +1403,7 @@ class bridgeEditor(QDockWidget, Ui_tuflowqgis_BridgeEditor):
         rowCount = spinBox.value()
         # set number of rows - by default the last row is added and deleted
         table.setRowCount(rowCount)
-        if table == self.pierTable:
+        if table == self.bridge.pierTable:
             headers = headers = ['Pier {0}'.format(p) for p in range(1, table.rowCount() + 1)]
             table.setVerticalHeaderLabels(headers)
     
@@ -1252,60 +1415,80 @@ class bridgeEditor(QDockWidget, Ui_tuflowqgis_BridgeEditor):
         :return:
         """
         
-        menu = QMenu(self)
+        menu = QMenu(self.bridge)
         exportCsv_action = QAction("Export Plot Data to Csv", menu)
         exportCsv_action.triggered.connect(self.export_csv)
         menu.addAction(exportCsv_action)
         menu.popup(self.plotWdg.mapToGlobal(pos))
     
     def updateAttributes(self):
+        """
+        Update the text fields on the OUTPUT tab
+        
+        :return:
+        """
+        
         # Invert
-        self.invert.setText('99999')
-        # dZ
-        self.dz.setText('0')
-        # Shape Width
-        self.shapeWidth.setText('{0:.1f}'.format(float(self.zLineWidth.text())))
-        if self.pierTable.item(0, 0) is None:
-            self.statusLog.insertItem(0, 'Warning: No Piers Defined in Table')
-            self.statusLabel.setText('Status: Warning')
+        if self.bridge.enforceInTerrain.isChecked():
+            self.bridge.invert.setText('0')
+            self.bridge.label_44.setText('Enforcing Bridge Invert- Points layer will be created')
+            self.variableGeom = True
         else:
-            self.layer1Obv.setText(self.deckTable.item(0, 1).text())
+            self.bridge.invert.setText('99999')
+            self.bridge.label_44.setText('Adopting existing Zpts as bridge invert')
+        # dZ
+        self.bridge.dz.setText('0')
+        # Shape Width
+        self.bridge.shapeWidth.setText('{0:.1f}'.format(float(self.bridge.zLineWidth.text())))
+        if self.bridge.pierTable.item(0, 0) is None:
+            self.bridge.statusLog.insertItem(0, 'Warning: No Piers Defined in Table')
+            self.bridge.statusLabel.setText('Status: Warning')
+        else:
+            self.bridge.layer1Obv.setText(self.bridge.deckTable.item(0, 1).text())
         # pier values
         self.calculateFlowArea()
         self.calculatePierArea()
-        self.layer1Block.setText('{0:.1f}'.format(self.pierArea / self.area * 100))
-        self.layer1Flc.setText('{0:.2f}'.format(lookupPierLoss(int(self.pierShape.currentText()), self.pierArea / self.area)))
+        self.bridge.layer1Block.setText('{0:.1f}'.format(self.pierArea / self.area * 100))
+        self.bridge.layer1Flc.setText('{0:.2f}'.format(lookupPierLoss(int(self.bridge.pierShape.currentText()), self.pierArea / self.area)))
         # elevation values
-        self.layer1Obv.setText(str(self.deckElevationBottom.value()))
-        self.layer2Depth.setText(str(self.deckThickness.value()))
-        self.layer3Depth.setText(str(self.handRailDepth.value()))
-        self.label_35.setText('Constant level')
-        self.label_36.setText('Constant level')
-        self.label_37.setText('Constant level')
-        for i in range(self.deckTable.rowCount()):
-            elev = float(self.deckTable.item(i, 1).text())
-            if i == 0:
-                elevPrev = elev
-            else:
-                if elev != elevPrev:
-                    self.layer1Obv.setText('0')
-                    self.layer2Depth.setText('0')
-                    self.layer3Depth.setText('0')
-                    self.label_35.setText('Variable elevation- Points layer will be created')
-                    self.label_36.setText('Variable elevation- Points layer will be created')
-                    self.label_37.setText('Variable elevation- Points layer will be created')
-                    break
-        # other blockage and FLC values
-        self.layer2Block.setText('100')
-        self.layer3Block.setText(str(self.handRailBlockage.value()))
-        self.layer3Flc.setText(str(self.handRailFlc.value()))
-        if self.rbDrowned.isChecked():
-            self.layer2Flc.setText('0.5')
+        self.bridge.layer1Obv.setText(str(self.bridge.deckElevationBottom.value()))
+        self.bridge.layer2Depth.setText(str(self.bridge.deckThickness.value()))
+        self.bridge.layer3Depth.setText(str(self.bridge.handRailDepth.value()))
+        self.bridge.label_35.setText('Constant level')
+        self.bridge.label_36.setText('Constant level')
+        self.bridge.label_37.setText('Constant level')
+        if self.variableGeom:
+            self.bridge.layer1Obv.setText('0')
+            self.bridge.layer2Depth.setText('0')
+            self.bridge.layer3Depth.setText('0')
+            self.bridge.label_35.setText('Variable elevation- Points layer will be created')
+            self.bridge.label_36.setText('Variable elevation- Points layer will be created')
+            self.bridge.label_37.setText('Variable elevation- Points layer will be created')
         else:
-            self.layer2Flc.setText('1.56')
+            for i in range(self.bridge.deckTable.rowCount()):
+                elev = float(self.bridge.deckTable.item(i, 1).text())
+                if i == 0:
+                    elevPrev = elev
+                else:
+                    if elev != elevPrev:
+                        self.bridge.layer1Obv.setText('0')
+                        self.bridge.layer2Depth.setText('0')
+                        self.bridge.layer3Depth.setText('0')
+                        self.bridge.label_35.setText('Variable elevation- Points layer will be created')
+                        self.bridge.label_36.setText('Variable elevation- Points layer will be created')
+                        self.bridge.label_37.setText('Variable elevation- Points layer will be created')
+                        self.variableGeom = True
+                        break
+        # other blockage and FLC values
+        self.bridge.layer2Block.setText('100')
+        self.bridge.layer3Block.setText(str(self.bridge.handRailBlockage.value()))
+        self.bridge.layer3Flc.setText(str(self.bridge.handRailFlc.value()))
+        if self.bridge.rbDrowned.isChecked():
+            self.bridge.layer2Flc.setText('0.5')
+        else:
+            self.bridge.layer2Flc.setText('1.56')
         # comment
-        if not self.comment.text():
-            self.comment.setText(self.bridgeName.text())
+        self.bridge.comment.setText(self.bridge.bridgeName.text())
 
     def export_csv(self):
         """
@@ -1384,8 +1567,135 @@ class bridgeEditor(QDockWidget, Ui_tuflowqgis_BridgeEditor):
                     file.write(line)
                 file.close()
             except IOError:
-                self.statusLog.insertItem(0, 'Error: Opening File for editing')
-                self.statusLabel.setText('Status: Error')
+                self.bridge.statusLog.insertItem(0, 'Error: Opening File for editing')
+                self.bridge.statusLabel.setText('Status: Error')
                 return
-        self.statusLog.insertItem(0, 'Successfully exported csv')
-        self.statusLabel.setText('Status: Successful')
+        self.bridge.statusLog.insertItem(0, 'Successfully exported csv')
+        self.bridge.statusLabel.setText('Status: Successful')
+        
+    def createLayer(self):
+        """
+        Import an empty 2d_lfcsh layer and add temp layer feature with attributes
+        
+        :return:
+        """
+        
+        # precheck to see if there is a feature to create
+        if self.feat is None:
+            self.bridge.statusLog.insertItem(0, 'Error: No features to create layer from')
+            self.bridge.statusLabel.setText('Status: Error')
+            return
+        # import empty file
+        emptyTypes = ['2d_lfcsh']
+        lines = True
+        points = False
+        regions = False
+        if self.variableGeom:
+            points = True
+        message = tuflowqgis_import_empty_tf(self.iface, self.bridge.emptydir.text(), self.bridge.runId.text(), emptyTypes, points, lines, regions)
+        if message is not None:
+            QMessageBox.critical(self.iface.mainWindow(), "Importing TUFLOW Empty File(s)", message)
+        # add features
+        self.editLayer(tuflowqgis_find_layer('2d_lfcsh_{0}_L'.format(self.bridge.runId.text())), self.feat, True)
+        #self.bridge.statusLabel.setText('Status: Successful')
+    
+    def updateLayer(self):
+        """
+        Update the selected bridge layer with either updated attributes of selected feature, or add new feature
+        
+        :return:
+        """
+        
+        lyr = self.iface.mapCanvas().currentLayer()  # QgsVectorLayer
+        feat = lyr.selectedFeatures()   # list [QgsFeature]
+        if self.feat is None:
+            if len(feat) > 0:
+                self.editLayer(lyr, feat[0], False)
+            else:
+                self.bridge.statusLog.insertItem(0, 'Error: No edits to update')
+                self.bridge.statusLabel.setText('Status: Error')
+        else:
+            self.editLayer(lyr, self.feat, True)
+        self.bridge.statusLabel.setText('Status: Successful')
+    
+    def incrementLayer(self):
+        """
+        Increment layer then update with new feature or updated fields
+        
+        :return:
+        """
+        
+        # get current layer
+        lyr = self.iface.mapCanvas().currentLayer()  # QgsVectorLayer
+        feat = lyr.selectedFeatures()  # QgsFeature
+        if len(feat) > 0:
+            fid = feat[0].id()
+        # increment layer
+        self.incrementDialog = tuflowqgis_increment_dialog(self.iface)
+        self.incrementDialog.exec_()
+        # get new layer
+        lyr = tuflowqgis_find_layer(self.incrementDialog.outname)
+        if len(feat) > 0:
+            for feature in lyr.getFeatures():
+                if feature.id() == fid:
+                    feat = feature
+                    break
+                else:
+                    feat = None
+        if self.feat is None:
+            if feat is not None:
+                self.editLayer(lyr, feat, False)
+            else:
+                self.bridge.statusLog.insertItem(0, 'Error: No edits to update')
+                self.bridge.statusLabel.setText('Status: Error')
+        else:
+            self.editLayer(lyr, self.feat, True)
+        self.bridge.statusLabel.setText('Status: Successful')
+    
+    def editLayer(self, layer, feat, append):
+        """
+        edit layer with new feature or updated fields
+        
+        :param layer: QgsVectorLayer
+        :param feat: QgsFeature
+        :param append: bool - True for append to layer, false for don't append
+        :return:
+        """
+        
+        dp = layer.dataProvider()
+        attributes = [float(self.bridge.invert.text()),
+                      float(self.bridge.dz.text()),
+                      float(self.bridge.shapeWidth.text()),
+                      self.bridge.shapeOptions.text(),
+                      float(self.bridge.layer1Obv.text()),
+                      float(self.bridge.layer1Block.text()),
+                      float(self.bridge.layer1Flc.text()),
+                      float(self.bridge.layer2Depth.text()),
+                      float(self.bridge.layer2Block.text()),
+                      float(self.bridge.layer2Flc.text()),
+                      float(self.bridge.layer3Depth.text()),
+                      float(self.bridge.layer3Block.text()),
+                      float(self.bridge.layer3Flc.text()),
+                      self.bridge.comment.text()]
+        layer.startEditing()
+        feat.setAttributes(attributes)
+        if append:
+            dp.addFeatures([feat])
+        else:
+            layer.updateFeature(feat)
+        layer.commitChanges()
+        # select created feature
+        #if append:
+        #    fid = feat.id()
+        #    for f in layer.getFeatures():
+        #        if f.id() == fid:
+        #            layer.select(fid)
+        self.canvas.scene().removeItem(self.rubberBand)  # Remove previous temp layer
+        self.layer = layer
+        self.updated = True
+        self.saveData()
+        self.clearXsection()
+        self.feat = None
+        layer.triggerRepaint()
+        self.bridge.statusLabel.setText('Status: Successful')
+        self.bridge = None
