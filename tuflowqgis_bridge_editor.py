@@ -49,7 +49,7 @@ class bridgeEditor():
         self.layer = None  # QgsVectorLayer - layer created by tool
         self.feat = None  # QgsFeature layer
         self.variableGeom = False  # True means a point layer will have to be used
-        self.initialisePlot()
+        #self.initialisePlot()
         self.qgis_connect()
         #self.populateDems()
         self.populateAttributes()
@@ -119,7 +119,7 @@ class bridgeEditor():
             self.bridge.pbUpdatePierData.clicked.connect(self.updatePierTable)
             self.bridge.pbUpdateDeckData.clicked.connect(self.updateDeckTable)
             self.bridge.pbUseMapWindowSel.clicked.connect(self.getCurrSel)
-            self.bridge.pbDrawXsection.clicked.connect(self.useTempPolyline)
+            #self.bridge.pbDrawXsection.clicked.connect(self.useTempPolyline)
             self.bridge.pbClearXsection.clicked.connect(self.clearXsection)
             self.bridge.pbUpdateAttributes.clicked.connect(self.updateAttributes)
             self.bridge.pbCreateLayer.clicked.connect(self.createLayer)
@@ -130,8 +130,8 @@ class bridgeEditor():
             self.bridge.deckRowCount.valueChanged.connect(lambda: self.tableRowCountChanged(self.bridge.deckRowCount, self.bridge.deckTable))
             self.bridge.pierRowCount.valueChanged.connect(lambda: self.tableRowCountChanged(self.bridge.pierRowCount, self.bridge.pierTable))
             # Right Click (Context) Menus
-            self.plotWdg.setContextMenuPolicy(Qt.CustomContextMenu)
-            self.plotWdg.customContextMenuRequested.connect(self.showMenu)
+            self.bridge.plotWdg.setContextMenuPolicy(Qt.CustomContextMenu)
+            self.bridge.plotWdg.customContextMenuRequested.connect(self.showMenu)
             self.xSectionTableRowHeaders = self.bridge.xSectionTable.verticalHeader()
             self.pierTableRowHeaders = self.bridge.pierTable.verticalHeader()
             self.deckTableRowHeaders = self.bridge.deckTable.verticalHeader()
@@ -158,18 +158,21 @@ class bridgeEditor():
             self.bridge.pbUpdatePierData.clicked.disconnect(self.updatePierTable)
             self.bridge.pbUpdateDeckData.clicked.disconnect(self.updateDeckTable)
             self.bridge.pbUseMapWindowSel.clicked.disconnect(self.getCurrSel)
-            self.bridge.pbDrawXsection.clicked.disconnect(self.useTempPolyline)
+            #self.bridge.pbDrawXsection.clicked.disconnect(self.useTempPolyline)
             self.bridge.pbClearXsection.clicked.disconnect(self.clearXsection)
             self.bridge.pbUpdateAttributes.clicked.disconnect(self.updateAttributes)
             self.bridge.pbCreateLayer.clicked.connect(self.createLayer)
             self.bridge.pbUpdateLayer.clicked.connect(self.updateLayer)
             self.bridge.pbIncrementLayer.clicked.connect(self.incrementLayer)
             # Spin boxes
-            self.bridge.xSectionRowCount.valueChanged.disconnect(lambda: self.tableRowCountChanged(self.bridge.xSectionRowCount, self.bridge.xSectionTable))
-            self.bridge.deckRowCount.valueChanged.disconnect(lambda: self.tableRowCountChanged(self.bridge.deckRowCount, self.bridge.deckTable))
-            self.bridge.pierRowCount.valueChanged.disconnect(lambda: self.tableRowCountChanged(self.bridge.pierRowCount, self.bridge.pierTable))
+            #self.bridge.xSectionRowCount.valueChanged.disconnect(lambda: self.tableRowCountChanged(self.bridge.xSectionRowCount, self.bridge.xSectionTable))
+            #self.bridge.deckRowCount.valueChanged.disconnect(lambda: self.tableRowCountChanged(self.bridge.deckRowCount, self.bridge.deckTable))
+            #self.bridge.pierRowCount.valueChanged.disconnect(lambda: self.tableRowCountChanged(self.bridge.pierRowCount, self.bridge.pierTable))
+            self.bridge.xSectionRowCount.valueChanged.disconnect()
+            self.bridge.deckRowCount.valueChanged.disconnect()
+            self.bridge.pierRowCount.valueChanged.disconnect()
             # Right Click (Context) Menus
-            self.plotWdg.customContextMenuRequested.disconnect(self.showMenu)
+            self.bridge.plotWdg.customContextMenuRequested.disconnect(self.showMenu)
             self.xSectionTableRowHeaders.customContextMenuRequested.disconnect(self.showXsectionTableMenu)
             self.deckTableRowHeaders.customContextMenuRequested.disconnect(self.showDeckTableMenu)
             self.pierTableRowHeaders.customContextMenuRequested.disconnect(self.showPierTableMenu)
@@ -221,7 +224,7 @@ class bridgeEditor():
         self.artists.append(a)
         self.labels.append(label)
         self.subplot.hold(True)
-        self.fig.tight_layout()
+        #self.fig.tight_layout()
         self.plotWdg.draw()
 
     def manageMatplotlibAxe(self, axe1):
@@ -248,23 +251,24 @@ class bridgeEditor():
         
         if self.feat is None:
             lyr = self.canvas.currentLayer()
-            if lyr.type() == 0:  # QgsVectorLayer
-                feat = lyr.selectedFeatures()
-                if len(feat) > 0:
-                    self.bridge.invert.setText('{0}'.format(feat[0].attributes()[0]))
-                    self.bridge.dz.setText('{0}'.format(feat[0].attributes()[1]))
-                    self.bridge.shapeWidth.setText('{0}'.format(feat[0].attributes()[2]))
-                    self.bridge.shapeOptions.setText('{0}'.format(feat[0].attributes()[3]))
-                    self.bridge.layer1Block.setText('{0}'.format(feat[0].attributes()[4]))
-                    self.bridge.layer1Obv.setText('{0}'.format(feat[0].attributes()[5]))
-                    self.bridge.layer1Flc.setText('{0}'.format(feat[0].attributes()[6]))
-                    self.bridge.layer2Depth.setText('{0}'.format(feat[0].attributes()[7]))
-                    self.bridge.layer2Block.setText('{0}'.format(feat[0].attributes()[8]))
-                    self.bridge.layer2Flc.setText('{0}'.format(feat[0].attributes()[9]))
-                    self.bridge.layer3Depth.setText('{0}'.format(feat[0].attributes()[10]))
-                    self.bridge.layer3Block.setText('{0}'.format(feat[0].attributes()[11]))
-                    self.bridge.layer3Flc.setText('{0}'.format(feat[0].attributes()[12]))
-                    self.bridge.comment.setText('{0}'.format(feat[0].attributes()[13]))
+            if lyr == QgsVectorLayer:
+                if lyr.type() == 0:  # QgsVectorLayer
+                    feat = lyr.selectedFeatures()
+                    if len(feat) > 0:
+                        self.bridge.invert.setText('{0}'.format(feat[0].attributes()[0]))
+                        self.bridge.dz.setText('{0}'.format(feat[0].attributes()[1]))
+                        self.bridge.shapeWidth.setText('{0}'.format(feat[0].attributes()[2]))
+                        self.bridge.shapeOptions.setText('{0}'.format(feat[0].attributes()[3]))
+                        self.bridge.layer1Block.setText('{0}'.format(feat[0].attributes()[4]))
+                        self.bridge.layer1Obv.setText('{0}'.format(feat[0].attributes()[5]))
+                        self.bridge.layer1Flc.setText('{0}'.format(feat[0].attributes()[6]))
+                        self.bridge.layer2Depth.setText('{0}'.format(feat[0].attributes()[7]))
+                        self.bridge.layer2Block.setText('{0}'.format(feat[0].attributes()[8]))
+                        self.bridge.layer2Flc.setText('{0}'.format(feat[0].attributes()[9]))
+                        self.bridge.layer3Depth.setText('{0}'.format(feat[0].attributes()[10]))
+                        self.bridge.layer3Block.setText('{0}'.format(feat[0].attributes()[11]))
+                        self.bridge.layer3Flc.setText('{0}'.format(feat[0].attributes()[12]))
+                        self.bridge.comment.setText('{0}'.format(feat[0].attributes()[13]))
 
     def loadEditor(self, editor):
         self.bridge = editor
@@ -345,6 +349,8 @@ class bridgeEditor():
         self.bridge.pierShape.setCurrentIndex(self.saved_pierShape)
         self.bridge.zLineWidth.setValue(self.saved_zLineWidth)
         self.bridge.enforceInTerrain.setChecked(self.saved_enforceInTerrain)
+
+        self.updatePlot()
     
     def getCurrSel(self):
         """
@@ -415,20 +421,24 @@ class bridgeEditor():
         """
         
         self.canvas.scene().removeItem(self.rubberBand)  # Remove previous temp layer
-        self.labels = []
-        self.subplot.cla()  # clear axis
+        self.bridge.labels = []
+        self.xSectionElev = []
+        self.xSectionOffset = []
+        self.deckPatch = []
+        self.pierPatches = []
+        self.bridge.subplot.cla()  # clear axis
         self.feat = None
         # create curve
-        self.manageMatplotlibAxe(self.subplot)
+        self.manageMatplotlibAxe(self.bridge.subplot)
         label = "test"
         x = numpy.linspace(-numpy.pi, numpy.pi, 201)
         y = numpy.sin(x)
-        a, = self.subplot.plot(x, y)
-        self.artists.append(a)
-        self.labels.append(label)
-        self.subplot.hold(True)
-        self.fig.tight_layout()
-        self.plotWdg.draw()
+        a, = self.bridge.subplot.plot(x, y)
+        self.bridge.artists.append(a)
+        self.bridge.labels.append(label)
+        self.bridge.subplot.hold(True)
+        #self.fig.tight_layout()
+        self.bridge.plotWdg.draw()
         # clear tables
         self.bridge.xSectionTable.setRowCount(0)
         self.bridge.deckTable.setRowCount(0)
@@ -1164,42 +1174,42 @@ class bridgeEditor():
         """
 
         self.mouseTrackDisconnect()
+        self.updateXsectionData()
         self.updateDeckOffset()
         # Set up default limits
         ymax = -99999
         # Reset and clear plot
-        self.subplot.cla()
-        self.artists = []
-        self.labels = []
+        self.bridge.subplot.cla()
+        self.bridge.artists = []
+        self.bridge.labels = []
         # Update X Section
-        self.updateXsectionData()
-        a, = self.subplot.plot(self.xSectionOffset, self.xSectionElev)
+        a, = self.bridge.subplot.plot(self.xSectionOffset, self.xSectionElev)
         label = 'X-Section'
         ymax = max(ymax, max(self.xSectionElev))
-        self.labels.append(label)
-        self.artists.append(a)
-        self.subplot.hold(True)
+        self.bridge.labels.append(label)
+        self.bridge.artists.append(a)
+        self.bridge.subplot.hold(True)
         # Update Pier Data
         self.createPierPatches()
         for pier in self.pierPatches:
             for v in pier:
                 ymax = max(ymax, v[1])
             patch = Polygon(pier, facecolor='0.9', edgecolor='0.5')
-            self.subplot.add_patch(patch)
+            self.bridge.subplot.add_patch(patch)
         # Update Deck Data
         self.createDeckPatch()
         for v in self.deckPatch:
             ymax = max(ymax, v[1])
         if self.deckPatch:
             patch = Polygon(self.deckPatch, facecolor='0.9', edgecolor='0.5')
-            self.subplot.add_patch(patch)
+            self.bridge.subplot.add_patch(patch)
         # Draw
-        self.manageMatplotlibAxe(self.subplot)
-        yTicks = self.subplot.get_yticks()
+        self.manageMatplotlibAxe(self.bridge.subplot)
+        yTicks = self.bridge.subplot.get_yticks()
         yInc = yTicks[1] - yTicks[0]
-        self.subplot.set_ybound(upper=ymax + yInc)
-        self.fig.tight_layout()
-        self.plotWdg.draw()
+        self.bridge.subplot.set_ybound(upper=ymax + yInc)
+        #self.fig.tight_layout()
+        self.bridge.plotWdg.draw()
 
     def showPierTableMenu(self, pos):
         """
@@ -1616,7 +1626,7 @@ class bridgeEditor():
                 self.bridge.statusLabel.setText('Status: Error')
         else:
             self.editLayer(lyr, self.feat, True)
-        self.bridge.statusLabel.setText('Status: Successful')
+        #self.bridge.statusLabel.setText('Status: Successful')
     
     def incrementLayer(self):
         """
@@ -1685,11 +1695,17 @@ class bridgeEditor():
             layer.updateFeature(feat)
         layer.commitChanges()
         # select created feature
-        #if append:
-        #    fid = feat.id()
-        #    for f in layer.getFeatures():
-        #        if f.id() == fid:
-        #            layer.select(fid)
+        if append:
+            layer.removeSelection()
+            no_features = layer.featureCount()
+            count = 1
+            for f in layer.getFeatures():
+                if count == no_features:
+                    self.feature = f
+                    fid = f.id()
+                    layer.select(fid)
+                    break
+                count += 1
         self.canvas.scene().removeItem(self.rubberBand)  # Remove previous temp layer
         self.layer = layer
         self.updated = True
@@ -1698,4 +1714,5 @@ class bridgeEditor():
         self.feat = None
         layer.triggerRepaint()
         self.bridge.statusLabel.setText('Status: Successful')
+        self.qgis_disconnect()
         self.bridge = None
