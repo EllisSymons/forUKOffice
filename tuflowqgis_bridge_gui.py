@@ -1,13 +1,6 @@
 # coding=utf-8
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
-from PyQt4 import QtGui
-from qgis.core import *
-from qgis.gui import *
-from canvas_event import canvasEvent
-import matplotlib
-import matplotlib.pyplot as plt
 from tuflowqgis_bridge_editor import *
+from tuflowqgis_library import findAllRasterLyrs
 import sys
 sys.path.append(os.path.dirname(os.path.abspath(__file__)) + "/forms")
 from ui_tuflowqgis_bridge_editor import Ui_tuflowqgis_BridgeEditor
@@ -25,8 +18,7 @@ class bridgeGui(QDockWidget, Ui_tuflowqgis_BridgeEditor):
         self.new_bridge = False
         self.initialisePlot()
         self.populateDems()
-        #self.newBridge()
-        
+        self.bridge = bridgeEditor(self, self.iface)
         self.qgis_connect()
 
     def qgis_connect(self):
@@ -38,7 +30,7 @@ class bridgeGui(QDockWidget, Ui_tuflowqgis_BridgeEditor):
     
         if not self.connected:
             self.canvas.layersChanged.connect(self.populateDems)
-            #self.canvas.layersChanged.connect(self.checkForBridge)
+            self.canvas.layersChanged.connect(self.checkForBridge)
             self.canvas.currentLayerChanged.connect(self.checkForBridge)
             self.canvas.selectionChanged.connect(self.checkForBridge)
             self.pbDrawXsection.clicked.connect(self.startNewBridge)
@@ -142,17 +134,51 @@ class bridgeGui(QDockWidget, Ui_tuflowqgis_BridgeEditor):
                     demIndex = i
             if demIndex is not None:
                 self.demComboBox.setCurrentIndex(demIndex)
+
+    def browse(self):
+        """
+        Browse to user defined Empty File Directory
+        
+        :return:
+        """
+        
+        outFile_old = None
+        if len(self.emptydir.text()) > 0:
+            outFile_old = self.outFile.text()
+        settings = QSettings()
+        lastFolder = str(settings.value("bridge_editor/emptydir", os.sep))
+        if len(lastFolder) > 0:  # use last folder if stored
+            fpath = lastFolder
+        else:
+            fpath = os.getcwd()
+        outFile = QFileDialog.getExistingDirectory(None, "Empty Directory")
+        if outFile is None or len(outFile) < 3 or outFile == os.sep or outFile == 'c:\\':
+            if outFile_old is not None:
+                self.emptydir.setText(outFile_old)
+        else:
+            settings.setValue("bridge_editor/emptydir", os.path.dirname(outFile))
+            self.emptydir.setText(outFile)
     
     def startNewBridge(self):
-        import pydevd
-        pydevd.settrace('localhost', port=53100, stdoutToServer=True, stderrToServer=True)
+        """
+        Initiate new bridge class
+        
+        :return:
+        """
+        
+        self.bridge.clearXsection()
+        self.bridge.qgis_disconnect()
         self.bridge = bridgeEditor(self, self.iface)
         self.bridge.useTempPolyline()
 
     def checkForBridge(self):
-        import pydevd
-        pydevd.settrace('localhost', port=53100, stdoutToServer=True, stderrToServer=True)
-        self.saveBridge()
+        """
+        Check for pre-existing bridge data
+        
+        :return:
+        """
+        
+        self.saveBridge()  # save changes to current bridge class object before loading new
         lyr = self.canvas.currentLayer()
         if lyr.type() == 0:  # QgsVectorLayer
             lyrName = lyr.name()
@@ -162,26 +188,32 @@ class bridgeGui(QDockWidget, Ui_tuflowqgis_BridgeEditor):
                 bridgeKey = '{0},{1}'.format(lyrName, fid)
                 if bridgeKey in self.bridges.keys():
                     self.loadBridge(self.bridges[bridgeKey])
-                #else:
-                #    self.newBridge()
-                #    self.new_bridge = True
-        #else:
-        #    self.newBridge()
-        #    self.new_bridge = True
         
     def loadBridge(self, bridge):
-        import pydevd
-        pydevd.settrace('localhost', port=53100, stdoutToServer=True, stderrToServer=True)
+        """
+        Load savaed and pre-existing bridge class object
+        
+        :param bridge: tuflowqgis_bridge_editor clas object
+        :return:
+        """
+        
+        self.bridge.qgis_disconnect()
+        self.bridge.bridge = None
         self.bridge = bridge
-        self.bridge.loadEditor(self)
+        self.bridge.loadGui(self)
         self.bridge.loadData()
+        self.bridge.populateAttributes()
     
     def newBridge(self):
-        import pydevd
-        pydevd.settrace('localhost', port=53100, stdoutToServer=True, stderrToServer=True)
         self.bridge = bridgeEditor(self, self.iface)
         
     def saveBridge(self):
+        """
+        Save bridge editor class object to dictionary for quick access later
+        
+        :return:
+        """
+        
         if self.bridge.updated:
             lyr = self.bridge.layer
             lyrName = lyr.name()
@@ -190,21 +222,3 @@ class bridgeGui(QDockWidget, Ui_tuflowqgis_BridgeEditor):
             self.bridge.updated = False
             self.bridges['{0},{1}'.format(lyrName, fid)] = self.bridge
             self.new_bridge = False
-        #lyr = self.canvas.currentLayer()
-        #if lyr.type() == 0:  # QgsVetorLayer
-        #    lyrName = lyr.name()
-        #elif lyr.type() == 1:  # QgsRasterLayer
-        #    lyr = bridge.layer
-        #    if lyr is not None:
-        #        lyrName = lyr.name()
-        #    else:
-        #        return
-        #else:
-        #    return
-        #if self.bridge.updated:
-        #    feat = lyr.selectedFeatures()
-        #    if len(feat) > 0:
-        #        fid = feat[0].id()
-        #        self.bridges['{0},{1}'.format(lyrName, fid)] = self.bridge
-        #        self.bridge.updated = False
-

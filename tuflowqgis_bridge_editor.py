@@ -11,14 +11,14 @@ from matplotlib.figure import Figure
 from matplotlib.patches import Patch
 from matplotlib.patches import Polygon
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg
-import numpy
 from tuflowqgis_settings import TF_Settings
-from tuflowqgis_library import lineToPoints, getRasterValue, findAllRasterLyrs, tuflowqgis_find_layer, tuflowqgis_import_empty_tf
-from tuflowqgis_dialog import tuflowqgis_increment_dialog
+from tuflowqgis_library import lineToPoints, getRasterValue
+from tuflowqgis_bridge_context_menus import *
+from tuflowqgis_bridge_rubberband import *
+from tuflowqgis_bridge_layer_edit import *
 from canvas_event import canvasEvent
 from Pier_Losses import lookupPierLoss
 sys.path.append(os.path.dirname(os.path.abspath(__file__)) + "/forms")
-#from ui_tuflowqgis_bridge_editor import Ui_tuflowqgis_BridgeEditor
 # Debug using PyCharm
 sys.path.append(r'C:\Program Files\JetBrains\PyCharm 2018.1\debug-eggs')
 sys.path.append(r'C:\Program Files\JetBrains\PyCharm 2018.1\helpers\pydev')
@@ -27,13 +27,10 @@ sys.path.append(r'C:\Program Files\JetBrains\PyCharm 2018.1\helpers\pydev')
 class bridgeEditor():
 
     def __init__(self, bridge, iface, **kwargs):
-        #QDockWidget.__init__(self)
-        #self.wdg = Ui_tuflowqgis_BridgeEditor.__init__(self)
-        #self.setupUi(self)
         self.updated = False
-        self.bridge = bridge
-        self.iface = iface
-        self.canvas = self.iface.mapCanvas()
+        self.bridge = bridge  # bridge gui class
+        self.iface = iface  # QgsInterface
+        self.canvas = self.iface.mapCanvas()  # QgsMapCanvas
         self.connected = False  # signal connections
         self.cursorTrackingConnected = False  # temp polyline signals
         self.xSectionOffset = []  # XSection offset values
@@ -49,9 +46,7 @@ class bridgeEditor():
         self.layer = None  # QgsVectorLayer - layer created by tool
         self.feat = None  # QgsFeature layer
         self.variableGeom = False  # True means a point layer will have to be used
-        #self.initialisePlot()
         self.qgis_connect()
-        #self.populateDems()
         self.populateAttributes()
         
         # Save data
@@ -84,7 +79,6 @@ class bridgeEditor():
         error, message = self.tfsettings.Load()
         if error:
             QMessageBox.information(self.iface.mainWindow(), "Error", "Error Loading Settings: " + message)
-
         basepath = self.tfsettings.combined.base_dir
         if basepath:
             path_split = basepath.split('\\')
@@ -93,13 +87,6 @@ class bridgeEditor():
             self.bridge.emptydir.setText(os.path.join(basepath, "TUFLOW", "model", "gis", "empty"))
         else:
             self.bridge.emptydir.setText("ERROR - Project not loaded")
-            
-        # Get loaded bridge editor data
-        if 'loaded_data' in kwargs.keys():
-            self.loadedBridge = kwargs['loaded_data']
-            #self.loadData()
-        else:
-            self.loadedBridge = None
 		    
     def __del__(self):
         self.qgis_disconnect()
@@ -113,7 +100,7 @@ class bridgeEditor():
         
         if not self.connected:
             # canvas interactions
-            #self.canvas.layersChanged.connect(self.populateDems)
+            # None
             # push buttons
             self.bridge.pbUpdate.clicked.connect(self.updatePlot)
             self.bridge.pbUpdatePierData.clicked.connect(self.updatePierTable)
@@ -122,25 +109,25 @@ class bridgeEditor():
             #self.bridge.pbDrawXsection.clicked.connect(self.useTempPolyline)
             self.bridge.pbClearXsection.clicked.connect(self.clearXsection)
             self.bridge.pbUpdateAttributes.clicked.connect(self.updateAttributes)
-            self.bridge.pbCreateLayer.clicked.connect(self.createLayer)
-            self.bridge.pbUpdateLayer.clicked.connect(self.updateLayer)
-            self.bridge.pbIncrementLayer.clicked.connect(self.incrementLayer)
+            self.bridge.pbCreateLayer.clicked.connect(lambda: createLayer(self))
+            self.bridge.pbUpdateLayer.clicked.connect(lambda: updateLayer(self))
+            self.bridge.pbIncrementLayer.clicked.connect(lambda: incrementLayer(self))
             # Spin boxes
-            self.bridge.xSectionRowCount.valueChanged.connect(lambda: self.tableRowCountChanged(self.bridge.xSectionRowCount, self.bridge.xSectionTable))
-            self.bridge.deckRowCount.valueChanged.connect(lambda: self.tableRowCountChanged(self.bridge.deckRowCount, self.bridge.deckTable))
-            self.bridge.pierRowCount.valueChanged.connect(lambda: self.tableRowCountChanged(self.bridge.pierRowCount, self.bridge.pierTable))
+            self.bridge.xSectionRowCount.valueChanged.connect(lambda: tableRowCountChanged(self, self.bridge.xSectionRowCount, self.bridge.xSectionTable))
+            self.bridge.deckRowCount.valueChanged.connect(lambda: tableRowCountChanged(self, self.bridge.deckRowCount, self.bridge.deckTable))
+            self.bridge.pierRowCount.valueChanged.connect(lambda: tableRowCountChanged(self, self.bridge.pierRowCount, self.bridge.pierTable))
             # Right Click (Context) Menus
-            self.bridge.plotWdg.setContextMenuPolicy(Qt.CustomContextMenu)
-            self.bridge.plotWdg.customContextMenuRequested.connect(self.showMenu)
             self.xSectionTableRowHeaders = self.bridge.xSectionTable.verticalHeader()
             self.pierTableRowHeaders = self.bridge.pierTable.verticalHeader()
             self.deckTableRowHeaders = self.bridge.deckTable.verticalHeader()
+            self.bridge.plotWdg.setContextMenuPolicy(Qt.CustomContextMenu)
             self.xSectionTableRowHeaders.setContextMenuPolicy(Qt.CustomContextMenu)
             self.deckTableRowHeaders.setContextMenuPolicy(Qt.CustomContextMenu)
             self.pierTableRowHeaders.setContextMenuPolicy(Qt.CustomContextMenu)
-            self.xSectionTableRowHeaders.customContextMenuRequested.connect(self.showXsectionTableMenu)
-            self.deckTableRowHeaders.customContextMenuRequested.connect(self.showDeckTableMenu)
-            self.pierTableRowHeaders.customContextMenuRequested.connect(self.showPierTableMenu)
+            self.bridge.plotWdg.customContextMenuRequested.connect(lambda pos: plotterMenu(self, pos))
+            self.xSectionTableRowHeaders.customContextMenuRequested.connect(lambda pos: xSectionTableMenu(self, pos))
+            self.deckTableRowHeaders.customContextMenuRequested.connect(lambda pos: deckTableMenu(self, pos))
+            self.pierTableRowHeaders.customContextMenuRequested.connect(lambda pos: pierTableMenu(self, pos))
             self.connected = True
 
     def qgis_disconnect(self):
@@ -152,7 +139,7 @@ class bridgeEditor():
 
         if self.connected:
             # canvas interactions
-            #self.canvas.layersChanged.disconnect(self.populateDems)
+            # None
             # push buttons
             self.bridge.pbUpdate.clicked.disconnect(self.updatePlot)
             self.bridge.pbUpdatePierData.clicked.disconnect(self.updatePierTable)
@@ -161,86 +148,19 @@ class bridgeEditor():
             #self.bridge.pbDrawXsection.clicked.disconnect(self.useTempPolyline)
             self.bridge.pbClearXsection.clicked.disconnect(self.clearXsection)
             self.bridge.pbUpdateAttributes.clicked.disconnect(self.updateAttributes)
-            self.bridge.pbCreateLayer.clicked.connect(self.createLayer)
-            self.bridge.pbUpdateLayer.clicked.connect(self.updateLayer)
-            self.bridge.pbIncrementLayer.clicked.connect(self.incrementLayer)
+            self.bridge.pbCreateLayer.clicked.disconnect()
+            self.bridge.pbUpdateLayer.clicked.disconnect()
+            self.bridge.pbIncrementLayer.clicked.disconnect()
             # Spin boxes
-            #self.bridge.xSectionRowCount.valueChanged.disconnect(lambda: self.tableRowCountChanged(self.bridge.xSectionRowCount, self.bridge.xSectionTable))
-            #self.bridge.deckRowCount.valueChanged.disconnect(lambda: self.tableRowCountChanged(self.bridge.deckRowCount, self.bridge.deckTable))
-            #self.bridge.pierRowCount.valueChanged.disconnect(lambda: self.tableRowCountChanged(self.bridge.pierRowCount, self.bridge.pierTable))
             self.bridge.xSectionRowCount.valueChanged.disconnect()
             self.bridge.deckRowCount.valueChanged.disconnect()
             self.bridge.pierRowCount.valueChanged.disconnect()
             # Right Click (Context) Menus
-            self.bridge.plotWdg.customContextMenuRequested.disconnect(self.showMenu)
-            self.xSectionTableRowHeaders.customContextMenuRequested.disconnect(self.showXsectionTableMenu)
-            self.deckTableRowHeaders.customContextMenuRequested.disconnect(self.showDeckTableMenu)
-            self.pierTableRowHeaders.customContextMenuRequested.disconnect(self.showPierTableMenu)
+            self.bridge.plotWdg.customContextMenuRequested.disconnect()
+            self.xSectionTableRowHeaders.customContextMenuRequested.disconnect()
+            self.deckTableRowHeaders.customContextMenuRequested.disconnect()
+            self.pierTableRowHeaders.customContextMenuRequested.disconnect()
             self.connected = False
-            
-    def initialisePlot(self):
-        """
-        Initialise matplotlib plotting
-        
-        :return: void matplotlib plot widget
-        """
-        
-        # Initialise ui packing
-        self.layout = self.bridge.frame_for_plot_2.layout()
-        minsize = self.bridge.minimumSize()
-        maxsize = self.bridge.maximumSize()
-        self.bridge.setMinimumSize(minsize)
-        self.bridge.setMaximumSize(maxsize)
-        self.iface.mapCanvas().setRenderFlag(True)
-        # Initialise plotting parameters
-        self.artists = []
-        self.labels = []
-        self.fig, self.subplot = plt.subplots()
-        font = {'family': 'arial', 'weight': 'normal', 'size': 12}
-        rect = self.fig.patch
-        rect.set_facecolor((0.9, 0.9, 0.9))
-        self.subplot.set_xbound(0, 1000)
-        self.subplot.set_ybound(0, 1000)
-        self.manageMatplotlibAxe(self.subplot)
-        canvas = FigureCanvasQTAgg(self.fig)
-        sizePolicy = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        canvas.setSizePolicy(sizePolicy)
-        self.plotWdg = canvas
-        self.bridge.gridLayout_3.addWidget(self.plotWdg)
-        if matplotlib.__version__ < 1.5:
-            mpltoolbar = matplotlib.backends.backend_qt4agg.NavigationToolbar2QTAgg(self.plotWdg,
-                                                                                    self.bridge.frame_for_toolbar)
-        else:
-            mpltoolbar = matplotlib.backends.backend_qt4agg.NavigationToolbar2QT(self.plotWdg, self.bridge.frame_for_toolbar)
-        lstActions = mpltoolbar.actions()
-        mpltoolbar.removeAction(lstActions[7])  # remove customise subplot
-        # create curve
-        label = "test"
-        x = numpy.linspace(-numpy.pi, numpy.pi, 201)
-        y = numpy.sin(x)
-        a, = self.subplot.plot(x, y)
-        self.artists.append(a)
-        self.labels.append(label)
-        self.subplot.hold(True)
-        #self.fig.tight_layout()
-        self.plotWdg.draw()
-
-    def manageMatplotlibAxe(self, axe1):
-        """
-        Settings for matplotlib axis
-        
-        :param axe1: matplotlib axis object
-        :return: void
-        """
-        
-        axe1.grid()
-        axe1.tick_params(axis="both", which="major", direction="out", length=10, width=1, bottom=True, top=False,
-                         left=True, right=False)
-        axe1.minorticks_on()
-        axe1.tick_params(axis="both", which="minor", direction="out", length=5, width=1, bottom=True, top=False,
-                         left=True, right=False)
 
     def populateAttributes(self):
         """
@@ -248,17 +168,17 @@ class bridgeEditor():
         
         :return:
         """
-        
+
         if self.feat is None:
             lyr = self.canvas.currentLayer()
-            if lyr == QgsVectorLayer:
+            if lyr is not None:
                 if lyr.type() == 0:  # QgsVectorLayer
                     feat = lyr.selectedFeatures()
                     if len(feat) > 0:
                         self.bridge.invert.setText('{0}'.format(feat[0].attributes()[0]))
                         self.bridge.dz.setText('{0}'.format(feat[0].attributes()[1]))
                         self.bridge.shapeWidth.setText('{0}'.format(feat[0].attributes()[2]))
-                        self.bridge.shapeOptions.setText('{0}'.format(feat[0].attributes()[3]))
+                        self.bridge.shapeOptions.setText('{0}'.format(feat[0].attributes()[3]) if feat[0].attributes()[3] != NULL else '')
                         self.bridge.layer1Block.setText('{0}'.format(feat[0].attributes()[4]))
                         self.bridge.layer1Obv.setText('{0}'.format(feat[0].attributes()[5]))
                         self.bridge.layer1Flc.setText('{0}'.format(feat[0].attributes()[6]))
@@ -270,10 +190,23 @@ class bridgeEditor():
                         self.bridge.layer3Flc.setText('{0}'.format(feat[0].attributes()[12]))
                         self.bridge.comment.setText('{0}'.format(feat[0].attributes()[13]))
 
-    def loadEditor(self, editor):
-        self.bridge = editor
+    def loadGui(self, gui):
+        """
+        Loads the GUI class
+        
+        :param gui: tuflowqgis_bridge_gui class object
+        :return:
+        """
+        
+        self.bridge = gui
     
     def saveData(self):
+        """
+        Save the GUI data into the editor object
+        
+        :return:
+        """
+        
         # save tables
         x = []
         y = []
@@ -313,7 +246,7 @@ class bridgeEditor():
         
     def loadData(self):
         """
-        loads the plot from a previous bridge editor
+        loads the plot from a previous bridge editor class
 
         :return:
         """
@@ -349,7 +282,8 @@ class bridgeEditor():
         self.bridge.pierShape.setCurrentIndex(self.saved_pierShape)
         self.bridge.zLineWidth.setValue(self.saved_zLineWidth)
         self.bridge.enforceInTerrain.setChecked(self.saved_enforceInTerrain)
-
+        
+        self.qgis_connect()
         self.updatePlot()
     
     def getCurrSel(self):
@@ -359,7 +293,6 @@ class bridgeEditor():
         :return:
         """
         
-        self.mouseTrackDisconnect()
         # Get current selection
         lyr = self.iface.mapCanvas().currentLayer()  # QgsVectorLayer
         feat = lyr.selectedFeatures()  # list [QgsFeature]
@@ -429,7 +362,7 @@ class bridgeEditor():
         self.bridge.subplot.cla()  # clear axis
         self.feat = None
         # create curve
-        self.manageMatplotlibAxe(self.bridge.subplot)
+        self.bridge.manageMatplotlibAxe(self.bridge.subplot)
         label = "test"
         x = numpy.linspace(-numpy.pi, numpy.pi, 201)
         y = numpy.sin(x)
@@ -462,6 +395,25 @@ class bridgeEditor():
         self.bridge.pierShape.setCurrentIndex(0)
         self.bridge.zLineWidth.setValue(0)
         self.bridge.enforceInTerrain.setChecked(False)
+        # clear attributes
+        self.bridge.invert.setText('')
+        self.bridge.dz.setText('')
+        self.bridge.shapeWidth.setText('')
+        self.bridge.shapeOptions.setText('')
+        self.bridge.layer1Obv.setText('')
+        self.bridge.layer1Block.setText('')
+        self.bridge.layer1Flc.setText('')
+        self.bridge.layer2Depth.setText('')
+        self.bridge.layer2Block.setText('')
+        self.bridge.layer2Flc.setText('')
+        self.bridge.layer3Depth.setText('')
+        self.bridge.layer3Block.setText('')
+        self.bridge.layer3Flc.setText('')
+        self.bridge.comment.setText('')
+        self.bridge.label_44.setText('')
+        self.bridge.label_35.setText('')
+        self.bridge.label_36.setText('')
+        self.bridge.label_37.setText('')
 
     def createMemoryLayerFromTempLayer(self):
         """
@@ -490,101 +442,7 @@ class bridgeEditor():
         self.canvas.setMapTool(self.tempPolyline)
         self.points = []
         self.rubberBand.setToGeometry(QgsGeometry.fromPolyline(self.points), None)
-        self.mouseTrackConnect()
-        
-    def moved(self, position):
-        """
-        Signal sent when cursor is moved on the map canvas
-        
-        :param position: dict event signal position
-        :return: void
-        """
-        
-        x = position['x']
-        y = position['y']
-        point = self.canvas.getCoordinateTransform().toMapCoordinates(x, y)
-        if self.points:
-            try:  # QGIS 2
-                if QGis.QGIS_VERSION >= 10900:
-                    self.rubberBand.reset(QGis.Line)
-                else:
-                    self.rubberBand.reset(False)
-            except:  # QGIS 3
-                self.rubberBand.reset(QgsWkbTypes.LineGeometry)
-            #self.points.pop()
-            #self.points.append(point)
-            self.rubberBand.setToGeometry(QgsGeometry.fromPolyline(self.points), None)
-            self.rubberBand.addPoint(point)
-    
-    def leftClick(self, position):
-        """
-        Signal sent when canvas is left clicked
-        
-        :param position: dict event signal position
-        :return: void
-        """
-        
-        x = position['x']
-        y = position['y']
-        point = self.canvas.getCoordinateTransform().toMapCoordinates(x, y)
-        self.points.append(point)
-        self.rubberBand.addPoint(point)
-    
-    def rightClick(self, position):
-        """
-        Signal sent when canvas is right clicked
-        
-        :param position: dict event signal position
-        :return: void
-        
-        :param position:
-        :return:
-        """
-        
-        self.mouseTrackDisconnect()
-        self.createMemoryLayerFromTempLayer()
-
-    def escape(self, key):
-        """
-        Signal sent when a key is pressed in qgis. Will cancel the line if escape is pressed
-        
-        :param key: QKeyEvent
-        :return:
-        """
-        
-        #QMessageBox.information(self.iface.mainWindow(), "debug", "{0}".format(key.key()))
-        if key.key() == 16777216:  # Escape key
-            self.canvas.scene().removeItem(self.rubberBand)  # Remove previous temp layer
-            self.mouseTrackDisconnect()
-    
-    def mouseTrackConnect(self):
-        """
-        Captures signals from the custom map tool
-        
-        :return:
-        """
-        
-        if not self.cursorTrackingConnected:
-            self.cursorTrackingConnected = True
-            QApplication.setOverrideCursor(Qt.CrossCursor)
-            self.tempPolyline.moved.connect(self.moved)
-            self.tempPolyline.rightClicked.connect(self.rightClick)
-            self.tempPolyline.leftClicked.connect(self.leftClick)
-            self.canvas.keyPressed.connect(self.escape)
-
-    def mouseTrackDisconnect(self):
-        """
-        Turn off capturing of the custom map tool
-        
-        :return:
-        """
-        
-        if self.cursorTrackingConnected:
-            self.cursorTrackingConnected = False
-            QApplication.restoreOverrideCursor()
-            self.tempPolyline.moved.disconnect(self.moved)
-            self.tempPolyline.rightClicked.disconnect(self.rightClick)
-            self.tempPolyline.leftClicked.disconnect(self.leftClick)
+        mouseTrackConnect(self)  # start the tuflowqgis_bridge_rubberband
     
     def updateXsectionTable(self):
         """
@@ -623,7 +481,6 @@ class bridgeEditor():
         :return: void updated table widget with data
         """
 
-        self.mouseTrackDisconnect()
         # Check if cross section data is present
         if not self.xSectionOffset:
             return
@@ -644,6 +501,8 @@ class bridgeEditor():
             self.bridge.pierTable.setItem(i, 0, QTableWidgetItem(str(pier)))
         # update spinbox
         self.bridge.pierRowCount.setValue(self.bridge.pierTable.rowCount())
+        
+        self.updatePlot()
 
     def createPierPatches(self):
         """
@@ -712,7 +571,6 @@ class bridgeEditor():
         :return:
         """
 
-        self.mouseTrackDisconnect()
         # Set up table
         self.bridge.deckTable.setRowCount(2)
         # Update parameters
@@ -728,6 +586,8 @@ class bridgeEditor():
         self.bridge.deckTable.setItem(1, 0, QTableWidgetItem(str(xmax)))
         self.bridge.deckTable.setItem(0, 1, QTableWidgetItem(str(self.bridge.deckElevationBottom.value())))
         self.bridge.deckTable.setItem(1, 1, QTableWidgetItem(str(self.bridge.deckElevationBottom.value())))
+        
+        self.updatePlot()
         
     def updateDeckOffset(self):
         """
@@ -1173,7 +1033,6 @@ class bridgeEditor():
         :return: void
         """
 
-        self.mouseTrackDisconnect()
         self.updateXsectionData()
         self.updateDeckOffset()
         # Set up default limits
@@ -1204,232 +1063,12 @@ class bridgeEditor():
             patch = Polygon(self.deckPatch, facecolor='0.9', edgecolor='0.5')
             self.bridge.subplot.add_patch(patch)
         # Draw
-        self.manageMatplotlibAxe(self.bridge.subplot)
+        self.bridge.manageMatplotlibAxe(self.bridge.subplot)
         yTicks = self.bridge.subplot.get_yticks()
         yInc = yTicks[1] - yTicks[0]
         self.bridge.subplot.set_ybound(upper=ymax + yInc)
-        #self.fig.tight_layout()
+        self.bridge.fig.tight_layout()
         self.bridge.plotWdg.draw()
-
-    def showPierTableMenu(self, pos):
-        """
-        Table right click menu
-        
-        :param pos: QPoint & pos
-        :return:
-        """
-        
-        menu = QMenu(self.bridge)
-        insertRowBefore_action = QAction("Insert Row (before)", menu)
-        insertRowAfter_action = QAction("Insert Row (after)", menu)
-        deleteRow_action = QAction("Delete Row", menu)
-        insertRowBefore_action.triggered.connect(lambda: self.insertRowBefore(self.bridge.pierTable))
-        insertRowAfter_action.triggered.connect(lambda: self.insertRowAfter(self.bridge.pierTable))
-        deleteRow_action.triggered.connect(lambda: self.deleteRow(self.bridge.pierTable))
-        menu.addAction(insertRowBefore_action)
-        menu.addAction(insertRowAfter_action)
-        menu.addAction(deleteRow_action)
-        menu.popup(self.bridge.pierTable.mapToGlobal(pos))
-        
-    def showDeckTableMenu(self, pos):
-        """
-        Table right click menu
-
-        :param pos: QPoint & pos
-        :return:
-        """
-        
-        menu = QMenu(self.bridge)
-        insertRowBefore_action = QAction("Insert Row (before)", menu)
-        insertRowAfter_action = QAction("Insert Row (after)", menu)
-        deleteRow_action = QAction("Delete Row", menu)
-        insertRowBefore_action.triggered.connect(lambda: self.insertRowBefore(self.bridge.deckTable))
-        insertRowAfter_action.triggered.connect(lambda: self.insertRowAfter(self.bridge.deckTable))
-        deleteRow_action.triggered.connect(lambda: self.deleteRow(self.bridge.deckTable))
-        menu.addAction(insertRowBefore_action)
-        menu.addAction(insertRowAfter_action)
-        menu.addAction(deleteRow_action)
-        menu.popup(self.bridge.pierTable.mapToGlobal(pos))
-        
-    def showXsectionTableMenu(self, pos):
-        """
-        Table right click menu
-
-        :param pos: QPoint & pos
-        :return:
-        """
-        
-        menu = QMenu(self.bridge)
-        insertRowBefore_action = QAction("Insert Row (before)", menu)
-        insertRowAfter_action = QAction("Insert Row (after)", menu)
-        deleteRow_action = QAction("Delete Row", menu)
-        insertRowBefore_action.triggered.connect(lambda: self.insertRowBefore(self.bridge.xSectionTable))
-        insertRowAfter_action.triggered.connect(lambda: self.insertRowAfter(self.bridge.xSectionTable))
-        deleteRow_action.triggered.connect(lambda: self.deleteRow(self.bridge.xSectionTable))
-        menu.addAction(insertRowBefore_action)
-        menu.addAction(insertRowAfter_action)
-        menu.addAction(deleteRow_action)
-        menu.popup(self.bridge.pierTable.mapToGlobal(pos))
-        
-    def insertRowBefore(self, table):
-        """
-        Insert row in QTableWidget before the current selection
-        
-        :param table: QTableWidget
-        :return:
-        """
-        
-        # Get selected row
-        currentRow = table.currentRow()
-        if currentRow is None:
-            self.bridge.statusLog.insertItem(0, 'Error: No row selected')
-            self.bridge.statusLabel.setText('Status: Error')
-            return
-        # store data
-        x = []  # list of strings
-        y = []  # list of strings
-        for i in range(table.rowCount()):
-            x.append(table.item(i, 0).text())
-            if table != self.bridge.pierTable:
-                y.append(table.item(i, 1).text())
-        # add row and populate data
-        table.setRowCount(len(x) + 1)
-        if table == self.bridge.pierTable:  # populate pier numbering
-            headers = ['Pier {0}'.format(p) for p in range(1, table.rowCount() + 1)]
-            table.setVerticalHeaderLabels(headers)
-        for i in range(table.rowCount()):
-            if i < currentRow:
-                table.setItem(i, 0, QTableWidgetItem(x[i]))
-                if table != self.bridge.pierTable:
-                    table.setItem(i, 1, QTableWidgetItem(y[i]))
-            elif i == currentRow:
-                table.setItem(i, 0, QTableWidgetItem('0'))
-                if table != self.bridge.pierTable:
-                    table.setItem(i, 1, QTableWidgetItem('0'))
-            elif i > currentRow:
-                table.setItem(i, 0, QTableWidgetItem(x[i - 1]))
-                if table != self.bridge.pierTable:
-                   table.setItem(i, 1, QTableWidgetItem(y[i - 1]))
-        # update class properties for XSection data
-        if table == self.bridge.xSectionTable:
-            self.updateXsectionData()
-        # Update spinbox
-        dict = {self.bridge.xSectionTable: self.bridge.xSectionRowCount, self.bridge.deckTable: self.bridge.deckRowCount, self.bridge.pierTable: self.bridge.pierRowCount}
-        spinBox = dict[table]
-        spinBox.setValue(table.rowCount())
-
-    def insertRowAfter(self, table):
-        """
-        Insert row in QTableWidget after the current selection
-
-        :param table: QTableWidget
-        :return:
-        """
-    
-        # Get selected row
-        currentRow = table.currentRow() + 1  # add one so it is inserted after
-        if currentRow is None:
-            self.bridge.statusLog.insertItem(0, 'Error: No row selected')
-            self.bridge.statusLabel.setText('Status: Error')
-            return
-        # store data
-        x = []  # list of strings
-        y = []  # list of strings
-        for i in range(table.rowCount()):
-            x.append(table.item(i, 0).text())
-            if table != self.bridge.pierTable:
-                y.append(table.item(i, 1).text())
-        # add row and populate data
-        table.setRowCount(len(x) + 1)
-        if table == self.bridge.pierTable:  # populate pier numbering
-            headers = ['Pier {0}'.format(p) for p in range(1, table.rowCount() + 1)]
-            table.setVerticalHeaderLabels(headers)
-        for i in range(table.rowCount()):
-            if i < currentRow:
-                table.setItem(i, 0, QTableWidgetItem(x[i]))
-                if table != self.bridge.pierTable:
-                    table.setItem(i, 1, QTableWidgetItem(y[i]))
-            elif i == currentRow:
-                table.setItem(i, 0, QTableWidgetItem('0'))
-                if table != self.bridge.pierTable:
-                    table.setItem(i, 1, QTableWidgetItem('0'))
-            elif i > currentRow:
-                table.setItem(i, 0, QTableWidgetItem(x[i - 1]))
-                if table != self.bridge.pierTable:
-                    table.setItem(i, 1, QTableWidgetItem(y[i - 1]))
-        # update class properties for XSection data
-        if table == self.bridge.xSectionTable:
-            self.updateXsectionData()
-        # Update spinbox
-        dict = {self.bridge.xSectionTable: self.bridge.xSectionRowCount, self.bridge.deckTable: self.bridge.deckRowCount,
-                self.bridge.pierTable: self.bridge.pierRowCount}
-        spinBox = dict[table]
-        spinBox.setValue(table.rowCount())
-    
-    def deleteRow(self, table):
-        """
-        Delete selected row
-        
-        :param table: QTableWidget
-        :return:
-        """
-        
-        # get selected row
-        currentRow = table.currentRow()
-        if currentRow is None:
-            self.bridge.statusLog.insertItem(0, 'Error: No row selected')
-            self.bridge.statusLabel.setText('Status: Error')
-            return
-        # store data
-        x = []  # list of strings
-        y = []  # list of strings
-        for i in range(table.rowCount()):
-            x.append(table.item(i, 0).text())
-            if table != self.bridge.pierTable:
-                y.append(table.item(i, 1).text())
-        # remove row and populate data
-        table.setRowCount(len(x) - 1)
-        if table == self.bridge.pierTable:  # populate pier numbering
-            headers = ['Pier {0}'.format(p) for p in range(1, table.rowCount() - 1)]
-            table.setVerticalHeaderLabels(headers)
-        x.pop(currentRow)
-        if table != self.bridge.pierTable:
-            y.pop(currentRow)
-        for i in range(table.rowCount()):
-            table.setItem(i, 0, QTableWidgetItem(x[i]))
-            if table != self.bridge.pierTable:
-                table.setItem(i, 1, QTableWidgetItem(y[i]))
-        # update class properties for XSection data
-        if table == self.bridge.xSectionTable:
-            self.updateXsectionData()
-        # Update spinbox
-        dict = {self.bridge.xSectionTable: self.bridge.xSectionRowCount, self.bridge.deckTable: self.bridge.deckRowCount,
-                self.bridge.pierTable: self.bridge.pierRowCount}
-        spinBox = dict[table]
-        spinBox.setValue(table.rowCount())
-
-    def tableRowCountChanged(self, spinBox, table):
-        # get number of rows
-        rowCount = spinBox.value()
-        # set number of rows - by default the last row is added and deleted
-        table.setRowCount(rowCount)
-        if table == self.bridge.pierTable:
-            headers = headers = ['Pier {0}'.format(p) for p in range(1, table.rowCount() + 1)]
-            table.setVerticalHeaderLabels(headers)
-    
-    def showMenu(self, pos):
-        """
-        graph right click menu
-        
-        :param pos: position on widget
-        :return:
-        """
-        
-        menu = QMenu(self.bridge)
-        exportCsv_action = QAction("Export Plot Data to Csv", menu)
-        exportCsv_action.triggered.connect(self.export_csv)
-        menu.addAction(exportCsv_action)
-        menu.popup(self.plotWdg.mapToGlobal(pos))
     
     def updateAttributes(self):
         """
@@ -1499,220 +1138,3 @@ class bridgeEditor():
             self.bridge.layer2Flc.setText('1.56')
         # comment
         self.bridge.comment.setText(self.bridge.bridgeName.text())
-
-    def export_csv(self):
-        """
-        Export XS to csv
-        
-        :return:
-        """
-    
-        settings = QSettings()
-        lastFolder = str(settings.value("TUFLOW_Bridge_editor/export_csv", os.sep))
-        if (len(lastFolder) > 0):  # use last folder if stored
-            fpath = lastFolder
-        else:
-            fpath = os.getcwd()
-        # Get data headers
-        dataHeader = 'Offset,Elevation'
-        resultFiles = ['elevation']
-        c = [0]  # index for change in result files or current time is selected
-        maxLen = 0
-        for i in c:
-            maxLen = max(maxLen, len(self.subplot.lines[i].get_data()[0]))
-        # Get data
-        for i, resultFile in enumerate(resultFiles):
-            if i == 0:
-                data = self.subplot.lines[c[i]].get_data()[0]  # write X axis first
-                data = numpy.reshape(data, [len(data), 1])
-                if len(data) < maxLen:
-                    diff = maxLen - len(data)
-                    fill = numpy.zeros([diff, 1]) * numpy.nan
-                    data = numpy.append(data, fill, axis=0)
-            else:
-                dataX = self.subplot.lines[c[i]].get_data()[0]  # Write X axis again for new results
-                dataX = numpy.reshape(dataX, [len(dataX), 1])
-                if len(dataX) < maxLen:
-                    diff = maxLen - len(dataX)
-                    fill = numpy.zeros([diff, 1]) * numpy.nan
-                    dataX = numpy.append(dataX, fill, axis=0)
-                data = numpy.append(data, dataX, axis=1)
-            if i < len(c) - 1:  # isn't last result file
-                for line in self.subplot.lines[c[i]:c[i + 1]]:
-                    dataY = line.get_data()[1]
-                    dataY = numpy.reshape(dataY, [len(dataY), 1])
-                    if len(dataY) < maxLen:
-                        diff = maxLen - len(dataY)
-                        fill = numpy.zeros([diff, 1]) * numpy.nan
-                        dataY = numpy.append(dataY, fill, axis=0)
-                    data = numpy.append(data, dataY, axis=1)
-            else:  # is last result file
-                for line in self.subplot.lines[c[i]:]:
-                    dataY = line.get_data()[1]
-                    dataY = numpy.reshape(dataY, [len(dataY), 1])
-                    if len(dataY) < maxLen:
-                        diff = maxLen - len(dataY)
-                        fill = numpy.zeros([diff, 1]) * numpy.nan
-                        dataY = numpy.append(dataY, fill, axis=0)
-                    data = numpy.append(data, dataY, axis=1)
-        # Save data out
-        saveFile = QFileDialog.getSaveFileName(self, 'Save File', fpath)
-        if len(saveFile) < 2:
-            return
-        else:
-            if saveFile != os.sep and saveFile.lower() != 'c:\\' and saveFile != '':
-                settings.setValue("TUFLOW_Bridge_editor/export_csv", saveFile)
-        if saveFile is not None:
-            try:
-                file = open(saveFile, 'w')
-                file.write('{0}\n'.format(dataHeader))
-                for i, row in enumerate(data):
-                    line = ''
-                    for j, value in enumerate(row):
-                        if not numpy.isnan(data[i][j]):
-                            line += '{0},'.format(data[i][j])
-                        else:
-                            line += '{0},'.format('')
-                    line += '\n'
-                    file.write(line)
-                file.close()
-            except IOError:
-                self.bridge.statusLog.insertItem(0, 'Error: Opening File for editing')
-                self.bridge.statusLabel.setText('Status: Error')
-                return
-        self.bridge.statusLog.insertItem(0, 'Successfully exported csv')
-        self.bridge.statusLabel.setText('Status: Successful')
-        
-    def createLayer(self):
-        """
-        Import an empty 2d_lfcsh layer and add temp layer feature with attributes
-        
-        :return:
-        """
-        
-        # precheck to see if there is a feature to create
-        if self.feat is None:
-            self.bridge.statusLog.insertItem(0, 'Error: No features to create layer from')
-            self.bridge.statusLabel.setText('Status: Error')
-            return
-        # import empty file
-        emptyTypes = ['2d_lfcsh']
-        lines = True
-        points = False
-        regions = False
-        if self.variableGeom:
-            points = True
-        message = tuflowqgis_import_empty_tf(self.iface, self.bridge.emptydir.text(), self.bridge.runId.text(), emptyTypes, points, lines, regions)
-        if message is not None:
-            QMessageBox.critical(self.iface.mainWindow(), "Importing TUFLOW Empty File(s)", message)
-        # add features
-        self.editLayer(tuflowqgis_find_layer('2d_lfcsh_{0}_L'.format(self.bridge.runId.text())), self.feat, True)
-        #self.bridge.statusLabel.setText('Status: Successful')
-    
-    def updateLayer(self):
-        """
-        Update the selected bridge layer with either updated attributes of selected feature, or add new feature
-        
-        :return:
-        """
-        
-        lyr = self.iface.mapCanvas().currentLayer()  # QgsVectorLayer
-        feat = lyr.selectedFeatures()   # list [QgsFeature]
-        if self.feat is None:
-            if len(feat) > 0:
-                self.editLayer(lyr, feat[0], False)
-            else:
-                self.bridge.statusLog.insertItem(0, 'Error: No edits to update')
-                self.bridge.statusLabel.setText('Status: Error')
-        else:
-            self.editLayer(lyr, self.feat, True)
-        #self.bridge.statusLabel.setText('Status: Successful')
-    
-    def incrementLayer(self):
-        """
-        Increment layer then update with new feature or updated fields
-        
-        :return:
-        """
-        
-        # get current layer
-        lyr = self.iface.mapCanvas().currentLayer()  # QgsVectorLayer
-        feat = lyr.selectedFeatures()  # QgsFeature
-        if len(feat) > 0:
-            fid = feat[0].id()
-        # increment layer
-        self.incrementDialog = tuflowqgis_increment_dialog(self.iface)
-        self.incrementDialog.exec_()
-        # get new layer
-        lyr = tuflowqgis_find_layer(self.incrementDialog.outname)
-        if len(feat) > 0:
-            for feature in lyr.getFeatures():
-                if feature.id() == fid:
-                    feat = feature
-                    break
-                else:
-                    feat = None
-        if self.feat is None:
-            if feat is not None:
-                self.editLayer(lyr, feat, False)
-            else:
-                self.bridge.statusLog.insertItem(0, 'Error: No edits to update')
-                self.bridge.statusLabel.setText('Status: Error')
-        else:
-            self.editLayer(lyr, self.feat, True)
-        self.bridge.statusLabel.setText('Status: Successful')
-    
-    def editLayer(self, layer, feat, append):
-        """
-        edit layer with new feature or updated fields
-        
-        :param layer: QgsVectorLayer
-        :param feat: QgsFeature
-        :param append: bool - True for append to layer, false for don't append
-        :return:
-        """
-        
-        dp = layer.dataProvider()
-        attributes = [float(self.bridge.invert.text()),
-                      float(self.bridge.dz.text()),
-                      float(self.bridge.shapeWidth.text()),
-                      self.bridge.shapeOptions.text(),
-                      float(self.bridge.layer1Obv.text()),
-                      float(self.bridge.layer1Block.text()),
-                      float(self.bridge.layer1Flc.text()),
-                      float(self.bridge.layer2Depth.text()),
-                      float(self.bridge.layer2Block.text()),
-                      float(self.bridge.layer2Flc.text()),
-                      float(self.bridge.layer3Depth.text()),
-                      float(self.bridge.layer3Block.text()),
-                      float(self.bridge.layer3Flc.text()),
-                      self.bridge.comment.text()]
-        layer.startEditing()
-        feat.setAttributes(attributes)
-        if append:
-            dp.addFeatures([feat])
-        else:
-            layer.updateFeature(feat)
-        layer.commitChanges()
-        # select created feature
-        if append:
-            layer.removeSelection()
-            no_features = layer.featureCount()
-            count = 1
-            for f in layer.getFeatures():
-                if count == no_features:
-                    self.feature = f
-                    fid = f.id()
-                    layer.select(fid)
-                    break
-                count += 1
-        self.canvas.scene().removeItem(self.rubberBand)  # Remove previous temp layer
-        self.layer = layer
-        self.updated = True
-        self.saveData()
-        self.clearXsection()
-        self.feat = None
-        layer.triggerRepaint()
-        self.bridge.statusLabel.setText('Status: Successful')
-        self.qgis_disconnect()
-        self.bridge = None
