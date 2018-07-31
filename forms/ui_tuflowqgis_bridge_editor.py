@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'ui_tuflowqgis_bridge_editor.ui'
 #
-# Created: Mon Jul 30 11:31:48 2018
+# Created: Tue Jul 31 11:10:30 2018
 #      by: PyQt4 UI code generator 4.10.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -158,9 +158,9 @@ class Ui_tuflowqgis_BridgeEditor(object):
         self.pbDrawXsection.setIconSize(QtCore.QSize(15, 15))
         self.pbDrawXsection.setObjectName(_fromUtf8("pbDrawXsection"))
         self.bridgeInputs.addWidget(self.pbDrawXsection, 1, 4, 2, 1)
-        self.pushButton_5 = QtGui.QPushButton(self.tab)
-        self.pushButton_5.setObjectName(_fromUtf8("pushButton_5"))
-        self.bridgeInputs.addWidget(self.pushButton_5, 0, 5, 1, 1)
+        self.pbSaveFile = QtGui.QPushButton(self.tab)
+        self.pbSaveFile.setObjectName(_fromUtf8("pbSaveFile"))
+        self.bridgeInputs.addWidget(self.pbSaveFile, 0, 5, 1, 1)
         self.deckThickness = QtGui.QDoubleSpinBox(self.tab)
         self.deckThickness.setObjectName(_fromUtf8("deckThickness"))
         self.bridgeInputs.addWidget(self.deckThickness, 5, 1, 1, 1)
@@ -517,8 +517,8 @@ class Ui_tuflowqgis_BridgeEditor(object):
         self.tabWidget_2.setCurrentIndex(0)
         QtCore.QMetaObject.connectSlotsByName(tuflowqgis_BridgeEditor)
         tuflowqgis_BridgeEditor.setTabOrder(self.tabWidget, self.bridgeName)
-        tuflowqgis_BridgeEditor.setTabOrder(self.bridgeName, self.pushButton_5)
-        tuflowqgis_BridgeEditor.setTabOrder(self.pushButton_5, self.demComboBox)
+        tuflowqgis_BridgeEditor.setTabOrder(self.bridgeName, self.pbSaveFile)
+        tuflowqgis_BridgeEditor.setTabOrder(self.pbSaveFile, self.demComboBox)
         tuflowqgis_BridgeEditor.setTabOrder(self.demComboBox, self.pbDrawXsection)
         tuflowqgis_BridgeEditor.setTabOrder(self.pbDrawXsection, self.pbUseMapWindowSel)
         tuflowqgis_BridgeEditor.setTabOrder(self.pbUseMapWindowSel, self.pbUpdateDeckData)
@@ -595,7 +595,7 @@ class Ui_tuflowqgis_BridgeEditor(object):
         self.pbUpdateDeckData.setText(_translate("tuflowqgis_BridgeEditor", "Update Deck Data", None))
         self.label_13.setText(_translate("tuflowqgis_BridgeEditor", "Deck Elevation (Bottom) m RL", None))
         self.pbDrawXsection.setText(_translate("tuflowqgis_BridgeEditor", "Draw XSection", None))
-        self.pushButton_5.setText(_translate("tuflowqgis_BridgeEditor", "Save", None))
+        self.pbSaveFile.setText(_translate("tuflowqgis_BridgeEditor", "Save", None))
         self.rbUnderPressure.setText(_translate("tuflowqgis_BridgeEditor", "Under Pressure", None))
         self.pbUpdatePierData.setText(_translate("tuflowqgis_BridgeEditor", "Update Pier Data", None))
         self.label_34.setText(_translate("tuflowqgis_BridgeEditor", "Gap between Piers (m)", None))

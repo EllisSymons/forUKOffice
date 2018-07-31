@@ -285,7 +285,7 @@
                </widget>
               </item>
               <item row="0" column="5">
-               <widget class="QPushButton" name="pushButton_5">
+               <widget class="QPushButton" name="pbSaveFile">
                 <property name="text">
                  <string>Save</string>
                 </property>
@@ -616,86 +616,33 @@
           <x>0</x>
           <y>0</y>
           <width>645</width>
-          <height>540</height>
+          <height>595</height>
          </rect>
         </property>
         <layout class="QGridLayout" name="gridLayout_4">
-         <item row="10" column="0">
-          <widget class="QLabel" name="label_28">
+         <item row="16" column="0">
+          <widget class="QLabel" name="label_30">
            <property name="text">
-            <string>Layer 2 FLC</string>
+            <string>Empty Directory</string>
            </property>
           </widget>
          </item>
-         <item row="2" column="0">
-          <widget class="QLabel" name="label_23">
+         <item row="13" column="0">
+          <widget class="QLabel" name="label_4">
            <property name="text">
-            <string>dZ</string>
+            <string>Layer 3 FLC</string>
            </property>
           </widget>
          </item>
-         <item row="8" column="0">
-          <widget class="QLabel" name="label_19">
-           <property name="text">
-            <string>Layer 2 Depth</string>
-           </property>
-          </widget>
+         <item row="6" column="1">
+          <widget class="QLineEdit" name="layer1Block"/>
          </item>
-         <item row="7" column="0">
-          <widget class="QLabel" name="label_20">
-           <property name="text">
-            <string>Layer 1 FLC</string>
-           </property>
-          </widget>
-         </item>
-         <item row="13" column="1">
-          <widget class="QLineEdit" name="layer3Flc"/>
-         </item>
-         <item row="11" column="1">
-          <widget class="QLineEdit" name="layer3Depth"/>
-         </item>
-         <item row="1" column="1">
-          <widget class="QLineEdit" name="invert"/>
-         </item>
-         <item row="18" column="0" colspan="2">
+         <item row="20" column="0" colspan="2">
           <widget class="QPushButton" name="pbCreateLayer">
            <property name="text">
             <string>Auto Create 2d_lfcsh layer</string>
            </property>
           </widget>
-         </item>
-         <item row="4" column="1">
-          <widget class="QLineEdit" name="shapeOptions"/>
-         </item>
-         <item row="9" column="0">
-          <widget class="QLabel" name="label_18">
-           <property name="text">
-            <string>Layer 2 % Blockage</string>
-           </property>
-          </widget>
-         </item>
-         <item row="8" column="1">
-          <widget class="QLineEdit" name="layer2Depth"/>
-         </item>
-         <item row="0" column="0">
-          <widget class="QPushButton" name="pbUpdateAttributes">
-           <property name="text">
-            <string>Update</string>
-           </property>
-          </widget>
-         </item>
-         <item row="12" column="1">
-          <widget class="QLineEdit" name="layer3Block"/>
-         </item>
-         <item row="5" column="0">
-          <widget class="QLabel" name="label_22">
-           <property name="text">
-            <string>Layer 1 Obvert</string>
-           </property>
-          </widget>
-         </item>
-         <item row="9" column="1">
-          <widget class="QLineEdit" name="layer2Block"/>
          </item>
          <item row="1" column="0">
           <widget class="QLabel" name="label_3">
@@ -704,24 +651,10 @@
            </property>
           </widget>
          </item>
-         <item row="19" column="0" colspan="2">
+         <item row="21" column="0" colspan="2">
           <widget class="QPushButton" name="pbUpdateLayer">
            <property name="text">
             <string>Update Existing 2d_lfcsh layer with new bridge / attributes</string>
-           </property>
-          </widget>
-         </item>
-         <item row="20" column="0" colspan="2">
-          <widget class="QPushButton" name="pbIncrementLayer">
-           <property name="text">
-            <string>Increment and Update Existing 2d_lfcsh layer</string>
-           </property>
-          </widget>
-         </item>
-         <item row="3" column="0">
-          <widget class="QLabel" name="label_24">
-           <property name="text">
-            <string>Shape Width</string>
            </property>
           </widget>
          </item>
@@ -729,13 +662,6 @@
           <widget class="QLabel" name="label_29">
            <property name="text">
             <string/>
-           </property>
-          </widget>
-         </item>
-         <item row="12" column="0">
-          <widget class="QLabel" name="label_27">
-           <property name="text">
-            <string>Layer 3 % Blockage</string>
            </property>
           </widget>
          </item>
@@ -749,70 +675,100 @@
          <item row="2" column="1">
           <widget class="QLineEdit" name="dz"/>
          </item>
-         <item row="3" column="1">
-          <widget class="QLineEdit" name="shapeWidth"/>
-         </item>
-         <item row="16" column="0">
-          <widget class="QLabel" name="label_30">
+         <item row="10" column="0">
+          <widget class="QLabel" name="label_28">
            <property name="text">
-            <string>Empty Directory</string>
+            <string>Layer 2 FLC</string>
            </property>
           </widget>
          </item>
          <item row="7" column="1">
           <widget class="QLineEdit" name="layer1Flc"/>
          </item>
-         <item row="17" column="0" colspan="2">
-          <widget class="QLineEdit" name="emptydir"/>
-         </item>
-         <item row="13" column="0">
-          <widget class="QLabel" name="label_4">
+         <item row="8" column="0">
+          <widget class="QLabel" name="label_19">
            <property name="text">
-            <string>Layer 3 FLC</string>
+            <string>Layer 2 Depth</string>
            </property>
           </widget>
          </item>
-         <item row="6" column="1">
-          <widget class="QLineEdit" name="layer1Block"/>
+         <item row="13" column="1">
+          <widget class="QLineEdit" name="layer3Flc"/>
          </item>
-         <item row="5" column="1">
-          <widget class="QLineEdit" name="layer1Obv"/>
+         <item row="9" column="1">
+          <widget class="QLineEdit" name="layer2Block"/>
          </item>
-         <item row="6" column="0">
-          <widget class="QLabel" name="label_21">
+         <item row="3" column="0">
+          <widget class="QLabel" name="label_24">
            <property name="text">
-            <string>Layer 1 % Blockage</string>
+            <string>Shape Width</string>
            </property>
           </widget>
          </item>
-         <item row="11" column="0">
-          <widget class="QLabel" name="label_26">
+         <item row="12" column="0">
+          <widget class="QLabel" name="label_27">
            <property name="text">
-            <string>Layer 3 Depth</string>
+            <string>Layer 3 % Blockage</string>
            </property>
           </widget>
          </item>
-         <item row="7" column="2">
-          <widget class="QLabel" name="label_31">
+         <item row="3" column="1">
+          <widget class="QLineEdit" name="shapeWidth"/>
+         </item>
+         <item row="22" column="0" colspan="2">
+          <widget class="QPushButton" name="pbIncrementLayer">
            <property name="text">
-            <string>Based on Hydraulics of Bridge Waterways (FHWA, 1978)</string>
+            <string>Increment and Update Existing 2d_lfcsh layer</string>
            </property>
           </widget>
          </item>
-         <item row="10" column="1">
-          <widget class="QLineEdit" name="layer2Flc"/>
-         </item>
-         <item row="8" column="2">
-          <widget class="QLabel" name="label_36">
+         <item row="7" column="0">
+          <widget class="QLabel" name="label_20">
            <property name="text">
-            <string/>
+            <string>Layer 1 FLC</string>
            </property>
           </widget>
          </item>
-         <item row="5" column="2">
-          <widget class="QLabel" name="label_35">
+         <item row="11" column="1">
+          <widget class="QLineEdit" name="layer3Depth"/>
+         </item>
+         <item row="4" column="1">
+          <widget class="QLineEdit" name="shapeOptions"/>
+         </item>
+         <item row="1" column="1">
+          <widget class="QLineEdit" name="invert"/>
+         </item>
+         <item row="0" column="0">
+          <widget class="QPushButton" name="pbUpdateAttributes">
            <property name="text">
-            <string/>
+            <string>Update</string>
+           </property>
+          </widget>
+         </item>
+         <item row="12" column="1">
+          <widget class="QLineEdit" name="layer3Block"/>
+         </item>
+         <item row="2" column="0">
+          <widget class="QLabel" name="label_23">
+           <property name="text">
+            <string>dZ</string>
+           </property>
+          </widget>
+         </item>
+         <item row="9" column="0">
+          <widget class="QLabel" name="label_18">
+           <property name="text">
+            <string>Layer 2 % Blockage</string>
+           </property>
+          </widget>
+         </item>
+         <item row="8" column="1">
+          <widget class="QLineEdit" name="layer2Depth"/>
+         </item>
+         <item row="5" column="0">
+          <widget class="QLabel" name="label_22">
+           <property name="text">
+            <string>Layer 1 Obvert</string>
            </property>
           </widget>
          </item>
@@ -823,6 +779,40 @@
            </property>
           </widget>
          </item>
+         <item row="11" column="0">
+          <widget class="QLabel" name="label_26">
+           <property name="text">
+            <string>Layer 3 Depth</string>
+           </property>
+          </widget>
+         </item>
+         <item row="5" column="2">
+          <widget class="QLabel" name="label_35">
+           <property name="text">
+            <string/>
+           </property>
+          </widget>
+         </item>
+         <item row="5" column="1">
+          <widget class="QLineEdit" name="layer1Obv"/>
+         </item>
+         <item row="7" column="2">
+          <widget class="QLabel" name="label_31">
+           <property name="text">
+            <string>Based on Hydraulics of Bridge Waterways (FHWA, 1978)</string>
+           </property>
+          </widget>
+         </item>
+         <item row="8" column="2">
+          <widget class="QLabel" name="label_36">
+           <property name="text">
+            <string/>
+           </property>
+          </widget>
+         </item>
+         <item row="14" column="1">
+          <widget class="QLineEdit" name="comment"/>
+         </item>
          <item row="14" column="0">
           <widget class="QLabel" name="label_38">
            <property name="text">
@@ -830,16 +820,10 @@
            </property>
           </widget>
          </item>
-         <item row="14" column="1">
-          <widget class="QLineEdit" name="comment"/>
-         </item>
-         <item row="17" column="2">
-          <widget class="QLineEdit" name="runId"/>
-         </item>
-         <item row="16" column="2">
-          <widget class="QLabel" name="label_43">
+         <item row="6" column="0">
+          <widget class="QLabel" name="label_21">
            <property name="text">
-            <string>Run ID</string>
+            <string>Layer 1 % Blockage</string>
            </property>
           </widget>
          </item>
@@ -849,6 +833,29 @@
             <string/>
            </property>
           </widget>
+         </item>
+         <item row="10" column="1">
+          <widget class="QLineEdit" name="layer2Flc"/>
+         </item>
+         <item row="19" column="0" colspan="2">
+          <widget class="QLineEdit" name="runId"/>
+         </item>
+         <item row="18" column="0" colspan="2">
+          <widget class="QLabel" name="label_43">
+           <property name="text">
+            <string>Run ID</string>
+           </property>
+          </widget>
+         </item>
+         <item row="16" column="1">
+          <widget class="QPushButton" name="pbBrowse">
+           <property name="text">
+            <string>Browse</string>
+           </property>
+          </widget>
+         </item>
+         <item row="17" column="0" colspan="3">
+          <widget class="QLineEdit" name="emptydir"/>
          </item>
         </layout>
        </widget>
@@ -915,7 +922,7 @@
  <tabstops>
   <tabstop>tabWidget</tabstop>
   <tabstop>bridgeName</tabstop>
-  <tabstop>pushButton_5</tabstop>
+  <tabstop>pbSaveFile</tabstop>
   <tabstop>demComboBox</tabstop>
   <tabstop>pbDrawXsection</tabstop>
   <tabstop>pbUseMapWindowSel</tabstop>

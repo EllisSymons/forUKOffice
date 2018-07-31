@@ -11,13 +11,13 @@ from matplotlib.figure import Figure
 from matplotlib.patches import Patch
 from matplotlib.patches import Polygon
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg
-from tuflowqgis_settings import TF_Settings
-from tuflowqgis_library import lineToPoints, getRasterValue
+from tuflow.tuflowqgis_settings import TF_Settings
+from tuflow.tuflowqgis_library import lineToPoints, getRasterValue
 from tuflowqgis_bridge_context_menus import *
-from tuflowqgis_bridge_rubberband import *
+from tuflow.tuflowqgis_bridge_rubberband import *
 from tuflowqgis_bridge_layer_edit import *
-from canvas_event import canvasEvent
-from Pier_Losses import lookupPierLoss
+from tuflow.canvas_event import canvasEvent
+from tuflow.Pier_Losses import lookupPierLoss
 sys.path.append(os.path.dirname(os.path.abspath(__file__)) + "/forms")
 # Debug using PyCharm
 sys.path.append(r'C:\Program Files\JetBrains\PyCharm 2018.1\debug-eggs')
@@ -26,9 +26,9 @@ sys.path.append(r'C:\Program Files\JetBrains\PyCharm 2018.1\helpers\pydev')
 #class bridgeEditor(QDockWidget, Ui_tuflowqgis_BridgeEditor):
 class bridgeEditor():
 
-    def __init__(self, bridge, iface, **kwargs):
+    def __init__(self, gui, iface, **kwargs):
         self.updated = False
-        self.bridge = bridge  # bridge gui class
+        self.gui = gui  # bridge gui class
         self.iface = iface  # QgsInterface
         self.canvas = self.iface.mapCanvas()  # QgsMapCanvas
         self.connected = False  # signal connections
@@ -84,9 +84,9 @@ class bridgeEditor():
             path_split = basepath.split('\\')
             if path_split[-1].lower() == 'tuflow':
                 basepath = '\\'.join(path_split[:-1])
-            self.bridge.emptydir.setText(os.path.join(basepath, "TUFLOW", "model", "gis", "empty"))
+            self.gui.emptydir.setText(os.path.join(basepath, "TUFLOW", "model", "gis", "empty"))
         else:
-            self.bridge.emptydir.setText("ERROR - Project not loaded")
+            self.gui.emptydir.setText("ERROR - Project not loaded")
 		    
     def __del__(self):
         self.qgis_disconnect()
@@ -102,29 +102,29 @@ class bridgeEditor():
             # canvas interactions
             # None
             # push buttons
-            self.bridge.pbUpdate.clicked.connect(self.updatePlot)
-            self.bridge.pbUpdatePierData.clicked.connect(self.updatePierTable)
-            self.bridge.pbUpdateDeckData.clicked.connect(self.updateDeckTable)
-            self.bridge.pbUseMapWindowSel.clicked.connect(self.getCurrSel)
-            #self.bridge.pbDrawXsection.clicked.connect(self.useTempPolyline)
-            self.bridge.pbClearXsection.clicked.connect(self.clearXsection)
-            self.bridge.pbUpdateAttributes.clicked.connect(self.updateAttributes)
-            self.bridge.pbCreateLayer.clicked.connect(lambda: createLayer(self))
-            self.bridge.pbUpdateLayer.clicked.connect(lambda: updateLayer(self))
-            self.bridge.pbIncrementLayer.clicked.connect(lambda: incrementLayer(self))
+            self.gui.pbUpdate.clicked.connect(self.updatePlot)
+            self.gui.pbUpdatePierData.clicked.connect(self.updatePierTable)
+            self.gui.pbUpdateDeckData.clicked.connect(self.updateDeckTable)
+            self.gui.pbUseMapWindowSel.clicked.connect(self.getCurrSel)
+            #self.gui.pbDrawXsection.clicked.connect(self.useTempPolyline)
+            self.gui.pbClearXsection.clicked.connect(self.clearXsection)
+            self.gui.pbUpdateAttributes.clicked.connect(self.updateAttributes)
+            self.gui.pbCreateLayer.clicked.connect(lambda: createLayer(self))
+            self.gui.pbUpdateLayer.clicked.connect(lambda: updateLayer(self))
+            self.gui.pbIncrementLayer.clicked.connect(lambda: incrementLayer(self))
             # Spin boxes
-            self.bridge.xSectionRowCount.valueChanged.connect(lambda: tableRowCountChanged(self, self.bridge.xSectionRowCount, self.bridge.xSectionTable))
-            self.bridge.deckRowCount.valueChanged.connect(lambda: tableRowCountChanged(self, self.bridge.deckRowCount, self.bridge.deckTable))
-            self.bridge.pierRowCount.valueChanged.connect(lambda: tableRowCountChanged(self, self.bridge.pierRowCount, self.bridge.pierTable))
+            self.gui.xSectionRowCount.valueChanged.connect(lambda: tableRowCountChanged(self, self.gui.xSectionRowCount, self.gui.xSectionTable))
+            self.gui.deckRowCount.valueChanged.connect(lambda: tableRowCountChanged(self, self.gui.deckRowCount, self.gui.deckTable))
+            self.gui.pierRowCount.valueChanged.connect(lambda: tableRowCountChanged(self, self.gui.pierRowCount, self.gui.pierTable))
             # Right Click (Context) Menus
-            self.xSectionTableRowHeaders = self.bridge.xSectionTable.verticalHeader()
-            self.pierTableRowHeaders = self.bridge.pierTable.verticalHeader()
-            self.deckTableRowHeaders = self.bridge.deckTable.verticalHeader()
-            self.bridge.plotWdg.setContextMenuPolicy(Qt.CustomContextMenu)
+            self.xSectionTableRowHeaders = self.gui.xSectionTable.verticalHeader()
+            self.pierTableRowHeaders = self.gui.pierTable.verticalHeader()
+            self.deckTableRowHeaders = self.gui.deckTable.verticalHeader()
+            self.gui.plotWdg.setContextMenuPolicy(Qt.CustomContextMenu)
             self.xSectionTableRowHeaders.setContextMenuPolicy(Qt.CustomContextMenu)
             self.deckTableRowHeaders.setContextMenuPolicy(Qt.CustomContextMenu)
             self.pierTableRowHeaders.setContextMenuPolicy(Qt.CustomContextMenu)
-            self.bridge.plotWdg.customContextMenuRequested.connect(lambda pos: plotterMenu(self, pos))
+            self.gui.plotWdg.customContextMenuRequested.connect(lambda pos: plotterMenu(self, pos))
             self.xSectionTableRowHeaders.customContextMenuRequested.connect(lambda pos: xSectionTableMenu(self, pos))
             self.deckTableRowHeaders.customContextMenuRequested.connect(lambda pos: deckTableMenu(self, pos))
             self.pierTableRowHeaders.customContextMenuRequested.connect(lambda pos: pierTableMenu(self, pos))
@@ -141,22 +141,22 @@ class bridgeEditor():
             # canvas interactions
             # None
             # push buttons
-            self.bridge.pbUpdate.clicked.disconnect(self.updatePlot)
-            self.bridge.pbUpdatePierData.clicked.disconnect(self.updatePierTable)
-            self.bridge.pbUpdateDeckData.clicked.disconnect(self.updateDeckTable)
-            self.bridge.pbUseMapWindowSel.clicked.disconnect(self.getCurrSel)
-            #self.bridge.pbDrawXsection.clicked.disconnect(self.useTempPolyline)
-            self.bridge.pbClearXsection.clicked.disconnect(self.clearXsection)
-            self.bridge.pbUpdateAttributes.clicked.disconnect(self.updateAttributes)
-            self.bridge.pbCreateLayer.clicked.disconnect()
-            self.bridge.pbUpdateLayer.clicked.disconnect()
-            self.bridge.pbIncrementLayer.clicked.disconnect()
+            self.gui.pbUpdate.clicked.disconnect(self.updatePlot)
+            self.gui.pbUpdatePierData.clicked.disconnect(self.updatePierTable)
+            self.gui.pbUpdateDeckData.clicked.disconnect(self.updateDeckTable)
+            self.gui.pbUseMapWindowSel.clicked.disconnect(self.getCurrSel)
+            #self.gui.pbDrawXsection.clicked.disconnect(self.useTempPolyline)
+            self.gui.pbClearXsection.clicked.disconnect(self.clearXsection)
+            self.gui.pbUpdateAttributes.clicked.disconnect(self.updateAttributes)
+            self.gui.pbCreateLayer.clicked.disconnect()
+            self.gui.pbUpdateLayer.clicked.disconnect()
+            self.gui.pbIncrementLayer.clicked.disconnect()
             # Spin boxes
-            self.bridge.xSectionRowCount.valueChanged.disconnect()
-            self.bridge.deckRowCount.valueChanged.disconnect()
-            self.bridge.pierRowCount.valueChanged.disconnect()
+            self.gui.xSectionRowCount.valueChanged.disconnect()
+            self.gui.deckRowCount.valueChanged.disconnect()
+            self.gui.pierRowCount.valueChanged.disconnect()
             # Right Click (Context) Menus
-            self.bridge.plotWdg.customContextMenuRequested.disconnect()
+            self.gui.plotWdg.customContextMenuRequested.disconnect()
             self.xSectionTableRowHeaders.customContextMenuRequested.disconnect()
             self.deckTableRowHeaders.customContextMenuRequested.disconnect()
             self.pierTableRowHeaders.customContextMenuRequested.disconnect()
@@ -175,20 +175,20 @@ class bridgeEditor():
                 if lyr.type() == 0:  # QgsVectorLayer
                     feat = lyr.selectedFeatures()
                     if len(feat) > 0:
-                        self.bridge.invert.setText('{0}'.format(feat[0].attributes()[0]))
-                        self.bridge.dz.setText('{0}'.format(feat[0].attributes()[1]))
-                        self.bridge.shapeWidth.setText('{0}'.format(feat[0].attributes()[2]))
-                        self.bridge.shapeOptions.setText('{0}'.format(feat[0].attributes()[3]) if feat[0].attributes()[3] != NULL else '')
-                        self.bridge.layer1Block.setText('{0}'.format(feat[0].attributes()[4]))
-                        self.bridge.layer1Obv.setText('{0}'.format(feat[0].attributes()[5]))
-                        self.bridge.layer1Flc.setText('{0}'.format(feat[0].attributes()[6]))
-                        self.bridge.layer2Depth.setText('{0}'.format(feat[0].attributes()[7]))
-                        self.bridge.layer2Block.setText('{0}'.format(feat[0].attributes()[8]))
-                        self.bridge.layer2Flc.setText('{0}'.format(feat[0].attributes()[9]))
-                        self.bridge.layer3Depth.setText('{0}'.format(feat[0].attributes()[10]))
-                        self.bridge.layer3Block.setText('{0}'.format(feat[0].attributes()[11]))
-                        self.bridge.layer3Flc.setText('{0}'.format(feat[0].attributes()[12]))
-                        self.bridge.comment.setText('{0}'.format(feat[0].attributes()[13]))
+                        self.gui.invert.setText('{0}'.format(feat[0].attributes()[0]))
+                        self.gui.dz.setText('{0}'.format(feat[0].attributes()[1]))
+                        self.gui.shapeWidth.setText('{0}'.format(feat[0].attributes()[2]))
+                        self.gui.shapeOptions.setText('{0}'.format(feat[0].attributes()[3]) if feat[0].attributes()[3] != NULL else '')
+                        self.gui.layer1Block.setText('{0}'.format(feat[0].attributes()[4]))
+                        self.gui.layer1Obv.setText('{0}'.format(feat[0].attributes()[5]))
+                        self.gui.layer1Flc.setText('{0}'.format(feat[0].attributes()[6]))
+                        self.gui.layer2Depth.setText('{0}'.format(feat[0].attributes()[7]))
+                        self.gui.layer2Block.setText('{0}'.format(feat[0].attributes()[8]))
+                        self.gui.layer2Flc.setText('{0}'.format(feat[0].attributes()[9]))
+                        self.gui.layer3Depth.setText('{0}'.format(feat[0].attributes()[10]))
+                        self.gui.layer3Block.setText('{0}'.format(feat[0].attributes()[11]))
+                        self.gui.layer3Flc.setText('{0}'.format(feat[0].attributes()[12]))
+                        self.gui.comment.setText('{0}'.format(feat[0].attributes()[13]))
 
     def loadGui(self, gui):
         """
@@ -198,7 +198,7 @@ class bridgeEditor():
         :return:
         """
         
-        self.bridge = gui
+        self.gui = gui
     
     def saveData(self):
         """
@@ -210,39 +210,39 @@ class bridgeEditor():
         # save tables
         x = []
         y = []
-        for i in range(self.bridge.xSectionTable.rowCount()):
-            x.append(self.bridge.xSectionTable.item(i, 0).text())
-            y.append(self.bridge.xSectionTable.item(i, 1).text())
+        for i in range(self.gui.xSectionTable.rowCount()):
+            x.append(self.gui.xSectionTable.item(i, 0).text())
+            y.append(self.gui.xSectionTable.item(i, 1).text())
         self.saved_xSectionTable = [x, y]
         x = []
         y = []
-        for i in range(self.bridge.deckTable.rowCount()):
-            x.append(self.bridge.deckTable.item(i, 0).text())
-            y.append(self.bridge.deckTable.item(i, 1).text())
+        for i in range(self.gui.deckTable.rowCount()):
+            x.append(self.gui.deckTable.item(i, 0).text())
+            y.append(self.gui.deckTable.item(i, 1).text())
         self.saved_deckTable = [x, y]
         x = []
-        for i in range(self.bridge.pierTable.rowCount()):
-            x.append(self.bridge.pierTable.item(i, 0).text())
+        for i in range(self.gui.pierTable.rowCount()):
+            x.append(self.gui.pierTable.item(i, 0).text())
         self.saved_pierTable = x[:]
         # save spinboxes
-        self.saved_xSectionRowCount = self.bridge.xSectionRowCount.value()
-        self.saved_deckRowCount = self.bridge.deckRowCount.value()
-        self.saved_pierRowCount = self.bridge.pierRowCount.value()
+        self.saved_xSectionRowCount = self.gui.xSectionRowCount.value()
+        self.saved_deckRowCount = self.gui.deckRowCount.value()
+        self.saved_pierRowCount = self.gui.pierRowCount.value()
         # save input boxes
-        self.saved_bridgeName = self.bridge.bridgeName.text()
-        self.saved_deckElevationBottom = self.bridge.deckElevationBottom.value()
-        self.saved_deckThickness = self.bridge.deckThickness.value()
-        self.saved_handRailDepth = self.bridge.handRailDepth.value()
-        self.saved_handRailFlc = self.bridge.handRailFlc.value()
-        self.saved_handRailBlockage = self.bridge.handRailBlockage.value()
-        self.saved_rbDrowned = self.bridge.rbDrowned.isChecked()
-        self.saved_pierNo = self.bridge.pierNo.value()
-        self.saved_pierWidth = self.bridge.pierWidth.value()
-        self.saved_pierWidthLeft = self.bridge.pierWidthLeft.value()
-        self.saved_pierGap = self.bridge.pierGap.value()
-        self.saved_pierShape = self.bridge.pierShape.currentIndex()
-        self.saved_zLineWidth = self.bridge.zLineWidth.value()
-        self.saved_enforceInTerrain = self.bridge.enforceInTerrain.isChecked()
+        self.saved_bridgeName = self.gui.bridgeName.text()
+        self.saved_deckElevationBottom = self.gui.deckElevationBottom.value()
+        self.saved_deckThickness = self.gui.deckThickness.value()
+        self.saved_handRailDepth = self.gui.handRailDepth.value()
+        self.saved_handRailFlc = self.gui.handRailFlc.value()
+        self.saved_handRailBlockage = self.gui.handRailBlockage.value()
+        self.saved_rbDrowned = self.gui.rbDrowned.isChecked()
+        self.saved_pierNo = self.gui.pierNo.value()
+        self.saved_pierWidth = self.gui.pierWidth.value()
+        self.saved_pierWidthLeft = self.gui.pierWidthLeft.value()
+        self.saved_pierGap = self.gui.pierGap.value()
+        self.saved_pierShape = self.gui.pierShape.currentIndex()
+        self.saved_zLineWidth = self.gui.zLineWidth.value()
+        self.saved_enforceInTerrain = self.gui.enforceInTerrain.isChecked()
         
     def loadData(self):
         """
@@ -252,37 +252,37 @@ class bridgeEditor():
         """
 
         # save tables
-        self.bridge.xSectionTable.setRowCount(len(self.saved_xSectionTable[0]))
-        for i in range(self.bridge.xSectionTable.rowCount()):
-            self.bridge.xSectionTable.setItem(i, 0, QTableWidgetItem(self.saved_xSectionTable[0][i]))
-            self.bridge.xSectionTable.setItem(i, 1, QTableWidgetItem(self.saved_xSectionTable[1][i]))
-        self.bridge.deckTable.setRowCount(len(self.saved_deckTable[0]))
-        for i in range(self.bridge.deckTable.rowCount()):
-            self.bridge.deckTable.setItem(i, 0, QTableWidgetItem(self.saved_deckTable[0][i]))
-            self.bridge.deckTable.setItem(i, 1, QTableWidgetItem(self.saved_deckTable[1][i]))
-        self.bridge.pierTable.setRowCount(len(self.saved_pierTable))
-        for i in range(self.bridge.pierTable.rowCount()):
-            self.bridge.pierTable.setItem(i, 0, QTableWidgetItem(self.saved_pierTable[i]))
+        self.gui.xSectionTable.setRowCount(len(self.saved_xSectionTable[0]))
+        for i in range(self.gui.xSectionTable.rowCount()):
+            self.gui.xSectionTable.setItem(i, 0, QTableWidgetItem(self.saved_xSectionTable[0][i]))
+            self.gui.xSectionTable.setItem(i, 1, QTableWidgetItem(self.saved_xSectionTable[1][i]))
+        self.gui.deckTable.setRowCount(len(self.saved_deckTable[0]))
+        for i in range(self.gui.deckTable.rowCount()):
+            self.gui.deckTable.setItem(i, 0, QTableWidgetItem(self.saved_deckTable[0][i]))
+            self.gui.deckTable.setItem(i, 1, QTableWidgetItem(self.saved_deckTable[1][i]))
+        self.gui.pierTable.setRowCount(len(self.saved_pierTable))
+        for i in range(self.gui.pierTable.rowCount()):
+            self.gui.pierTable.setItem(i, 0, QTableWidgetItem(self.saved_pierTable[i]))
         # save spinboxes
-        self.bridge.xSectionRowCount.setValue(self.saved_xSectionRowCount)
-        self.bridge.deckRowCount.setValue(self.saved_deckRowCount)
-        self.bridge.pierRowCount.setValue(self.saved_pierRowCount)
+        self.gui.xSectionRowCount.setValue(self.saved_xSectionRowCount)
+        self.gui.deckRowCount.setValue(self.saved_deckRowCount)
+        self.gui.pierRowCount.setValue(self.saved_pierRowCount)
         # save input boxes
-        self.bridge.bridgeName.setText(self.saved_bridgeName)
-        self.bridge.deckElevationBottom.setValue(self.saved_deckElevationBottom)
-        self.bridge.deckThickness.setValue(self.saved_deckThickness)
-        self.bridge.handRailDepth.setValue(self.saved_handRailDepth)
-        self.bridge.handRailFlc.setValue(self.saved_handRailFlc)
-        self.bridge.handRailBlockage.setValue(self.saved_handRailBlockage)
-        self.bridge.rbDrowned.setChecked(self.saved_rbDrowned)
-        self.bridge.pierNo.setValue(self.saved_pierNo)
-        self.bridge.pierWidth.setValue(self.saved_pierWidth)
-        self.bridge.pierWidthLeft.setValue(self.saved_pierWidthLeft)
-        self.bridge.pierGap.setValue(self.saved_pierGap)
-        self.bridge.pierShape.setCurrentIndex(self.saved_pierShape)
-        self.bridge.zLineWidth.setValue(self.saved_zLineWidth)
-        self.bridge.enforceInTerrain.setChecked(self.saved_enforceInTerrain)
-        
+        self.gui.bridgeName.setText(self.saved_bridgeName)
+        self.gui.deckElevationBottom.setValue(self.saved_deckElevationBottom)
+        self.gui.deckThickness.setValue(self.saved_deckThickness)
+        self.gui.handRailDepth.setValue(self.saved_handRailDepth)
+        self.gui.handRailFlc.setValue(self.saved_handRailFlc)
+        self.gui.handRailBlockage.setValue(self.saved_handRailBlockage)
+        self.gui.rbDrowned.setChecked(self.saved_rbDrowned)
+        self.gui.pierNo.setValue(self.saved_pierNo)
+        self.gui.pierWidth.setValue(self.saved_pierWidth)
+        self.gui.pierWidthLeft.setValue(self.saved_pierWidthLeft)
+        self.gui.pierGap.setValue(self.saved_pierGap)
+        self.gui.pierShape.setCurrentIndex(self.saved_pierShape)
+        self.gui.zLineWidth.setValue(self.saved_zLineWidth)
+        self.gui.enforceInTerrain.setChecked(self.saved_enforceInTerrain)
+
         self.qgis_connect()
         self.updatePlot()
     
@@ -310,28 +310,28 @@ class bridgeEditor():
         # Check that selected layer is a polyline
         if lyr is not None:
             if lyr.geometryType() != 1:
-                self.bridge.statusLog.insertItem(0, 'Error: Layer is not a polyline type')
-                self.bridge.statusLabel.setText('Status: Error')
+                self.gui.statusLog.insertItem(0, 'Error: Layer is not a polyline type')
+                self.gui.statusLabel.setText('Status: Error')
                 return
             else:
-                self.bridge.statusLabel.setText('Status: Successful')
+                self.gui.statusLabel.setText('Status: Successful')
         # Check number of features selected
         if len(feat) == 0:
-            self.bridge.statusLog.insertItem(0, 'Error: No Features Selected')
-            self.bridge.statusLabel.setText('Status: Error')
+            self.gui.statusLog.insertItem(0, 'Error: No Features Selected')
+            self.gui.statusLabel.setText('Status: Error')
             return
         if len(feat) > 1:
-            self.bridge.statusLog.insertItem(0, 'Warning: More than one feature selected - using first selection in {0}'.format(lyr.name()))
-            self.bridge.statusLabel.setText('Status: Warning')
+            self.gui.statusLog.insertItem(0, 'Warning: More than one feature selected - using first selection in {0}'.format(lyr.name()))
+            self.gui.statusLabel.setText('Status: Warning')
         else:
             #self.statusLog.insertItem(0, 'Message: Draping line in {0}'.format(lyr.name()))
-            self.bridge.statusLabel.setText('Status: Successful')
+            self.gui.statusLabel.setText('Status: Successful')
         feat = feat[0]  # QgsFeature
         # Get DEM for draping
-        dem = tuflowqgis_find_layer(self.bridge.demComboBox.currentText())  # QgsRasterLayer
+        dem = tuflowqgis_find_layer(self.gui.demComboBox.currentText())  # QgsRasterLayer
         if dem is None:
-            self.bridge.statusLog.insertItem(0, 'Error: No DEM selected')
-            self.bridge.statusLabel.setText('Status: Error')
+            self.gui.statusLog.insertItem(0, 'Error: No DEM selected')
+            self.gui.statusLabel.setText('Status: Error')
             return
         else:
             demCellSize = max(dem.rasterUnitsPerPixelX(), dem.rasterUnitsPerPixelY())
@@ -354,66 +354,66 @@ class bridgeEditor():
         """
         
         self.canvas.scene().removeItem(self.rubberBand)  # Remove previous temp layer
-        self.bridge.labels = []
+        self.gui.labels = []
         self.xSectionElev = []
         self.xSectionOffset = []
         self.deckPatch = []
         self.pierPatches = []
-        self.bridge.subplot.cla()  # clear axis
+        self.gui.subplot.cla()  # clear axis
         self.feat = None
         # create curve
-        self.bridge.manageMatplotlibAxe(self.bridge.subplot)
+        self.gui.manageMatplotlibAxe(self.gui.subplot)
         label = "test"
         x = numpy.linspace(-numpy.pi, numpy.pi, 201)
         y = numpy.sin(x)
-        a, = self.bridge.subplot.plot(x, y)
-        self.bridge.artists.append(a)
-        self.bridge.labels.append(label)
-        self.bridge.subplot.hold(True)
+        a, = self.gui.subplot.plot(x, y)
+        self.gui.artists.append(a)
+        self.gui.labels.append(label)
+        self.gui.subplot.hold(True)
         #self.fig.tight_layout()
-        self.bridge.plotWdg.draw()
+        self.gui.plotWdg.draw()
         # clear tables
-        self.bridge.xSectionTable.setRowCount(0)
-        self.bridge.deckTable.setRowCount(0)
-        self.bridge.pierTable.setRowCount(0)
+        self.gui.xSectionTable.setRowCount(0)
+        self.gui.deckTable.setRowCount(0)
+        self.gui.pierTable.setRowCount(0)
         # clear spinboxes
-        self.bridge.xSectionRowCount.setValue(0)
-        self.bridge.deckRowCount.setValue(0)
-        self.bridge.pierRowCount.setValue(0)
+        self.gui.xSectionRowCount.setValue(0)
+        self.gui.deckRowCount.setValue(0)
+        self.gui.pierRowCount.setValue(0)
         # clear input boxes
-        self.bridge.bridgeName.setText('')
-        self.bridge.deckElevationBottom.setValue(0)
-        self.bridge.deckThickness.setValue(0)
-        self.bridge.handRailDepth.setValue(0)
-        self.bridge.handRailFlc.setValue(0)
-        self.bridge.handRailBlockage.setValue(0)
-        self.bridge.rbDrowned.setChecked(True)
-        self.bridge.pierNo.setValue(0)
-        self.bridge.pierWidth.setValue(0)
-        self.bridge.pierWidthLeft.setValue(0)
-        self.bridge.pierGap.setValue(0)
-        self.bridge.pierShape.setCurrentIndex(0)
-        self.bridge.zLineWidth.setValue(0)
-        self.bridge.enforceInTerrain.setChecked(False)
+        self.gui.bridgeName.setText('')
+        self.gui.deckElevationBottom.setValue(0)
+        self.gui.deckThickness.setValue(0)
+        self.gui.handRailDepth.setValue(0)
+        self.gui.handRailFlc.setValue(0)
+        self.gui.handRailBlockage.setValue(0)
+        self.gui.rbDrowned.setChecked(True)
+        self.gui.pierNo.setValue(0)
+        self.gui.pierWidth.setValue(0)
+        self.gui.pierWidthLeft.setValue(0)
+        self.gui.pierGap.setValue(0)
+        self.gui.pierShape.setCurrentIndex(0)
+        self.gui.zLineWidth.setValue(0)
+        self.gui.enforceInTerrain.setChecked(False)
         # clear attributes
-        self.bridge.invert.setText('')
-        self.bridge.dz.setText('')
-        self.bridge.shapeWidth.setText('')
-        self.bridge.shapeOptions.setText('')
-        self.bridge.layer1Obv.setText('')
-        self.bridge.layer1Block.setText('')
-        self.bridge.layer1Flc.setText('')
-        self.bridge.layer2Depth.setText('')
-        self.bridge.layer2Block.setText('')
-        self.bridge.layer2Flc.setText('')
-        self.bridge.layer3Depth.setText('')
-        self.bridge.layer3Block.setText('')
-        self.bridge.layer3Flc.setText('')
-        self.bridge.comment.setText('')
-        self.bridge.label_44.setText('')
-        self.bridge.label_35.setText('')
-        self.bridge.label_36.setText('')
-        self.bridge.label_37.setText('')
+        self.gui.invert.setText('')
+        self.gui.dz.setText('')
+        self.gui.shapeWidth.setText('')
+        self.gui.shapeOptions.setText('')
+        self.gui.layer1Obv.setText('')
+        self.gui.layer1Block.setText('')
+        self.gui.layer1Flc.setText('')
+        self.gui.layer2Depth.setText('')
+        self.gui.layer2Block.setText('')
+        self.gui.layer2Flc.setText('')
+        self.gui.layer3Depth.setText('')
+        self.gui.layer3Block.setText('')
+        self.gui.layer3Flc.setText('')
+        self.gui.comment.setText('')
+        self.gui.label_44.setText('')
+        self.gui.label_35.setText('')
+        self.gui.label_36.setText('')
+        self.gui.label_37.setText('')
 
     def createMemoryLayerFromTempLayer(self):
         """
@@ -452,13 +452,13 @@ class bridgeEditor():
         :return: void updated table widget with data
         """
 
-        self.bridge.xSectionTable.setRowCount(len(self.xSectionOffset))
-        self.bridge.xSectionTable.setItem(0, 0, QTableWidgetItem('test'))
+        self.gui.xSectionTable.setRowCount(len(self.xSectionOffset))
+        self.gui.xSectionTable.setItem(0, 0, QTableWidgetItem('test'))
         for i, value in enumerate(self.xSectionOffset):
-            self.bridge.xSectionTable.setItem(i, 0, QTableWidgetItem(str(value)))
-            self.bridge.xSectionTable.setItem(i, 1, QTableWidgetItem(str(self.xSectionElev[i])))
+            self.gui.xSectionTable.setItem(i, 0, QTableWidgetItem(str(value)))
+            self.gui.xSectionTable.setItem(i, 1, QTableWidgetItem(str(self.xSectionElev[i])))
         # update spinbox
-        self.bridge.xSectionRowCount.setValue(self.bridge.xSectionTable.rowCount())
+        self.gui.xSectionRowCount.setValue(self.gui.xSectionTable.rowCount())
 
     def updateXsectionData(self):
         """
@@ -470,9 +470,9 @@ class bridgeEditor():
         
         self.xSectionOffset = []
         self.xSectionElev = []
-        for i in range(self.bridge.xSectionTable.rowCount()):
-            self.xSectionOffset.append(float(self.bridge.xSectionTable.item(i, 0).text()))
-            self.xSectionElev.append(float(self.bridge.xSectionTable.item(i, 1).text()))
+        for i in range(self.gui.xSectionTable.rowCount()):
+            self.xSectionOffset.append(float(self.gui.xSectionTable.item(i, 0).text()))
+            self.xSectionElev.append(float(self.gui.xSectionTable.item(i, 1).text()))
             
     def updatePierTable(self):
         """
@@ -486,21 +486,21 @@ class bridgeEditor():
             return
         self.pierOffset = []
         # Set up QTableWidget
-        self.bridge.pierTable.setRowCount(self.bridge.pierNo.value())
+        self.gui.pierTable.setRowCount(self.gui.pierNo.value())
         # Populate values and column headers
         self.pierRowHeaders = []
-        for i in range(1, self.bridge.pierNo.value() + 1):
+        for i in range(1, self.gui.pierNo.value() + 1):
             self.pierRowHeaders.append('Pier {0}'.format(i))
             if i == 1:
-                offset = self.bridge.pierWidthLeft.value() + self.bridge.pierWidth.value() / 2
+                offset = self.gui.pierWidthLeft.value() + self.gui.pierWidth.value() / 2
             else:
-                offset += self.bridge.pierWidth.value() + self.bridge.pierGap.value()
+                offset += self.gui.pierWidth.value() + self.gui.pierGap.value()
             self.pierOffset.append(offset)
-        self.bridge.pierTable.setVerticalHeaderLabels(self.pierRowHeaders)
+        self.gui.pierTable.setVerticalHeaderLabels(self.pierRowHeaders)
         for i, pier in enumerate(self.pierOffset):
-            self.bridge.pierTable.setItem(i, 0, QTableWidgetItem(str(pier)))
+            self.gui.pierTable.setItem(i, 0, QTableWidgetItem(str(pier)))
         # update spinbox
-        self.bridge.pierRowCount.setValue(self.bridge.pierTable.rowCount())
+        self.gui.pierRowCount.setValue(self.gui.pierTable.rowCount())
         
         self.updatePlot()
 
@@ -511,26 +511,26 @@ class bridgeEditor():
         :return: void updates self.pierPatches
         """
         
-        if self.bridge.pierTable.item(0, 0) is None:
-            self.bridge.statusLog.insertItem(0, 'Warning: No Piers Defined in Table')
-            self.bridge.statusLabel.setText('Status: Warning')
+        if self.gui.pierTable.item(0, 0) is None:
+            self.gui.statusLog.insertItem(0, 'Warning: No Piers Defined in Table')
+            self.gui.statusLabel.setText('Status: Warning')
             return
         self.pierPatches = []
-        for i in range(self.bridge.pierTable.rowCount()):
+        for i in range(self.gui.pierTable.rowCount()):
             x = []
             y = []
-            x1 = float(self.bridge.pierTable.item(i, 0).text()) - self.bridge.pierWidth.value() / 2
-            x2 = float(self.bridge.pierTable.item(i, 0).text()) + self.bridge.pierWidth.value() / 2
+            x1 = float(self.gui.pierTable.item(i, 0).text()) - self.gui.pierWidth.value() / 2
+            x2 = float(self.gui.pierTable.item(i, 0).text()) + self.gui.pierWidth.value() / 2
             y1a = self.getGroundAtX(x1)
             y1b = self.getGroundAtX(x2)
             y2a = self.interpolateVLookupObvert(x1)
             y2b = self.interpolateVLookupObvert(x2)
             if y2a <= y1a or y2b <= y1b:
-                self.bridge.statusLog.insertItem(0, 'Error: Bridge deck level is lower than ground')
-                self.bridge.statusLabel.setText('Status: Error')
+                self.gui.statusLog.insertItem(0, 'Error: Bridge deck level is lower than ground')
+                self.gui.statusLabel.setText('Status: Error')
                 return
             else:
-                self.bridge.statusLabel.setText('Status: Successful')
+                self.gui.statusLabel.setText('Status: Successful')
             x.append(x1)
             y.append(y1a)
             iStart = None
@@ -562,7 +562,7 @@ class bridgeEditor():
             y.append(y2a)
             patch = list(zip(x, y))
             self.pierPatches.append(patch)
-        self.bridge.statusLabel.setText('Status: Successful')
+        self.gui.statusLabel.setText('Status: Successful')
             
     def updateDeckTable(self):
         """
@@ -572,20 +572,20 @@ class bridgeEditor():
         """
 
         # Set up table
-        self.bridge.deckTable.setRowCount(2)
+        self.gui.deckTable.setRowCount(2)
         # Update parameters
-        if self.xSectionElev[0] <= self.bridge.deckElevationBottom.value():
+        if self.xSectionElev[0] <= self.gui.deckElevationBottom.value():
             xmin = self.xSectionOffset[0]
         else:
-            xmin = self.getXatElevation(self.bridge.deckElevationBottom.value(), 1)
-        if self.xSectionElev[-1] <= self.bridge.deckElevationBottom.value():
+            xmin = self.getXatElevation(self.gui.deckElevationBottom.value(), 1)
+        if self.xSectionElev[-1] <= self.gui.deckElevationBottom.value():
             xmax = self.xSectionOffset[-1]
         else:
-            xmax = self.getXatElevation(self.bridge.deckElevationBottom.value(), -1)
-        self.bridge.deckTable.setItem(0, 0, QTableWidgetItem(str(xmin)))
-        self.bridge.deckTable.setItem(1, 0, QTableWidgetItem(str(xmax)))
-        self.bridge.deckTable.setItem(0, 1, QTableWidgetItem(str(self.bridge.deckElevationBottom.value())))
-        self.bridge.deckTable.setItem(1, 1, QTableWidgetItem(str(self.bridge.deckElevationBottom.value())))
+            xmax = self.getXatElevation(self.gui.deckElevationBottom.value(), -1)
+        self.gui.deckTable.setItem(0, 0, QTableWidgetItem(str(xmin)))
+        self.gui.deckTable.setItem(1, 0, QTableWidgetItem(str(xmax)))
+        self.gui.deckTable.setItem(0, 1, QTableWidgetItem(str(self.gui.deckElevationBottom.value())))
+        self.gui.deckTable.setItem(1, 1, QTableWidgetItem(str(self.gui.deckElevationBottom.value())))
         
         self.updatePlot()
         
@@ -596,25 +596,25 @@ class bridgeEditor():
         :return:
         """
         
-        if self.bridge.deckTable.item(0, 0) is not None:
+        if self.gui.deckTable.item(0, 0) is not None:
             # first value
-            elevation = float(self.bridge.deckTable.item(0, 1).text())
+            elevation = float(self.gui.deckTable.item(0, 1).text())
             if elevation >= self.xSectionElev[0]:
                 offset = self.xSectionOffset[0]
             else:
                 offset = self.getXatElevation(elevation, 1)
-            self.bridge.deckTable.setItem(0, 0, QTableWidgetItem(str(offset)))
+            self.gui.deckTable.setItem(0, 0, QTableWidgetItem(str(offset)))
             # last value
-            lastRow = self.bridge.deckTable.rowCount() - 1
-            elevation = float(self.bridge.deckTable.item(lastRow, 1).text())
+            lastRow = self.gui.deckTable.rowCount() - 1
+            elevation = float(self.gui.deckTable.item(lastRow, 1).text())
             if elevation >= self.xSectionElev[-1]:
                 offset = self.xSectionOffset[-1]
             else:
                 offset = self.getXatElevation(elevation, -1)
-            self.bridge.deckTable.setItem(lastRow, 0, QTableWidgetItem(str(offset)))
+            self.gui.deckTable.setItem(lastRow, 0, QTableWidgetItem(str(offset)))
             self.updateObverts()
         # Update spinbox
-        self.bridge.deckRowCount.setValue(self.bridge.deckTable.rowCount())
+        self.gui.deckRowCount.setValue(self.gui.deckTable.rowCount())
             
     def interpolateVLookupObvert(self, x):
         """
@@ -625,9 +625,9 @@ class bridgeEditor():
         """
         
         
-        for i in range(self.bridge.deckTable.rowCount()):
-            offset = float(self.bridge.deckTable.item(i, 0).text())
-            y = float(self.bridge.deckTable.item(i, 1).text())
+        for i in range(self.gui.deckTable.rowCount()):
+            offset = float(self.gui.deckTable.item(i, 0).text())
+            y = float(self.gui.deckTable.item(i, 1).text())
             if i == 0:
                 if offset == x:
                     return y
@@ -650,18 +650,18 @@ class bridgeEditor():
         """
 
         self.obverts = []
-        lastRow = self.bridge.deckTable.rowCount() - 1
+        lastRow = self.gui.deckTable.rowCount() - 1
         for offset in self.xSectionOffset:
-            if offset == float(self.bridge.deckTable.item(0, 0).text()):  # equal to the first entry in the deck table
-                self.obverts.append(float(self.bridge.deckTable.item(0, 1).text()))
-            elif offset == float(self.bridge.deckTable.item(lastRow, 0).text()):  # equal to the last entry in the deck table
-                self.obverts.append(float(self.bridge.deckTable.item(lastRow, 1).text()))
-            elif offset > float(self.bridge.deckTable.item(0, 0).text()) and offset < float(self.bridge.deckTable.item(lastRow, 0).text()):  # in between first and last entry- interpolate
+            if offset == float(self.gui.deckTable.item(0, 0).text()):  # equal to the first entry in the deck table
+                self.obverts.append(float(self.gui.deckTable.item(0, 1).text()))
+            elif offset == float(self.gui.deckTable.item(lastRow, 0).text()):  # equal to the last entry in the deck table
+                self.obverts.append(float(self.gui.deckTable.item(lastRow, 1).text()))
+            elif offset > float(self.gui.deckTable.item(0, 0).text()) and offset < float(self.gui.deckTable.item(lastRow, 0).text()):  # in between first and last entry- interpolate
                 self.obverts.append(self.interpolateVLookupObvert(offset))
-            elif offset > float(self.bridge.deckTable.item(lastRow, 0).text()):  # after last entry
-                self.obverts.append(float(self.bridge.deckTable.item(lastRow, 1).text()))
+            elif offset > float(self.gui.deckTable.item(lastRow, 0).text()):  # after last entry
+                self.obverts.append(float(self.gui.deckTable.item(lastRow, 1).text()))
             else:  # before first entry
-                self.obverts.append(float(self.bridge.deckTable.item(0, 1).text()))
+                self.obverts.append(float(self.gui.deckTable.item(0, 1).text()))
         
     def createDeckPatch(self):
         """
@@ -670,16 +670,16 @@ class bridgeEditor():
         :return: void updates self.deckPatch
         """
 
-        if self.bridge.deckTable.item(0, 0) is None:
-            self.bridge.statusLog.insertItem(0, 'Warning: No Piers Defined in Table')
-            self.bridge.statusLabel.setText('Status: Warning')
+        if self.gui.deckTable.item(0, 0) is None:
+            self.gui.statusLog.insertItem(0, 'Warning: No Piers Defined in Table')
+            self.gui.statusLabel.setText('Status: Warning')
             return
         x = []
         y = []
         # Get patch values between upper and lower deck cords on left hand side
-        y1 = float(self.bridge.deckTable.item(0, 1).text())  # lower cord on left hand deck limit
-        y2 = y1 + self.bridge.deckThickness.value()  # upper cord on left hand deck limit
-        x1 = float(self.bridge.deckTable.item(0, 0).text())  # x value of lower cord on left hand deck limit
+        y1 = float(self.gui.deckTable.item(0, 1).text())  # lower cord on left hand deck limit
+        y2 = y1 + self.gui.deckThickness.value()  # upper cord on left hand deck limit
+        x1 = float(self.gui.deckTable.item(0, 0).text())  # x value of lower cord on left hand deck limit
         x2 = self.getXatElevation(y2, 1)  # x value of upper cord on left hand deck limit
         x2 = x1 if x2 > x1 else x2  # x2 cannot be greater than x1
         x.append(x2)
@@ -709,7 +709,7 @@ class bridgeEditor():
         x.append(x1)
         y.append(y1)
         # get patch values along deck bottom
-        iMax = self.bridge.deckTable.rowCount() - 1
+        iMax = self.gui.deckTable.rowCount() - 1
         underDeck = False
         start = False
         for i, xsElev in enumerate(self.xSectionElev):
@@ -724,7 +724,7 @@ class bridgeEditor():
                     underDeck = True
                     start = True
                     continue
-            elif offset >= float(self.bridge.deckTable.item(iMax, 0).text()):
+            elif offset >= float(self.gui.deckTable.item(iMax, 0).text()):
                 start = False
             elif xsElev < obvert and xsElevPrev > obvertPrev:
                 underDeck = True
@@ -756,9 +756,9 @@ class bridgeEditor():
             obvertPrev = obvert
             offsetPrev = offset
         # Get patch values between upper and lower deck cords on right hand side
-        y3 = float(self.bridge.deckTable.item(iMax, 1).text())  # lower cord on right hand deck limit
-        y4 = y3 + self.bridge.deckThickness.value()  # upper cord on right hand deck limit
-        x3 = float(self.bridge.deckTable.item(iMax, 0).text())  # x value of lower cord on right hand deck limit
+        y3 = float(self.gui.deckTable.item(iMax, 1).text())  # lower cord on right hand deck limit
+        y4 = y3 + self.gui.deckThickness.value()  # upper cord on right hand deck limit
+        x3 = float(self.gui.deckTable.item(iMax, 0).text())  # x value of lower cord on right hand deck limit
         x4 = self.getXatElevation(y4, -1)  # x value of upper cord on right hand deck limit
         x4 = x3 if x4 < x3 else x4  # x4 cannot be less than x3
         x.append(x3)
@@ -791,7 +791,7 @@ class bridgeEditor():
         start = False
         for i in range(len(self.xSectionElev) - 1, 0, -1):
             xsElev = self.xSectionElev[i]
-            obvert = self.obverts[i] + self.bridge.deckThickness.value()
+            obvert = self.obverts[i] + self.gui.deckThickness.value()
             offset = self.xSectionOffset[i]
             if i == len(self.xSectionElev) - 1:
                 xsElevPrev = xsElev
@@ -802,7 +802,7 @@ class bridgeEditor():
                     underDeck = True
                     start = True
                     continue
-            elif offset <= float(self.bridge.deckTable.item(0, 0).text()):
+            elif offset <= float(self.gui.deckTable.item(0, 0).text()):
                 start = False
             elif xsElev < obvert and xsElevPrev > obvertPrev:
                 underDeck = True
@@ -850,22 +850,22 @@ class bridgeEditor():
         for i, offset in enumerate(self.xSectionOffset):
             if i == 0:
                 if x == offset:
-                    self.bridge.statusLabel.setText('Status: Successful')
+                    self.gui.statusLabel.setText('Status: Successful')
                     return self.xSectionElev[i]
                 xPrev = offset
                 iPrev = i
             else:
                 if x == offset:
-                    self.bridge.statusLabel.setText('Status: Successful')
+                    self.gui.statusLabel.setText('Status: Successful')
                     return self.xSectionElev[i]
                 elif x > xPrev and x < offset:
-                    self.bridge.statusLabel.setText('Status: Successful')
+                    self.gui.statusLabel.setText('Status: Successful')
                     return self.interpolate(x, xPrev, offset, self.xSectionElev[iPrev], self.xSectionElev[i])
                 else:
                     xPrev = offset
                     iPrev = i
-        self.bridge.statusLog.insertItem(0, 'Error: Unable to find ground level at pier offset')
-        self.bridge.statusLabel.setText('Status: Error')
+        self.gui.statusLog.insertItem(0, 'Error: Unable to find ground level at pier offset')
+        self.gui.statusLabel.setText('Status: Error')
         return min(self.xSectionElev)
     
     def getXatElevation(self, z, direction):
@@ -941,9 +941,9 @@ class bridgeEditor():
         """
         
         # check a deck exists
-        if self.bridge.deckTable.item(0, 0) is None:
-            self.bridge.statusLog.insertItem(0, 'Warning: Unable to calculate energy loss without bridge deck')
-            self.bridge.statusLabel.setText('Status: Warning')
+        if self.gui.deckTable.item(0, 0) is None:
+            self.gui.statusLog.insertItem(0, 'Warning: Unable to calculate energy loss without bridge deck')
+            self.gui.statusLabel.setText('Status: Warning')
             return
         # calculate area
         underDeck = False
@@ -989,7 +989,7 @@ class bridgeEditor():
             iPrev = i
             obvertPrev = obvert
             offsetPrev = offset
-        self.bridge.statusLabel.setText('Status: Successful')
+        self.gui.statusLabel.setText('Status: Successful')
         
     def calculatePierArea(self):
         """
@@ -999,11 +999,11 @@ class bridgeEditor():
         """
         
         self.pierArea = 0
-        if self.bridge.pierTable.item(0, 0) is None:
+        if self.gui.pierTable.item(0, 0) is None:
             return
         else:
             for i, pier in enumerate(self.pierPatches):
-                xEnd = float(self.bridge.pierTable.item(i, 0).text()) + self.bridge.pierWidth.value() / 2
+                xEnd = float(self.gui.pierTable.item(i, 0).text()) + self.gui.pierWidth.value() / 2
                 area = 0
                 end = False
                 for j, v in enumerate(pier):
@@ -1038,37 +1038,37 @@ class bridgeEditor():
         # Set up default limits
         ymax = -99999
         # Reset and clear plot
-        self.bridge.subplot.cla()
-        self.bridge.artists = []
-        self.bridge.labels = []
+        self.gui.subplot.cla()
+        self.gui.artists = []
+        self.gui.labels = []
         # Update X Section
-        a, = self.bridge.subplot.plot(self.xSectionOffset, self.xSectionElev)
+        a, = self.gui.subplot.plot(self.xSectionOffset, self.xSectionElev)
         label = 'X-Section'
         ymax = max(ymax, max(self.xSectionElev))
-        self.bridge.labels.append(label)
-        self.bridge.artists.append(a)
-        self.bridge.subplot.hold(True)
+        self.gui.labels.append(label)
+        self.gui.artists.append(a)
+        self.gui.subplot.hold(True)
         # Update Pier Data
         self.createPierPatches()
         for pier in self.pierPatches:
             for v in pier:
                 ymax = max(ymax, v[1])
             patch = Polygon(pier, facecolor='0.9', edgecolor='0.5')
-            self.bridge.subplot.add_patch(patch)
+            self.gui.subplot.add_patch(patch)
         # Update Deck Data
         self.createDeckPatch()
         for v in self.deckPatch:
             ymax = max(ymax, v[1])
         if self.deckPatch:
             patch = Polygon(self.deckPatch, facecolor='0.9', edgecolor='0.5')
-            self.bridge.subplot.add_patch(patch)
+            self.gui.subplot.add_patch(patch)
         # Draw
-        self.bridge.manageMatplotlibAxe(self.bridge.subplot)
-        yTicks = self.bridge.subplot.get_yticks()
+        self.gui.manageMatplotlibAxe(self.gui.subplot)
+        yTicks = self.gui.subplot.get_yticks()
         yInc = yTicks[1] - yTicks[0]
-        self.bridge.subplot.set_ybound(upper=ymax + yInc)
-        self.bridge.fig.tight_layout()
-        self.bridge.plotWdg.draw()
+        self.gui.subplot.set_ybound(upper=ymax + yInc)
+        self.gui.fig.tight_layout()
+        self.gui.plotWdg.draw()
     
     def updateAttributes(self):
         """
@@ -1078,63 +1078,63 @@ class bridgeEditor():
         """
         
         # Invert
-        if self.bridge.enforceInTerrain.isChecked():
-            self.bridge.invert.setText('0')
-            self.bridge.label_44.setText('Enforcing Bridge Invert- Points layer will be created')
+        if self.gui.enforceInTerrain.isChecked():
+            self.gui.invert.setText('0')
+            self.gui.label_44.setText('Enforcing Bridge Invert- Points layer will be created')
             self.variableGeom = True
         else:
-            self.bridge.invert.setText('99999')
-            self.bridge.label_44.setText('Adopting existing Zpts as bridge invert')
+            self.gui.invert.setText('99999')
+            self.gui.label_44.setText('Adopting existing Zpts as bridge invert')
         # dZ
-        self.bridge.dz.setText('0')
+        self.gui.dz.setText('0')
         # Shape Width
-        self.bridge.shapeWidth.setText('{0:.1f}'.format(float(self.bridge.zLineWidth.text())))
-        if self.bridge.pierTable.item(0, 0) is None:
-            self.bridge.statusLog.insertItem(0, 'Warning: No Piers Defined in Table')
-            self.bridge.statusLabel.setText('Status: Warning')
+        self.gui.shapeWidth.setText('{0:.1f}'.format(float(self.gui.zLineWidth.text())))
+        if self.gui.pierTable.item(0, 0) is None:
+            self.gui.statusLog.insertItem(0, 'Warning: No Piers Defined in Table')
+            self.gui.statusLabel.setText('Status: Warning')
         else:
-            self.bridge.layer1Obv.setText(self.bridge.deckTable.item(0, 1).text())
+            self.gui.layer1Obv.setText(self.gui.deckTable.item(0, 1).text())
         # pier values
         self.calculateFlowArea()
         self.calculatePierArea()
-        self.bridge.layer1Block.setText('{0:.1f}'.format(self.pierArea / self.area * 100))
-        self.bridge.layer1Flc.setText('{0:.2f}'.format(lookupPierLoss(int(self.bridge.pierShape.currentText()), self.pierArea / self.area)))
+        self.gui.layer1Block.setText('{0:.1f}'.format(self.pierArea / self.area * 100))
+        self.gui.layer1Flc.setText('{0:.2f}'.format(lookupPierLoss(int(self.gui.pierShape.currentText()), self.pierArea / self.area)))
         # elevation values
-        self.bridge.layer1Obv.setText(str(self.bridge.deckElevationBottom.value()))
-        self.bridge.layer2Depth.setText(str(self.bridge.deckThickness.value()))
-        self.bridge.layer3Depth.setText(str(self.bridge.handRailDepth.value()))
-        self.bridge.label_35.setText('Constant level')
-        self.bridge.label_36.setText('Constant level')
-        self.bridge.label_37.setText('Constant level')
+        self.gui.layer1Obv.setText(str(self.gui.deckElevationBottom.value()))
+        self.gui.layer2Depth.setText(str(self.gui.deckThickness.value()))
+        self.gui.layer3Depth.setText(str(self.gui.handRailDepth.value()))
+        self.gui.label_35.setText('Constant level')
+        self.gui.label_36.setText('Constant level')
+        self.gui.label_37.setText('Constant level')
         if self.variableGeom:
-            self.bridge.layer1Obv.setText('0')
-            self.bridge.layer2Depth.setText('0')
-            self.bridge.layer3Depth.setText('0')
-            self.bridge.label_35.setText('Variable elevation- Points layer will be created')
-            self.bridge.label_36.setText('Variable elevation- Points layer will be created')
-            self.bridge.label_37.setText('Variable elevation- Points layer will be created')
+            self.gui.layer1Obv.setText('0')
+            self.gui.layer2Depth.setText('0')
+            self.gui.layer3Depth.setText('0')
+            self.gui.label_35.setText('Variable elevation- Points layer will be created')
+            self.gui.label_36.setText('Variable elevation- Points layer will be created')
+            self.gui.label_37.setText('Variable elevation- Points layer will be created')
         else:
-            for i in range(self.bridge.deckTable.rowCount()):
-                elev = float(self.bridge.deckTable.item(i, 1).text())
+            for i in range(self.gui.deckTable.rowCount()):
+                elev = float(self.gui.deckTable.item(i, 1).text())
                 if i == 0:
                     elevPrev = elev
                 else:
                     if elev != elevPrev:
-                        self.bridge.layer1Obv.setText('0')
-                        self.bridge.layer2Depth.setText('0')
-                        self.bridge.layer3Depth.setText('0')
-                        self.bridge.label_35.setText('Variable elevation- Points layer will be created')
-                        self.bridge.label_36.setText('Variable elevation- Points layer will be created')
-                        self.bridge.label_37.setText('Variable elevation- Points layer will be created')
+                        self.gui.layer1Obv.setText('0')
+                        self.gui.layer2Depth.setText('0')
+                        self.gui.layer3Depth.setText('0')
+                        self.gui.label_35.setText('Variable elevation- Points layer will be created')
+                        self.gui.label_36.setText('Variable elevation- Points layer will be created')
+                        self.gui.label_37.setText('Variable elevation- Points layer will be created')
                         self.variableGeom = True
                         break
         # other blockage and FLC values
-        self.bridge.layer2Block.setText('100')
-        self.bridge.layer3Block.setText(str(self.bridge.handRailBlockage.value()))
-        self.bridge.layer3Flc.setText(str(self.bridge.handRailFlc.value()))
-        if self.bridge.rbDrowned.isChecked():
-            self.bridge.layer2Flc.setText('0.5')
+        self.gui.layer2Block.setText('100')
+        self.gui.layer3Block.setText(str(self.gui.handRailBlockage.value()))
+        self.gui.layer3Flc.setText(str(self.gui.handRailFlc.value()))
+        if self.gui.rbDrowned.isChecked():
+            self.gui.layer2Flc.setText('0.5')
         else:
-            self.bridge.layer2Flc.setText('1.56')
+            self.gui.layer2Flc.setText('1.56')
         # comment
-        self.bridge.comment.setText(self.bridge.bridgeName.text())
+        self.gui.comment.setText(self.gui.bridgeName.text())

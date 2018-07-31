@@ -1,7 +1,9 @@
 # coding=utf-8
 from tuflowqgis_bridge_editor import *
-from tuflowqgis_library import findAllRasterLyrs
+from tuflowqgis_bridge_filehandler import *
+from tuflow.tuflowqgis_library import findAllRasterLyrs
 import sys
+import cPickle
 sys.path.append(os.path.dirname(os.path.abspath(__file__)) + "/forms")
 from ui_tuflowqgis_bridge_editor import Ui_tuflowqgis_BridgeEditor
 
@@ -34,6 +36,7 @@ class bridgeGui(QDockWidget, Ui_tuflowqgis_BridgeEditor):
             self.canvas.currentLayerChanged.connect(self.checkForBridge)
             self.canvas.selectionChanged.connect(self.checkForBridge)
             self.pbDrawXsection.clicked.connect(self.startNewBridge)
+            self.pbSaveFile.clicked.connect(lambda: saveFile(self))
             self.connected = True
 
     def qgis_disconnect(self):
@@ -45,10 +48,11 @@ class bridgeGui(QDockWidget, Ui_tuflowqgis_BridgeEditor):
     
         if self.connected:
             self.canvas.layersChanged.disconnect(self.populateDems)
-            #self.canvas.layersChanged.disconnect(self.checkForBridge)
+            self.canvas.layersChanged.disconnect(self.checkForBridge)
             self.canvas.currentLayerChanged.disconnect(self.checkForBridge)
             self.canvas.selectionChanged.disconnect(self.checkForBridge)
             self.pbDrawXsection.clicked.disconnect(self.startNewBridge)
+            self.pbSaveFile.clicked.disconnect()
             self.connected = False
 
     def initialisePlot(self):
@@ -177,7 +181,7 @@ class bridgeGui(QDockWidget, Ui_tuflowqgis_BridgeEditor):
         
         :return:
         """
-        
+
         self.saveBridge()  # save changes to current bridge class object before loading new
         lyr = self.canvas.currentLayer()
         if lyr.type() == 0:  # QgsVectorLayer
@@ -188,17 +192,24 @@ class bridgeGui(QDockWidget, Ui_tuflowqgis_BridgeEditor):
                 bridgeKey = '{0},{1}'.format(lyrName, fid)
                 if bridgeKey in self.bridges.keys():
                     self.loadBridge(self.bridges[bridgeKey])
+                else:
+                    lyrSource = lyr.dataProvider().dataSourceUri().split('|')[0]
+                    inFile = '{0}.tuflowbridge'.format(os.path.splitext(lyrSource)[0])
+                    if os.path.exists(inFile):
+                        loadFile(self, inFile)
+                    if bridgeKey in self.bridges.keys():
+                        self.loadBridge(self.bridges[bridgeKey])
         
     def loadBridge(self, bridge):
         """
-        Load savaed and pre-existing bridge class object
+        Load saved and pre-existing bridge class object
         
         :param bridge: tuflowqgis_bridge_editor clas object
         :return:
         """
         
         self.bridge.qgis_disconnect()
-        self.bridge.bridge = None
+        self.bridge.gui = None
         self.bridge = bridge
         self.bridge.loadGui(self)
         self.bridge.loadData()
@@ -206,6 +217,21 @@ class bridgeGui(QDockWidget, Ui_tuflowqgis_BridgeEditor):
     
     def newBridge(self):
         self.bridge = bridgeEditor(self, self.iface)
+        
+    def incrementBridge(self, newLyr, oldLyr):
+        """
+        Increment the bridges dictionary object so that it has new layer name
+        
+        :param newLyr: string
+        :param oldLyr: string
+        :return:
+        """
+        
+        for key, bridge in self.bridges.items():
+            lyr, fid = key.split(',')
+            if lyr == oldLyr:
+                self.bridges['{0},{1}'.format(newLyr, fid)] = bridge
+                del self.bridges[key]
         
     def saveBridge(self):
         """
@@ -222,3 +248,4 @@ class bridgeGui(QDockWidget, Ui_tuflowqgis_BridgeEditor):
             self.bridge.updated = False
             self.bridges['{0},{1}'.format(lyrName, fid)] = self.bridge
             self.new_bridge = False
+            

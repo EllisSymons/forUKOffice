@@ -23,10 +23,6 @@ build_vers = '2018-05-AA (QGIS 2.x)'
 build_type = 'developmental' #release / developmental
 
 # Import the PyQt and QGIS libraries
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
-from qgis.core import *
-import os
 
 # Import the code for the dialog
 from tuflowqgis_dialog import *
@@ -34,7 +30,7 @@ from tuflowqgis_dialog import *
 # Import the code for the 1D results viewer
 from tuflowqgis_TuPlot import *
 from TuPLOT_external import *
-from tuflowqgis_bridge_gui import *
+from tuflow.tuflowqgis_bridge.tuflowqgis_bridge_gui import *
 
 #par
 from tuflowqgis_library import tuflowqgis_apply_check_tf
