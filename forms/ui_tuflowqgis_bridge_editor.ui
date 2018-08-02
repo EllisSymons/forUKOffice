@@ -188,7 +188,7 @@
               <item row="1" column="5" rowspan="2">
                <widget class="QPushButton" name="pbUseMapWindowSel">
                 <property name="text">
-                 <string>Use Map Window Selection</string>
+                 <string>Existing Layer</string>
                 </property>
                 <property name="iconSize">
                  <size>

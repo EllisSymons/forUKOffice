@@ -1,20 +1,11 @@
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
 from PyQt4 import QtGui
-from qgis.core import *
 from qgis.gui import *
 import sys
-import os
-import matplotlib
-import matplotlib.pyplot as plt
-from matplotlib.figure import Figure
-from matplotlib.patches import Patch
 from matplotlib.patches import Polygon
-from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg
 from tuflow.tuflowqgis_settings import TF_Settings
 from tuflow.tuflowqgis_library import lineToPoints, getRasterValue
 from tuflowqgis_bridge_context_menus import *
-from tuflow.tuflowqgis_bridge_rubberband import *
+from tuflow.tuflowqgis_bridge.tuflowqgis_bridge_rubberband import *
 from tuflowqgis_bridge_layer_edit import *
 from tuflow.canvas_event import canvasEvent
 from tuflow.Pier_Losses import lookupPierLoss
@@ -34,19 +25,32 @@ class bridgeEditor():
         self.connected = False  # signal connections
         self.cursorTrackingConnected = False  # temp polyline signals
         self.xSectionOffset = []  # XSection offset values
+        self.xSectionElev = []
         self.pierOffset = []  # list of pier offsets [[pier 1 offset], [pier 2 offset]]
         self.pierRowHeaders = []  # list of pier row names
         self.pierPatches = []  # patches used for plotting piers
         self.deckPatch = []  # patch used for plotting deck
         self.rubberBand = QgsRubberBand(self.iface.mapCanvas(), False)  # temporary polyline
+        self.tempPolyline = None
         self.points = []  # QgsPoints used for temporary created layer
         self.obverts = []  # list of obvert values aligning with xSectionOffset list
         self.area = 0  # area under bridge deck
         self.pierArea = 0  # area of piers in waterway
         self.layer = None  # QgsVectorLayer - layer created by tool
-        self.feat = None  # QgsFeature layer
+        self.feat = None  # QgsFeature layer, used for storing temporary data only
+        self.feature = None  # also QgsFeature Layer, confusing but this one is used when new layer is created
         self.variableGeom = False  # True means a point layer will have to be used
-        self.qgis_connect()
+        
+        # set up variables for connections
+        self.xSectionTableRowHeaders = self.gui.xSectionTable.verticalHeader()
+        self.pierTableRowHeaders = self.gui.pierTable.verticalHeader()
+        self.deckTableRowHeaders = self.gui.deckTable.verticalHeader()
+        self.gui.plotWdg.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.xSectionTableRowHeaders.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.deckTableRowHeaders.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.pierTableRowHeaders.setContextMenuPolicy(Qt.CustomContextMenu)
+        
+        #self.qgis_connect()
         self.populateAttributes()
         
         # Save data
@@ -89,47 +93,19 @@ class bridgeEditor():
             self.gui.emptydir.setText("ERROR - Project not loaded")
 		    
     def __del__(self):
-        self.qgis_disconnect()
+        self.qgis_disconnect()  # ensure signals are disconnected
 
     def qgis_connect(self):
         """
-        Set up signal connections.
+        Connect signal connections
         
-        :return: void
+        :return:
         """
         
         if not self.connected:
-            # canvas interactions
-            # None
-            # push buttons
-            self.gui.pbUpdate.clicked.connect(self.updatePlot)
-            self.gui.pbUpdatePierData.clicked.connect(self.updatePierTable)
-            self.gui.pbUpdateDeckData.clicked.connect(self.updateDeckTable)
-            self.gui.pbUseMapWindowSel.clicked.connect(self.getCurrSel)
-            #self.gui.pbDrawXsection.clicked.connect(self.useTempPolyline)
-            self.gui.pbClearXsection.clicked.connect(self.clearXsection)
-            self.gui.pbUpdateAttributes.clicked.connect(self.updateAttributes)
-            self.gui.pbCreateLayer.clicked.connect(lambda: createLayer(self))
-            self.gui.pbUpdateLayer.clicked.connect(lambda: updateLayer(self))
-            self.gui.pbIncrementLayer.clicked.connect(lambda: incrementLayer(self))
-            # Spin boxes
-            self.gui.xSectionRowCount.valueChanged.connect(lambda: tableRowCountChanged(self, self.gui.xSectionRowCount, self.gui.xSectionTable))
-            self.gui.deckRowCount.valueChanged.connect(lambda: tableRowCountChanged(self, self.gui.deckRowCount, self.gui.deckTable))
-            self.gui.pierRowCount.valueChanged.connect(lambda: tableRowCountChanged(self, self.gui.pierRowCount, self.gui.pierTable))
-            # Right Click (Context) Menus
-            self.xSectionTableRowHeaders = self.gui.xSectionTable.verticalHeader()
-            self.pierTableRowHeaders = self.gui.pierTable.verticalHeader()
-            self.deckTableRowHeaders = self.gui.deckTable.verticalHeader()
-            self.gui.plotWdg.setContextMenuPolicy(Qt.CustomContextMenu)
-            self.xSectionTableRowHeaders.setContextMenuPolicy(Qt.CustomContextMenu)
-            self.deckTableRowHeaders.setContextMenuPolicy(Qt.CustomContextMenu)
-            self.pierTableRowHeaders.setContextMenuPolicy(Qt.CustomContextMenu)
-            self.gui.plotWdg.customContextMenuRequested.connect(lambda pos: plotterMenu(self, pos))
-            self.xSectionTableRowHeaders.customContextMenuRequested.connect(lambda pos: xSectionTableMenu(self, pos))
-            self.deckTableRowHeaders.customContextMenuRequested.connect(lambda pos: deckTableMenu(self, pos))
-            self.pierTableRowHeaders.customContextMenuRequested.connect(lambda pos: pierTableMenu(self, pos))
+            # currently not used but reserved in case of future use
             self.connected = True
-
+    
     def qgis_disconnect(self):
         """
         Disconnect signal connections
@@ -138,29 +114,46 @@ class bridgeEditor():
         """
 
         if self.connected:
-            # canvas interactions
-            # None
-            # push buttons
-            self.gui.pbUpdate.clicked.disconnect(self.updatePlot)
-            self.gui.pbUpdatePierData.clicked.disconnect(self.updatePierTable)
-            self.gui.pbUpdateDeckData.clicked.disconnect(self.updateDeckTable)
-            self.gui.pbUseMapWindowSel.clicked.disconnect(self.getCurrSel)
-            #self.gui.pbDrawXsection.clicked.disconnect(self.useTempPolyline)
-            self.gui.pbClearXsection.clicked.disconnect(self.clearXsection)
-            self.gui.pbUpdateAttributes.clicked.disconnect(self.updateAttributes)
-            self.gui.pbCreateLayer.clicked.disconnect()
-            self.gui.pbUpdateLayer.clicked.disconnect()
-            self.gui.pbIncrementLayer.clicked.disconnect()
-            # Spin boxes
-            self.gui.xSectionRowCount.valueChanged.disconnect()
-            self.gui.deckRowCount.valueChanged.disconnect()
-            self.gui.pierRowCount.valueChanged.disconnect()
-            # Right Click (Context) Menus
-            self.gui.plotWdg.customContextMenuRequested.disconnect()
-            self.xSectionTableRowHeaders.customContextMenuRequested.disconnect()
-            self.deckTableRowHeaders.customContextMenuRequested.disconnect()
-            self.pierTableRowHeaders.customContextMenuRequested.disconnect()
+            # currently not used but reserved in case of future use
             self.connected = False
+        if self.gui is not None:
+            if self.gui.buttonsConnected:
+                # push buttons
+                self.gui.pbUpdate.clicked.disconnect()
+                self.gui.pbUpdatePierData.clicked.disconnect()
+                self.gui.pbUpdateDeckData.clicked.disconnect()
+                self.gui.pbUseMapWindowSel.clicked.disconnect()
+                self.gui.pbClearXsection.clicked.disconnect()
+                self.gui.pbUpdateAttributes.clicked.disconnect()
+                self.gui.pbCreateLayer.clicked.disconnect()
+                self.gui.pbUpdateLayer.clicked.disconnect()
+                self.gui.pbIncrementLayer.clicked.disconnect()
+                # Spin boxes
+                self.gui.xSectionRowCount.valueChanged.disconnect()
+                self.gui.deckRowCount.valueChanged.disconnect()
+                self.gui.pierRowCount.valueChanged.disconnect()
+                # Right Click (Context) Menus
+                self.xSectionTableRowHeaders.customContextMenuRequested.disconnect()
+                self.deckTableRowHeaders.customContextMenuRequested.disconnect()
+                self.pierTableRowHeaders.customContextMenuRequested.disconnect()
+                self.gui.plotWdg.customContextMenuRequested.disconnect()
+                # Other connections to tell the object that there has been an update
+                self.gui.bridgeName.textChanged.disconnect()
+                self.gui.deckElevationBottom.valueChanged.disconnect()
+                self.gui.deckThickness.valueChanged.disconnect()
+                self.gui.handRailDepth.valueChanged.disconnect()
+                self.gui.handRailFlc.valueChanged.disconnect()
+                self.gui.handRailBlockage.valueChanged.disconnect()
+                self.gui.rbDrowned.toggled.disconnect()
+                self.gui.pierNo.valueChanged.disconnect()
+                self.gui.pierWidth.valueChanged.disconnect()
+                self.gui.pierWidthLeft.valueChanged.disconnect()
+                self.gui.pierGap.valueChanged.disconnect()
+                self.gui.pierShape.currentIndexChanged.disconnect()
+                self.gui.zLineWidth.valueChanged.disconnect()
+                self.gui.enforceInTerrain.stateChanged.disconnect()
+                
+                self.gui.buttonsConnected = False
 
     def populateAttributes(self):
         """
@@ -285,6 +278,15 @@ class bridgeEditor():
 
         self.qgis_connect()
         self.updatePlot()
+    
+    def setUpdated(self):
+        """
+        Sets the updated status to true
+        
+        :return:
+        """
+        
+        self.updated = True
     
     def getCurrSel(self):
         """
@@ -467,12 +469,21 @@ class bridgeEditor():
         :return: list self.xSectionOffset
         :return: list self.xSectionElev
         """
-        
+
         self.xSectionOffset = []
         self.xSectionElev = []
         for i in range(self.gui.xSectionTable.rowCount()):
-            self.xSectionOffset.append(float(self.gui.xSectionTable.item(i, 0).text()))
-            self.xSectionElev.append(float(self.gui.xSectionTable.item(i, 1).text()))
+            if self.gui.xSectionTable.item(i, 0).text() != '' and self.gui.xSectionTable.item(i, 1).text() != '':  # otherwise skip
+                if self.gui.xSectionTable.item(i, 0).text() != '':
+                    try:
+                        self.xSectionOffset.append(float(self.gui.xSectionTable.item(i, 0).text()))
+                    except:
+                        QMessage.critical(self.iface.mainWindow(), 'Error', 'Table entry must be a number (Offset, row {0})'.format(i + 1))
+                if self.gui.xSectionTable.item(i, 1).text() != '':
+                    try:
+                        self.xSectionElev.append(float(self.gui.xSectionTable.item(i, 1).text()))
+                    except:
+                        QMessage.critical(self.iface.mainWindow(), 'Error', 'Table entry must be a number (Elevation, row {0})'.format(i + 1))
             
     def updatePierTable(self):
         """
@@ -502,6 +513,7 @@ class bridgeEditor():
         # update spinbox
         self.gui.pierRowCount.setValue(self.gui.pierTable.rowCount())
         
+        self.updated = True
         self.updatePlot()
 
     def createPierPatches(self):
@@ -587,6 +599,7 @@ class bridgeEditor():
         self.gui.deckTable.setItem(0, 1, QTableWidgetItem(str(self.gui.deckElevationBottom.value())))
         self.gui.deckTable.setItem(1, 1, QTableWidgetItem(str(self.gui.deckElevationBottom.value())))
         
+        self.updated = True
         self.updatePlot()
         
     def updateDeckOffset(self):

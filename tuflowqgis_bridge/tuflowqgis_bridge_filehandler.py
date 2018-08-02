@@ -6,6 +6,13 @@ from tuflowqgis_bridge_editor import *
 
 
 def convertListToString(input_list):
+	"""
+	Converts a list to a more reader friendly string object. Will separate with commas and "|" for 2D list
+	
+	:param input_list: list
+	:return: str
+	"""
+	
 	text = ''
 	try:
 		if type(input_list[0]) == list:  # 2D list
@@ -29,6 +36,13 @@ def convertListToString(input_list):
 
 
 def convertStringToList(input_string):
+	"""
+	Works in reverse to convertListToString
+	
+	:param input_string: str
+	:return: list
+	"""
+	
 	subvalue = input_string.strip("'").strip('"')
 	subvalue = input_string.split('|')
 	if len(subvalue) == 2:
@@ -56,6 +70,13 @@ def convertStringToList(input_string):
 
 
 def saveFile(bridge_gui):
+	"""
+	Saves the attributes of tuflowqgis_bridge_gui object to text file
+	
+	:param bridge_gui: tuflowqgis_bridge_gui.bridgeGui
+	:return: *.tuflowbridge text file
+	"""
+	
 	openFiles = []
 	for key, bridge in bridge_gui.bridges.items():
 		text = []
@@ -105,6 +126,14 @@ def saveFile(bridge_gui):
 
 
 def loadFile(bridge_gui, file):
+	"""
+	Load *.tuflowbrige file into tuflowqgis_bridge_gui
+	
+	:param bridge_gui: tuflowqgis_bridge_gui.bridgeGui to load into
+	:param file: *.tuflowbrigde file to load from
+	:return:
+	"""
+	
 	bridge_gui.bridges = {}
 	with open(file, 'r') as fo:
 		for line in fo:
@@ -169,7 +198,6 @@ def loadFile(bridge_gui, file):
 					elif parameter == 'Key':
 						fo.seek(1)  # gone to far. Need to rewind to just after the first line
 						break
-				bridge_editor.connected = False
 				bridge_editor.gui = None
 				bridge_gui.bridges[value] = bridge_editor
 				

@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'ui_tuflowqgis_bridge_editor.ui'
 #
-# Created: Tue Jul 31 11:10:30 2018
+# Created: Thu Aug 02 14:47:28 2018
 #      by: PyQt4 UI code generator 4.10.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -587,7 +587,7 @@ class Ui_tuflowqgis_BridgeEditor(object):
         self.label_11.setText(_translate("tuflowqgis_BridgeEditor", "Deck", None))
         self.label_7.setText(_translate("tuflowqgis_BridgeEditor", "Piers", None))
         self.label_33.setText(_translate("tuflowqgis_BridgeEditor", "Hand Rail FLC", None))
-        self.pbUseMapWindowSel.setText(_translate("tuflowqgis_BridgeEditor", "Use Map Window Selection", None))
+        self.pbUseMapWindowSel.setText(_translate("tuflowqgis_BridgeEditor", "Existing Layer", None))
         self.label_32.setText(_translate("tuflowqgis_BridgeEditor", "Bridge Name (Optional)", None))
         self.label_16.setText(_translate("tuflowqgis_BridgeEditor", "Hand Rail Blockage", None))
         self.rbDrowned.setText(_translate("tuflowqgis_BridgeEditor", "Drowned", None))

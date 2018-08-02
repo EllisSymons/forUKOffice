@@ -106,9 +106,9 @@ def insertRowBefore(bridge_editor, table):
 	x = []  # list of strings
 	y = []  # list of strings
 	for i in range(table.rowCount()):
-		x.append(table.item(i, 0).text())
+		x.append(table.item(i, 0).text() if table.item(i, 0) is not None else '')
 		if table != bridge_editor.gui.pierTable:
-			y.append(table.item(i, 1).text())
+			y.append(table.item(i, 1).text() if table.item(i, 1) is not None else '')
 	# add row and populate data
 	table.setRowCount(len(x) + 1)
 	if table == bridge_editor.gui.pierTable:  # populate pier numbering
@@ -120,9 +120,9 @@ def insertRowBefore(bridge_editor, table):
 			if table != bridge_editor.gui.pierTable:
 				table.setItem(i, 1, QTableWidgetItem(y[i]))
 		elif i == currentRow:
-			table.setItem(i, 0, QTableWidgetItem('0'))
+			table.setItem(i, 0, QTableWidgetItem(''))
 			if table != bridge_editor.gui.pierTable:
-				table.setItem(i, 1, QTableWidgetItem('0'))
+				table.setItem(i, 1, QTableWidgetItem(''))
 		elif i > currentRow:
 			table.setItem(i, 0, QTableWidgetItem(x[i - 1]))
 			if table != bridge_editor.gui.pierTable:
@@ -135,6 +135,8 @@ def insertRowBefore(bridge_editor, table):
 	        bridge_editor.gui.pierTable: bridge_editor.gui.pierRowCount}
 	spinBox = dict[table]
 	spinBox.setValue(table.rowCount())
+	
+	bridge_editor.updated = True
 
 
 def insertRowAfter(bridge_editor, table):
@@ -156,9 +158,9 @@ def insertRowAfter(bridge_editor, table):
 	x = []  # list of strings
 	y = []  # list of strings
 	for i in range(table.rowCount()):
-		x.append(table.item(i, 0).text())
+		x.append(table.item(i, 0).text() if table.item(i, 0) is not None else '')
 		if table != bridge_editor.gui.pierTable:
-			y.append(table.item(i, 1).text())
+			y.append(table.item(i, 1).text() if table.item(i, 1) is not None else '')
 	# add row and populate data
 	table.setRowCount(len(x) + 1)
 	if table == bridge_editor.gui.pierTable:  # populate pier numbering
@@ -170,9 +172,9 @@ def insertRowAfter(bridge_editor, table):
 			if table != bridge_editor.gui.pierTable:
 				table.setItem(i, 1, QTableWidgetItem(y[i]))
 		elif i == currentRow:
-			table.setItem(i, 0, QTableWidgetItem('0'))
+			table.setItem(i, 0, QTableWidgetItem(''))
 			if table != bridge_editor.gui.pierTable:
-				table.setItem(i, 1, QTableWidgetItem('0'))
+				table.setItem(i, 1, QTableWidgetItem(''))
 		elif i > currentRow:
 			table.setItem(i, 0, QTableWidgetItem(x[i - 1]))
 			if table != bridge_editor.gui.pierTable:
@@ -185,6 +187,8 @@ def insertRowAfter(bridge_editor, table):
 	        bridge_editor.gui.pierTable: bridge_editor.gui.pierRowCount}
 	spinBox = dict[table]
 	spinBox.setValue(table.rowCount())
+	
+	bridge_editor.updated = True
 
 
 def deleteRow(bridge_editor, table):
@@ -229,6 +233,8 @@ def deleteRow(bridge_editor, table):
 	        bridge_editor.gui.pierTable: bridge_editor.gui.pierRowCount}
 	spinBox = dict[table]
 	spinBox.setValue(table.rowCount())
+	
+	bridge_editor.updated = True
 
 
 def tableRowCountChanged(bridge_editor, spinBox, table):
@@ -248,6 +254,8 @@ def tableRowCountChanged(bridge_editor, spinBox, table):
 	if table == bridge_editor.gui.pierTable:
 		headers = headers = ['Pier {0}'.format(p) for p in range(1, table.rowCount() + 1)]
 		table.setVerticalHeaderLabels(headers)
+		
+	bridge_editor.updated = True
 
 
 def export_csv(bridge_editor):
