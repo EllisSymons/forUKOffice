@@ -3,7 +3,6 @@ from tuflowqgis_bridge_editor import *
 from tuflowqgis_bridge_filehandler import *
 from tuflow.tuflowqgis_library import findAllRasterLyrs
 import sys
-import cPickle
 sys.path.append(os.path.dirname(os.path.abspath(__file__)) + "/forms")
 from ui_tuflowqgis_bridge_editor import Ui_tuflowqgis_BridgeEditor
 
@@ -15,6 +14,7 @@ class bridgeGui(QDockWidget, Ui_tuflowqgis_BridgeEditor):
         self.setupUi(self)
         self.iface = iface
         self.canvas = self.iface.mapCanvas()
+        self.cLyr = self.canvas.currentLayer()
         self.bridges = {}  # lyr name,fid: bridgeEditor class object
         self.connected = False  # connections for gui
         self.buttonsConnected = False  # gui buttons connected via editor
@@ -35,6 +35,10 @@ class bridgeGui(QDockWidget, Ui_tuflowqgis_BridgeEditor):
         self.parent_connect()  # connect signal independent of if bridge editor object
         self.child_connect()  # connect signals that edit bridge editor object
         
+    def __del__(self):
+        self.child_disconnect()
+        self.parent_disconnect()
+        
     def parent_connect(self):
         """
         Set up signal connections for global gui window i.e. independent of if a bridge editor object is present.
@@ -48,7 +52,7 @@ class bridgeGui(QDockWidget, Ui_tuflowqgis_BridgeEditor):
             self.canvas.currentLayerChanged.connect(self.checkForBridge)
             self.canvas.selectionChanged.connect(self.checkForBridge)
             self.pbDrawXsection.clicked.connect(self.startNewBridge)
-            self.pbSaveFile.clicked.connect(lambda: saveFile(self))
+            self.pbSaveFile.clicked.connect(self.saveBridge)
             self.connected = True
             
     def child_connect(self):
@@ -94,6 +98,7 @@ class bridgeGui(QDockWidget, Ui_tuflowqgis_BridgeEditor):
             self.pierShape.currentIndexChanged.connect(self.bridge.setUpdated)
             self.zLineWidth.valueChanged.connect(self.bridge.setUpdated)
             self.enforceInTerrain.stateChanged.connect(self.bridge.setUpdated)
+            self.cLyr.editingStopped.connect(self.bridge.setUpdated)
             #self.pierTable.itemActivated.connect(self.bridge.setUpdated)
     
             self.buttonsConnected = True
@@ -277,14 +282,7 @@ class bridgeGui(QDockWidget, Ui_tuflowqgis_BridgeEditor):
 
         self.child_disconnect()
         self.bridge.clearXsection()
-        if len(self.bridges) > 0:
-            for i, (key, item) in enumerate(self.bridges.items()):
-                if item == self.bridge:  # don't delete current bridge object
-                    break
-                elif i + 1 == len(self.bridges):  # delete current bridge object so there's no phantom object in memory
-                    del self.bridge
-        else:
-            del self.bridge  # not already in database so can write over
+        self.checkBridgeExistsInFile()
         self.bridge = bridgeEditor(self, self.iface)
         self.child_connect()
         self.bridge.useTempPolyline()
@@ -295,7 +293,9 @@ class bridgeGui(QDockWidget, Ui_tuflowqgis_BridgeEditor):
         
         :return:
         """
-
+        
+        self.cLyr = self.canvas.currentLayer()  # grab current layer when lyr is changed
+        
         self.saveBridge()  # save changes to current bridge class object before loading new
         lyr = self.canvas.currentLayer()
         if lyr.type() == 0:  # QgsVectorLayer
@@ -308,7 +308,7 @@ class bridgeGui(QDockWidget, Ui_tuflowqgis_BridgeEditor):
                     self.loadBridge(self.bridges[bridgeKey])
                 else:
                     lyrSource = lyr.dataProvider().dataSourceUri().split('|')[0]
-                    inFile = '{0}.tuflowbridge'.format(os.path.splitext(lyrSource)[0])
+                    inFile = '{0}.tbe'.format(os.path.splitext(lyrSource)[0])
                     if os.path.exists(inFile):
                         loadFile(self, inFile)
                     if bridgeKey in self.bridges.keys():
@@ -324,6 +324,20 @@ class bridgeGui(QDockWidget, Ui_tuflowqgis_BridgeEditor):
 
         self.child_disconnect()
         self.bridge.gui = None
+        self.checkBridgeExistsInFile()
+        self.bridge = bridge
+        self.bridge.loadGui(self)
+        self.bridge.loadData()
+        self.bridge.populateAttributes()
+        self.child_connect()
+    
+    def checkBridgeExistsInFile(self):
+        """
+        Checks if current bridge editor object is saved somewhere, otherwise can be deleted from memory
+        
+        :return:
+        """
+        
         if len(self.bridges) > 0:
             for i, (key, item) in enumerate(self.bridges.items()):
                 if item == self.bridge:  # don't delete current bridge object
@@ -332,15 +346,27 @@ class bridgeGui(QDockWidget, Ui_tuflowqgis_BridgeEditor):
                     del self.bridge
         else:
             del self.bridge
-        self.bridge = bridge
-        self.bridge.loadGui(self)
-        self.bridge.loadData()
-        self.bridge.populateAttributes()
-        self.child_connect()
-    
-    def newBridge(self):
-        self.bridge = bridgeEditor(self, self.iface)
+            
+    def checkForBridgeFeature(self):
+        """
+        Checks to see if corresponding feature in map window still exists for bridge
         
+        :return:
+        """
+        
+        if len(self.bridges) > 0:
+            for key, item in self.bridges.items():
+                lyrName, fid = key.split(',')
+                for i, (name, search_layer) in enumerate(QgsMapLayerRegistry.instance().mapLayers().items()):
+                    if search_layer.name() == lyrName:
+                        for j, f in enumerate(search_layer.getFeatures()):
+                            if f.id() == int(fid):
+                                break
+                            elif j + 1 == search_layer.featureCount():
+                                del self.bridges[key]
+                    #elif i + 1 == len(QgsMapLayerRegistry.instance().mapLayers()):
+                    #    del self.bridges[key]
+    
     def incrementBridge(self, newLyr, oldLyr):
         """
         Increment the bridges dictionary object so that it has new layer name
@@ -365,15 +391,33 @@ class bridgeGui(QDockWidget, Ui_tuflowqgis_BridgeEditor):
 
         if self.bridge.updated:
             lyr = self.bridge.layer
-            if lyr is None:
-                lyr = self.canvas.currentLayer()  # give first preference to a new layer being made
-            if lyr is not None:
+            
+            
+            if lyr is None:  # get lyr from key if needed
+                for key, item in self.bridges.items():
+                    if item == self.bridge:
+                        lyrName, fid = key.split(',')
+                        lyr = tuflowqgis_find_layer(lyrName)
+                        break
+            
+            
+            if lyr is not None:  # continue
                 lyrName = lyr.name()
                 feat = self.bridge.feature
-                if feat is None:
-                    feat = lyr.selectedFeatures()[0] if len(lyr.selectedFeatures()) > 0 else None
-                if feat is not None:
+                
+                
+                if feat is None:  # get feature from key if needed
+                    for f in lyr.getFeatures():
+                        x = f.id()
+                        if f.id() == int(fid):
+                            feat = f
+                            break
+                
+                
+                if feat is not None:  # continue
                     fid = feat.id()
+                    self.bridge.saveData()
                     self.bridge.updated = False
                     self.bridges['{0},{1}'.format(lyrName, fid)] = self.bridge
+                    self.checkForBridgeFeature()  # check if features have been deleted
                     saveFile(self)

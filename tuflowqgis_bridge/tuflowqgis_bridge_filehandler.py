@@ -83,7 +83,7 @@ def saveFile(bridge_gui):
 		lyrName, fid = key.split(',')
 		lyr = tuflowqgis_find_layer(lyrName)
 		lyrSource = lyr.dataProvider().dataSourceUri().split('|')[0]
-		newFile = '{0}.tuflowbridge'.format(os.path.splitext(lyrSource)[0])
+		newFile = '{0}.tbe'.format(os.path.splitext(lyrSource)[0])
 		try:
 			if newFile not in openFiles:
 				writeNewFile = open(newFile, 'w')
@@ -198,6 +198,7 @@ def loadFile(bridge_gui, file):
 					elif parameter == 'Key':
 						fo.seek(1)  # gone to far. Need to rewind to just after the first line
 						break
+				bridge_editor.saved_object = True
 				bridge_editor.gui = None
 				bridge_gui.bridges[value] = bridge_editor
 				

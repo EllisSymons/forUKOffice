@@ -1,6 +1,11 @@
 from PyQt4 import QtGui
 from qgis.gui import *
 import sys
+import matplotlib
+import matplotlib.pyplot as plt
+from matplotlib.figure import Figure
+from matplotlib.patches import Patch
+from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg
 from matplotlib.patches import Polygon
 from tuflow.tuflowqgis_settings import TF_Settings
 from tuflow.tuflowqgis_library import lineToPoints, getRasterValue
@@ -55,6 +60,7 @@ class bridgeEditor():
         
         # Save data
         # save tables
+        self.saved_object = False
         self.saved_xSectionTable = None
         self.saved_deckTable = None
         self.saved_pierTable = None
@@ -67,7 +73,7 @@ class bridgeEditor():
         self.saved_deckElevationBottom = None
         self.saved_deckThickness = None
         self.saved_handRailDepth = None
-        self.saved_handRailFls = None
+        self.saved_handRailFlc = None
         self.saved_handRailBlockage = None
         self.saved_rbDrowned = None
         self.saved_pierNo = None
@@ -237,47 +243,50 @@ class bridgeEditor():
         self.saved_zLineWidth = self.gui.zLineWidth.value()
         self.saved_enforceInTerrain = self.gui.enforceInTerrain.isChecked()
         
+        self.saved_object = True
+        
     def loadData(self):
         """
         loads the plot from a previous bridge editor class
 
         :return:
         """
-
-        # save tables
-        self.gui.xSectionTable.setRowCount(len(self.saved_xSectionTable[0]))
-        for i in range(self.gui.xSectionTable.rowCount()):
-            self.gui.xSectionTable.setItem(i, 0, QTableWidgetItem(self.saved_xSectionTable[0][i]))
-            self.gui.xSectionTable.setItem(i, 1, QTableWidgetItem(self.saved_xSectionTable[1][i]))
-        self.gui.deckTable.setRowCount(len(self.saved_deckTable[0]))
-        for i in range(self.gui.deckTable.rowCount()):
-            self.gui.deckTable.setItem(i, 0, QTableWidgetItem(self.saved_deckTable[0][i]))
-            self.gui.deckTable.setItem(i, 1, QTableWidgetItem(self.saved_deckTable[1][i]))
-        self.gui.pierTable.setRowCount(len(self.saved_pierTable))
-        for i in range(self.gui.pierTable.rowCount()):
-            self.gui.pierTable.setItem(i, 0, QTableWidgetItem(self.saved_pierTable[i]))
-        # save spinboxes
-        self.gui.xSectionRowCount.setValue(self.saved_xSectionRowCount)
-        self.gui.deckRowCount.setValue(self.saved_deckRowCount)
-        self.gui.pierRowCount.setValue(self.saved_pierRowCount)
-        # save input boxes
-        self.gui.bridgeName.setText(self.saved_bridgeName)
-        self.gui.deckElevationBottom.setValue(self.saved_deckElevationBottom)
-        self.gui.deckThickness.setValue(self.saved_deckThickness)
-        self.gui.handRailDepth.setValue(self.saved_handRailDepth)
-        self.gui.handRailFlc.setValue(self.saved_handRailFlc)
-        self.gui.handRailBlockage.setValue(self.saved_handRailBlockage)
-        self.gui.rbDrowned.setChecked(self.saved_rbDrowned)
-        self.gui.pierNo.setValue(self.saved_pierNo)
-        self.gui.pierWidth.setValue(self.saved_pierWidth)
-        self.gui.pierWidthLeft.setValue(self.saved_pierWidthLeft)
-        self.gui.pierGap.setValue(self.saved_pierGap)
-        self.gui.pierShape.setCurrentIndex(self.saved_pierShape)
-        self.gui.zLineWidth.setValue(self.saved_zLineWidth)
-        self.gui.enforceInTerrain.setChecked(self.saved_enforceInTerrain)
-
-        self.qgis_connect()
-        self.updatePlot()
+        
+        if self.saved_object:
+            # save tables
+            self.gui.xSectionTable.setRowCount(len(self.saved_xSectionTable[0]))
+            for i in range(self.gui.xSectionTable.rowCount()):
+                self.gui.xSectionTable.setItem(i, 0, QTableWidgetItem(self.saved_xSectionTable[0][i]))
+                self.gui.xSectionTable.setItem(i, 1, QTableWidgetItem(self.saved_xSectionTable[1][i]))
+            self.gui.deckTable.setRowCount(len(self.saved_deckTable[0]))
+            for i in range(self.gui.deckTable.rowCount()):
+                self.gui.deckTable.setItem(i, 0, QTableWidgetItem(self.saved_deckTable[0][i]))
+                self.gui.deckTable.setItem(i, 1, QTableWidgetItem(self.saved_deckTable[1][i]))
+            self.gui.pierTable.setRowCount(len(self.saved_pierTable))
+            for i in range(self.gui.pierTable.rowCount()):
+                self.gui.pierTable.setItem(i, 0, QTableWidgetItem(self.saved_pierTable[i]))
+            # save spinboxes
+            self.gui.xSectionRowCount.setValue(self.saved_xSectionRowCount)
+            self.gui.deckRowCount.setValue(self.saved_deckRowCount)
+            self.gui.pierRowCount.setValue(self.saved_pierRowCount)
+            # save input boxes
+            self.gui.bridgeName.setText(self.saved_bridgeName)
+            self.gui.deckElevationBottom.setValue(self.saved_deckElevationBottom)
+            self.gui.deckThickness.setValue(self.saved_deckThickness)
+            self.gui.handRailDepth.setValue(self.saved_handRailDepth)
+            self.gui.handRailFlc.setValue(self.saved_handRailFlc)
+            self.gui.handRailBlockage.setValue(self.saved_handRailBlockage)
+            self.gui.rbDrowned.setChecked(self.saved_rbDrowned)
+            self.gui.pierNo.setValue(self.saved_pierNo)
+            self.gui.pierWidth.setValue(self.saved_pierWidth)
+            self.gui.pierWidthLeft.setValue(self.saved_pierWidthLeft)
+            self.gui.pierGap.setValue(self.saved_pierGap)
+            self.gui.pierShape.setCurrentIndex(self.saved_pierShape)
+            self.gui.zLineWidth.setValue(self.saved_zLineWidth)
+            self.gui.enforceInTerrain.setChecked(self.saved_enforceInTerrain)
+    
+            self.qgis_connect()
+            self.updatePlot()
     
     def setUpdated(self):
         """
