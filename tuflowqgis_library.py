@@ -52,9 +52,8 @@ def about(window):
 def casedPath(path):
 	"""Returns case sensitive path from an insensitive path. Used for linux file paths."""
 	
-	def casedpath(path):
-		r = glob.glob(re.sub(r'([^:/\\])(?=[/\\]|$)', r'[\1]', path))
-		return r and r[0] or path
+	r = glob.glob(re.sub(r'([^:/\\])(?=[/\\]|$)', r'[\1]', path))
+	return r and r[0] or path
 
 
 def tuflowqgis_find_layer(layer_name, **kwargs):
