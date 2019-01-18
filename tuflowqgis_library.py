@@ -166,10 +166,10 @@ def tuflowqgis_create_tf_dir(qgis, crs, basepath, engine):
 	parent_folder_name = "TUFLOWFV" if engine == 'flexible mesh' else "TUFLOW"
 	
 	# Create folders, ignore top level (e.g. model, as these are create when the subfolders are created)
-	TUFLOW_Folders = ["bc_dbase".format(os.sep),
-	                  "check".format(os.sep),
+	TUFLOW_Folders = ["bc_dbase",
+	                  "check",
 	                  "model{0}gis{0}empty".format(os.sep),
-	                  "results".format(os.sep),
+	                  "results",
 	                  "runs{0}log".format(os.sep)]
 	if engine == 'flexible mesh':
 		TUFLOW_Folders.append("model{0}geo".format(os.sep))
@@ -204,8 +204,8 @@ def tuflowqgis_create_tf_dir(qgis, crs, basepath, engine):
 	runfile = os.path.join(basepath, parent_folder_name, "runs", "Create_Empties{0}".format(ext))
 	f = open(runfile, 'w')
 	f.write("GIS FORMAT == SHP\n")
-	f.write("SHP Projection == ..\model\gis\projection.prj\n")
-	f.write("Write Empty GIS Files == ..\model\gis\empty\n")
+	f.write("SHP Projection == ..{0}model{0}gis{0}projection.prj\n".format(os.sep))
+	f.write("Write Empty GIS Files == ..{0}model{0}gis{0}empty\n".format(os.sep))
 	f.flush()
 	f.close()
 	QMessageBox.information(qgis.mainWindow(),"Information", "{0} folder successfully created: {1}".format(parent_folder_name, basepath))
@@ -229,16 +229,16 @@ def tuflowqgis_import_empty_tf(qgis, basepath, runID, empty_types, points, lines
 	if (regions):
 		geom_type.append('_R')
 	
-	gis_folder = basepath.replace('\empty','')
+	gis_folder = basepath.replace('{0}empty'.format(os.sep),'')
 	# Create folders, ignore top level (e.g. model, as these are create when the subfolders are created)
 	for type in empty_types:
 		for geom in geom_type:
-			fpath = os.path.join(basepath+"\\"+type+"_empty"+geom+".shp")
+			fpath = os.path.join(basepath, "{0}_empty{1}.shp".format(type, geom))
 			#QMessageBox.information(qgis.mainWindow(),"Creating TUFLOW directory", fpath)
 			if (os.path.isfile(fpath)):
 				layer = QgsVectorLayer(fpath, "tmp", "ogr")
-				name = str(type)+'_'+str(runID)+str(geom)+'.shp'
-				savename = os.path.join(gis_folder+"\\"+name)
+				name = '{0}_{1}{2}.shp'.format(type, runID, geom)
+				savename = os.path.join(gis_folder, name)
 				if QFile(savename).exists():
 					QMessageBox.critical(qgis.mainWindow(),"Info", ("File Exists: "+savename))
 				#outfile = QgsVectorFileWriter(QString(savename), QString("System"), 
