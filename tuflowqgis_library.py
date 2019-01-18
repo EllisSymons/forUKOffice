@@ -17,7 +17,7 @@
 """
 
 import csv
-import sys
+import sys, re
 import time
 import os.path
 import operator
@@ -47,6 +47,14 @@ def about(window):
 	QMessageBox.information(window, "TUFLOW",
 	                        "This is a {0} version of the TUFLOW QGIS utility\n"
 	                        "Build: {1}".format(build_type, build_vers))
+
+
+def casedPath(path):
+	"""Returns case sensitive path from an insensitive path. Used for linux file paths."""
+	
+	def casedpath(path):
+		r = glob.glob(re.sub(r'([^:/\\])(?=[/\\]|$)', r'[\1]', path))
+		return r and r[0] or path
 
 
 def tuflowqgis_find_layer(layer_name, **kwargs):
@@ -1306,7 +1314,8 @@ def getPathFromRel(dir, relPath, **kwargs):
 			continue
 		else:
 			path = os.path.join(path, c)
-	return path
+	
+	return casedPath(path)
 
 
 def checkForOutputDrive(tcf):
