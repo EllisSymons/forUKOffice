@@ -234,7 +234,8 @@ class tuflowqgis_import_empty_tf_dialog(QDialog, Ui_tuflowqgis_import_empty):
 				empty_type = os.path.basename(file.split('_empty')[0])
 				if empty_type not in empty_list:
 					empty_list.append(empty_type)
-					self.emptyType.addItem(empty_type)
+			empty_list = sorted(empty_list)
+			self.emptyType.addItems(empty_list)
 
 	def browse_empty_dir(self):
 		startDir = None
