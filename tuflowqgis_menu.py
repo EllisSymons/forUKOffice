@@ -174,7 +174,7 @@ class tuflowqgis_menu:
 		self.iface.addToolBarIcon(self.insert_TUFLOW_attributes_action)
 		
 		# ES 2018/05 Load input files from TCF
-		icon = QIcon(os.path.dirname(__file__) + "/icons/load_from_TCF.PNG")
+		icon = QIcon(os.path.join(os.path.dirname(__file__) + "icons", "load_from_TCF.PNG"))
 		self.load_tuflowFiles_from_TCF_action = QAction(icon, "Load TUFLOW Layers from TCF", self.iface.mainWindow())
 		self.load_tuflowFiles_from_TCF_action.triggered.connect(self.loadTuflowLayersFromTCF)
 		self.iface.addPluginToMenu("&TUFLOW", self.load_tuflowFiles_from_TCF_action)
