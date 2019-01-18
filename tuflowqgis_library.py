@@ -741,7 +741,7 @@ def tuflowqgis_insert_tf_attributes(qgis, inputLayer, basedir, runID, template, 
 		geomType = '_L'
 		
 	
-	gis_folder = basedir.replace('\empty', '')
+	gis_folder = basedir.replace('{0}empty'.format(os.sep), '')
 	
 	# Create new vector file from template with appended attribute fields
 	if template == '1d_nwk':
