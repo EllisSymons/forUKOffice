@@ -1290,7 +1290,10 @@ def getPathFromRel(dir, relPath, **kwargs):
 	
 	outputDrive = kwargs['output_drive'] if 'output_drive' in kwargs.keys() else None
 	
-	components = relPath.split('\\')
+	_components = relPath.split(os.sep)
+	components = []
+	for c in _components:
+		components += c.split('\\')
 	path = dir
 	
 	if outputDrive:
