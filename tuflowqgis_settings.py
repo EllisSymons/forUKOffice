@@ -16,7 +16,7 @@
  ***************************************************************************/
 """
 
-from PyQt4.QtCore import QSettings
+from PyQt5.QtCore import QSettings
 from qgis.core import QgsProject
 
 class stored():
@@ -42,10 +42,12 @@ class TF_Settings():
 			self.global_settings.CRS_ID = self.settings.value("TUFLOW/CRS", "Undefined")
 			self.global_settings.tf_exe = self.settings.value("TUFLOW/exe", "Undefined")
 			self.global_settings.base_dir = self.settings.value("TUFLOW/dir", "Undefined")
+			self.global_settings.engine = self.settings.value('TUFLOW/engine', None)
 		except:
 			error = True
 			message = 'Unable to load global setting'
-			return error, message		
+			return error, message
+		
 		#set to None type if not defined
 		if self.global_settings.CRS_ID=="Undefined":
 			self.global_settings.CRS_ID = None
@@ -59,6 +61,7 @@ class TF_Settings():
 			self.project_settings.CRS_ID = self.project.readEntry("TUFLOW","CRS","Undefined")[0]
 			self.project_settings.tf_exe = self.project.readEntry("TUFLOW","exe","Undefined")[0]
 			self.project_settings.base_dir = self.project.readEntry("TUFLOW","dir","Undefined")[0]
+			self.project_settings.engine = self.project.readEntry("TUFLOW", "engine", None)[0]
 		except:
 			error = True
 			message = 'Unable to load global setting'
@@ -89,6 +92,8 @@ class TF_Settings():
 				self.settings.setValue("TUFLOW/exe", self.global_settings.tf_exe)
 			if self.global_settings.base_dir:
 				self.settings.setValue("TUFLOW/dir", self.global_settings.base_dir)
+			if self.global_settings.engine:
+				self.settings.setValue("TUFLOW/engine", self.global_settings.engine)
 		except:
 			error = True
 			message = 'Unable to save global settings'
@@ -105,6 +110,8 @@ class TF_Settings():
 				self.project.writeEntry("TUFLOW", "exe", self.project_settings.tf_exe)
 			if self.project_settings.base_dir:
 				self.project.writeEntry("TUFLOW", "dir", self.project_settings.base_dir)
+			if self.project_settings.engine:
+				self.project.writeEntry("TUFLOW", "engine", self.project_settings.engine)
 		except:
 			error = True
 			message = 'Unable to save project data'
@@ -132,6 +139,14 @@ class TF_Settings():
 			self.combined.base_dir = self.global_settings.base_dir
 		else:
 			self.combined.base_dir = None
+			
+		# engine
+		if self.project_settings.engine:
+			self.combined.engine = self.project_settings.engine
+		elif self.global_settings.engine:
+			self.combined.engine = self.global_settings.engine
+		else:
+			self.combined.engine = None
 			
 	def get_last_exe(self):
 		error = False
@@ -237,7 +252,7 @@ class TF_Settings():
 		except:
 			last_arr = "Undefined"
 		return last_arr
-		
+			
 	def save_last_arr_outFolder(self, last_arr):
 		error = False
 		message = None

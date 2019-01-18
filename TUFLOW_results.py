@@ -1415,7 +1415,7 @@ class ResData():
 			error = True
 			message = 'ERROR - Closest time: '+str(self.times[t_ind])+' outside time search tolerance: '+str(dt_tol)
 			return  error, message
-		if dat_type == 'Head':
+		if dat_type == 'Water Level':
 			self.LP.Hdata = []
 			if not self.Data_1D.H.loaded:
 				error = True
@@ -1429,7 +1429,7 @@ class ResData():
 					self.LP.Hdata.append(self.Data_1D.H.Values[t_ind,h_ind])
 				else:
 					self.LP.Hdata.append(max(self.Data_1D.H.Values[t_ind,h_ind], self.LP.chan_inv[2*i-1]))
-		elif dat_type == 'Energy':
+		elif dat_type == 'Energy Level':
 			self.LP.Edata = []
 			if not self.Data_1D.E.loaded:
 				error = True
@@ -1961,3 +1961,222 @@ class ResData():
 				print('Warning - Unknown Data Type '+dat_type)
 		#successful load
 		return error, message
+	
+	def pointResultTypesTS(self):
+		"""
+		Returns a list of all the available point result types.
+		
+		:return: list -> str result type e.g. 'flows'
+		"""
+		
+		types = []
+		
+		for type in self.Types:
+			if 'WATER LEVELS' in type.upper():
+				types.append('Level')
+			elif 'ENERGY LEVELS' in type.upper():
+				types.append('Energy Level')
+			elif 'POINT VELOCITY' in type.upper():
+				types.append('Velocity')
+			elif 'POINT X-VEL' in type.upper():
+				types.append('VX')
+			elif 'POINT Y-VEL' in type.upper():
+				types.append('VY')
+				
+		return types
+	
+	def lineResultTypesTS(self):
+		"""
+		Returns a list of all the available line result types.
+		
+		:return: list -> str result type e.g. 'flows'
+		"""
+		
+		types = []
+		
+		for type in self.Types:
+			if 'FLOWS' in type.upper():
+				types.append('Flow')
+			elif 'VELOCITIES' in type.upper():
+				types.append('Velocity')
+			elif 'LINE FLOW AREA' in type.upper():
+				types.append('Flow Area')
+			elif 'LINE INTEGRAL FLOW' in type.upper():
+				types.append('Flow Integral')
+			elif 'US LEVELS' in type.upper():
+				types.append('US Levels')
+			elif 'DS LEVELS' in type.upper():
+				types.append('DS Levels')
+			elif 'DS LEVELS' in type.upper():
+				types.append('DS Levels')
+			elif 'LINE STRUCTURE FLOW' in type.upper():
+				types.append('Structure Flows')
+			elif 'STRUCTURE LEVELS' in type.upper():
+				types.append('Structure Levels')
+		
+		if types:
+			if 'US Levels' not in types:
+				types.append('US Levels')
+			if 'DS Levels' not in types:
+				types.append('DS Levels')
+		
+		return types
+	
+	def regionResultTypesTS(self):
+		"""
+		Returns a list of all the available region result types.
+		
+		:return: list -> str result type e.g. 'flows'
+		"""
+		
+		types = []
+		
+		for type in self.Types:
+			if 'REGION AVERAGE WATER LEVEL' in type.upper():  # 2017-09-AA
+				types.append('Average Level')
+			elif 'REGION MAX WATER LEVEL' in type.upper():  # 2017-09-AA
+				types.append('Max Level')
+			elif 'REGION FLOW INTO' in type.upper():  # 2017-09-AA
+				types.append('Flow Into')
+			elif 'REGION FLOW OUT OF' in type.upper():  # 2017-09-AA
+				types.append('Flow Out')
+			elif 'REGION VOLUME' in type.upper():  # 2017-09-AA
+				types.append('Volume')
+			elif 'REGION SINK/SOURCE' in type.upper():  # 2017-09-AA
+				types.append('Sink/Source')
+				
+		return types
+	
+	def lineResultTypesLP(self):
+		"""
+		Returns a list of all the available line result types for long plotting.
+
+		:return: list -> str result type e.g. 'flows'
+		"""
+		
+		types = []
+		
+		for type in self.Types:
+			if 'WATER LEVELS' in type.upper():
+				types.append('Water Level')
+				#types.append('Water Level at Time')
+			elif 'ENERGY LEVELS' in type.upper():
+				types.append('Energy Level')
+				#types.append('Energy Level at Time')
+				
+		types.append('Bed Elevation')
+		types.append('Culverts and Pipes')
+		types.append('Left Bank Obvert')
+		types.append('Right Bank Obvert')
+		types.append('Pit Ground Levels (if any)')
+		types.append('Adverse Gradients (if any)')
+		
+		return types
+	
+	def timeSteps(self):
+		"""
+		Returns a list of the available time steps. Assumes all time series results have the same timesteps.
+		
+		:return: list -> float time (hr)
+		"""
+		
+		if self.Data_1D.H.loaded:
+			return self.Data_1D.H.Values[:,1]
+		elif self.Data_1D.V.loaded:
+			return self.Data_1D.V.Values[:,1]
+		elif self.Data_1D.E.loaded:
+			return self.Data_1D.E.Values[:,1]
+		elif self.Data_1D.Q.loaded:
+			return self.Data_1D.Q.Values[:,1]
+		elif self.Data_1D.A.loaded:
+			return self.Data_1D.A.Values[:,1]
+		elif self.Data_2D.H.loaded:
+			return self.Data_2D.H.Values[:,1]
+		elif self.Data_2D.V.loaded:
+			return self.Data_2D.V.Values[:,1]
+		elif self.Data_2D.Q.loaded:
+			return self.Data_2D.Q.Values[:,1]
+		elif self.Data_2D.GL.loaded:
+			return self.Data_2D.GL.Values[:,1]
+		elif self.Data_2D.QA.loaded:
+			return self.Data_2D.QA.Values[:,1]
+		elif self.Data_2D.QI.loaded:
+			return self.Data_2D.QI.Values[:,1]
+		elif self.Data_2D.Vx.loaded:
+			return self.Data_2D.Vx.Values[:,1]
+		elif self.Data_2D.Vy.loaded:
+			return self.Data_2D.Vy.Values[:,1]
+		elif self.Data_2D.QS.loaded:
+			return self.Data_2D.QS.Values[:,1]
+		elif self.Data_2D.HUS.loaded:
+			return self.Data_2D.HUS.Values[:,1]
+		elif self.Data_2D.HDS.loaded:
+			return self.Data_2D.HDS.Values[:,1]
+		elif self.Data_2D.HAvg.loaded:
+			return self.Data_2D.HAvg.Values[:,1]
+		elif self.Data_2D.HMax.loaded:
+			return self.Data_2D.HMax.Values[:,1]
+		elif self.Data_2D.QIn.loaded:
+			return self.Data_2D.QIn.Values[:,1]
+		elif self.Data_2D.QOut.loaded:
+			return self.Data_2D.QOut.Values[:,1]
+		elif self.Data_2D.SS.loaded:
+			return self.Data_2D.SS.Values[:,1]
+		elif self.Data_2D.Vol.loaded:
+			return self.Data_2D.Vol.Values[:,1]
+		elif self.Data_RL.H_P.loaded:
+			return self.Data_RL.H_P.Values[:,1]
+		elif self.Data_RL.Q_L.loaded:
+			return self.Data_RL.Q_L.Values[:,1]
+		elif self.Data_RL.Vol_R.loaded:
+			return self.Data_RL.Vol_R.Values[:,1]
+		else:
+			return []
+		
+	def getLongPlotXY(self, type, time):
+		"""
+		Generates long plot X, Y coordinates
+		
+		:param type: str -> result type e.g. 'Water Level'
+		:param time: float
+		:return: tuple -> list -> float e.g. (x, y)
+		"""
+		
+		error = False
+		message = ''
+		
+		if 'water level' in type.lower():
+			if time == -99999:
+				return (self.LP.dist_chan_inverts, self.LP.Hmax)
+			else:
+				error, message = self.LP_getData('Water Level', time, 0.01)
+				return (self.LP.dist_chan_inverts, self.LP.Hdata)
+		
+		elif 'energy level' in type.lower():
+			if time == -99999:
+				return (self.LP.dist_chan_inverts, self.LP.Emax)
+			else:
+				error, message = self.LP_getData('Energy Level', time, 0.01)
+				return (self.LP.dist_chan_inverts, self.LP.Edata)
+			
+		elif 'adverse gradients (if any)' in type.lower():
+			return (self.LP.adverseH.chainage, self.LP.adverseH.elevation), \
+			       (self.LP.adverseE.chainage, self.LP.adverseE.elevation)
+		
+		elif 'bed elevation' in type.lower():
+			return (self.LP.dist_chan_inverts, self.LP.chan_inv)
+		
+		elif 'left bank obvert' in type.lower():
+			return (self.LP.dist_chan_inverts, self.LP.chan_LB)
+		
+		elif 'right bank obvert' in type.lower():
+			return (self.LP.dist_chan_inverts, self.LP.chan_RB)
+		
+		elif 'pit ground levels (if any)' in type.lower():
+			return (self.LP.pit_dist, self.LP.pit_z)
+		
+		elif 'culverts and pipes' in type.lower():
+			return self.LP.culv_verts, [0, 1, 2, 3, 4, 5]  # dummy y data - ultimately not used
+		
+		else:
+			return (None, None)

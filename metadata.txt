@@ -5,13 +5,13 @@
 
 [general]
 name=TUFLOW
-qgisMinimumVersion=2.0
-description=A collection of utilities for TUFLOW modelling in QGIS
-about=A collection of utilities for TUFLOW modelling in QGIS.
+qgisMinimumVersion=3.4
+description=A collection of utilities for TUFLOW flood and coastal simulation in QGIS
+about=A collection of utilities for TUFLOW flood and coastal simulation in QGIS.
 	Includes visualisation of results / inputs
 	Editing tools
 	Styling tools
-version=1.5.1
+version=2.2.99.3
 author=Phillip Ryan, Ellis Symons
 email=support@tuflow.com
 
@@ -20,10 +20,10 @@ email=support@tuflow.com
 # Optional items:
 
 # Uncomment the following line and add your changelog entries:
-changelog=
+changelog=New tool Tuview (replaces Tuplot)
 
 # tags are comma separated with spaces allowed
-tags=TUFLOW	
+tags=TUFLOW, simulation, flood, hydraulic modelling, MDAL, mesh, xmdf, dat, 2dm
 
 homepage=http://wiki.tuflow.com/index.php?title=TUFLOW_QGIS_Plugin
 tracker=https://github.com/TUFLOW-Support/QGIS-TUFLOW-Plugin/issues
