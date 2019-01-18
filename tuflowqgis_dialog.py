@@ -1805,7 +1805,8 @@ class tuflowqgis_insert_tuflow_attributes_dialog(QDialog, Ui_tuflowqgis_insert_t
 				empty_type = os.path.basename(file.split('_empty')[0])
 				if empty_type not in empty_list:
 					empty_list.append(empty_type)
-					self.comboBox_tfType.addItem(empty_type)
+			empty_list = sorted(empty_list)
+			self.comboBox_tfType.addItems(empty_list)
 									
 		self.browsedir.clicked.connect(lambda: self.browse_empty_dir(unicode(self.emptydir.displayText()).strip()))
 		self.emptydir.editingFinished.connect(self.dirChanged)
