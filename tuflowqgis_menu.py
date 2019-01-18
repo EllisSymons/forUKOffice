@@ -136,7 +136,7 @@ class tuflowqgis_menu:
 		#top level in menu
 		
 		# Reload Data Added ES 16/07/18
-		icon = QIcon(os.path.join(dir, "icons", "Reload_Data.png"))
+		icon = QIcon(os.path.join(dir, "icons", "Reload_Data.PNG"))
 		self.reload_data_action = QAction(icon, "Reload Data", self.iface.mainWindow())
 		self.reload_data_action.triggered.connect(self.reload_data)
 		self.iface.addToolBarIcon(self.reload_data_action)
@@ -201,7 +201,7 @@ class tuflowqgis_menu:
 		self.iface.addPluginToMenu("&TUFLOW", self.apply_chk_action)
 		
 		#PAR 2016/02/15
-		icon = QIcon(os.path.join(dir, "icons" "check_files_currentlayer.png"))
+		icon = QIcon(os.path.join(dir, "icons", "check_files_currentlayer.png"))
 		self.apply_chk_cLayer_action = QAction(icon, "Apply TUFLOW Styles to Current Layer", self.iface.mainWindow())
 		#QObject.connect(self.apply_chk_cLayer_action, SIGNAL("triggered()"), self.apply_check_cLayer)
 		self.apply_chk_cLayer_action.triggered.connect(self.apply_check_cLayer)
@@ -209,7 +209,7 @@ class tuflowqgis_menu:
 		self.iface.addPluginToMenu("&TUFLOW", self.apply_chk_cLayer_action)
 		
 		#Auto label generator ES 8/03/2018
-		icon = QIcon(os.path.join(dir, "icons" "Label_icon.PNG"))
+		icon = QIcon(os.path.join(dir, "icons", "Label_icon.PNG"))
 		self.apply_auto_label_action = QAction(icon, "Apply Label to Current Layer", self.iface.mainWindow())
 		self.apply_auto_label_action.triggered.connect(self.apply_label_cLayer)
 		self.iface.addToolBarIcon(self.apply_auto_label_action)
