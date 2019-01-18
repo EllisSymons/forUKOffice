@@ -57,14 +57,15 @@ class tuflowqgis_menu:
 		# About Submenu
 		self.about_menu = QMenu(QCoreApplication.translate("TUFLOW", "&About"))
 		self.iface.addPluginToMenu("&TUFLOW", self.about_menu.menuAction())
-
-		icon = QIcon(os.path.dirname(__file__) + "/icons/info.png")
+		
+		dir = os.path.dirname(__file__)
+		icon = QIcon(os.path.join(dir, "icons", "info.png"))
 		self.about_action = QAction(icon, "About", self.iface.mainWindow())
 		#QObject.connect(self.about_action, SIGNAL("triggered()"), self.about_tuflowqgis)
 		self.about_action.triggered.connect(self.about_tuflowqgis)
 		self.about_menu.addAction(self.about_action)
 		
-		icon = QIcon(os.path.dirname(__file__) + "/icons/check_dependancy.png")
+		icon = QIcon(os.path.join(dir, "icons", "check_dependancy.png"))
 		self.check_dependancy_action = QAction(icon, "Check Python Dependencies Installed", self.iface.mainWindow())
 		#QObject.connect(self.check_dependancy_action, SIGNAL("triggered()"), self.check_dependencies)
 		self.check_dependancy_action.triggered.connect(self.check_dependencies)
@@ -75,31 +76,26 @@ class tuflowqgis_menu:
 		self.iface.addPluginToMenu("&TUFLOW", self.editing_menu.menuAction())
 		
 		#icon = QIcon(os.path.dirname(__file__) + "/icons/tuflow_increment_24px.png")
-		icon = QIcon(os.path.dirname(__file__) + "/icons/tuflow.png")
+		icon = QIcon(os.path.join(dir, "icons", "tuflow.png"))
 		self.configure_tf_action = QAction(icon, "Configure / Create TUFLOW Project", self.iface.mainWindow())
 		#QObject.connect(self.configure_tf_action, SIGNAL("triggered()"), self.configure_tf)
 		self.configure_tf_action.triggered.connect(self.configure_tf)
 		self.editing_menu.addAction(self.configure_tf_action)
-		
-		#icon = QIcon(os.path.dirname(__file__) + "/icons/tuflow.png")
-		#self.create_tf_dir_action = QAction(icon, "Create TUFLOW Directory", self.iface.mainWindow())
-		#QObject.connect(self.create_tf_dir_action, SIGNAL("triggered()"), self.create_tf_dir)
-		#self.editing_menu.addAction(self.create_tf_dir_action)
 
-		icon = QIcon(os.path.dirname(__file__) + "/icons/tuflow_import.png")
+		icon = QIcon(os.path.join(dir, "icons"," tuflow_import.png"))
 		self.import_empty_tf_action = QAction(icon, "Import Empty File", self.iface.mainWindow())
 		#QObject.connect(self.import_empty_tf_action, SIGNAL("triggered()"), self.import_empty_tf)
 		self.import_empty_tf_action.triggered.connect(self.import_empty_tf)
 		self.editing_menu.addAction(self.import_empty_tf_action)
 		
 		# Add TUFLOW attribute fields to existing GIS layer Added ES 23/02/2018
-		icon = QIcon(os.path.dirname(__file__) + "/icons/insert_tuflow_attributes.png")
+		icon = QIcon(os.path.join(dir, "icons", "insert_tuflow_attributes.png"))
 		self.insert_TUFLOW_attributes_action = QAction(icon, "Insert TUFLOW Attributes to existing GIS layer", self.iface.mainWindow())
 		#QObject.connect(self.insert_TUFLOW_attributes_action, SIGNAL("triggered()"), self.insert_TUFLOW_attributes)
 		self.insert_TUFLOW_attributes_action.triggered.connect(self.insert_TUFLOW_attributes)
 		self.editing_menu.addAction(self.insert_TUFLOW_attributes_action)
 
-		icon = QIcon(os.path.dirname(__file__) + "/icons/tuflow_increment_24px.png")
+		icon = QIcon(os.path.join(dir, "icons", "tuflow_increment_24px.png"))
 		self.increment_action = QAction(icon, "Increment Selected Layer", self.iface.mainWindow())
 		#QObject.connect(self.increment_action, SIGNAL("triggered()"), self.increment_layer)
 		self.increment_action.triggered.connect(self.increment_layer)
@@ -131,7 +127,7 @@ class tuflowqgis_menu:
 		self.run_menu = QMenu(QCoreApplication.translate("TUFLOW", "&Run"))
 		self.iface.addPluginToMenu("&TUFLOW", self.run_menu.menuAction())
 		
-		icon = QIcon(os.path.dirname(__file__) + "/icons/Run_TUFLOW.png")
+		icon = QIcon(os.path.join(dir, "icons", "Run_TUFLOW.png"))
 		self.run_tuflow_action = QAction(icon, "Run TUFLOW Simulation", self.iface.mainWindow())
 		#QObject.connect(self.run_tuflow_action, SIGNAL("triggered()"), self.run_tuflow)
 		self.run_tuflow_action.triggered.connect(self.run_tuflow)
@@ -140,14 +136,14 @@ class tuflowqgis_menu:
 		#top level in menu
 		
 		# Reload Data Added ES 16/07/18
-		icon = QIcon(os.path.dirname(__file__) + "/icons/reload_data.png")
+		icon = QIcon(os.path.join(dir, "icons", "Reload_Data.png"))
 		self.reload_data_action = QAction(icon, "Reload Data", self.iface.mainWindow())
 		self.reload_data_action.triggered.connect(self.reload_data)
 		self.iface.addToolBarIcon(self.reload_data_action)
 		self.iface.addPluginToMenu("&TUFLOW", self.reload_data_action)
 		
 		# TuPlot
-		icon = QIcon(os.path.dirname(__file__) + "/icons/tuview.png")
+		icon = QIcon(os.path.join(dir, "icons", "tuview.png"))
 		self.view_results_action = QAction(icon, "TuPlot", self.iface.mainWindow())
 		self.view_results_action.triggered.connect(self.openResultsPlottingWindow)
 		self.iface.addToolBarIcon(self.view_results_action)
@@ -162,7 +158,7 @@ class tuflowqgis_menu:
 		#self.iface.addPluginToMenu("&TUFLOW", self.open_tuplot_external_action)
 		
 		# Added MJS 24/11
-		icon = QIcon(os.path.dirname(__file__) + "/icons/tuflow_import.png")
+		icon = QIcon(os.path.join(dir, "icons", "tuflow_import.png"))
 		self.import_empty_tf_action = QAction(icon, "Import Empty File", self.iface.mainWindow())
 		#QObject.connect(self.import_empty_tf_action, SIGNAL("triggered()"), self.import_empty_tf)
 		self.import_empty_tf_action.triggered.connect(self.import_empty_tf)
@@ -174,14 +170,14 @@ class tuflowqgis_menu:
 		self.iface.addToolBarIcon(self.insert_TUFLOW_attributes_action)
 		
 		# ES 2018/05 Load input files from TCF
-		icon = QIcon(os.path.join(os.path.dirname(__file__) + "icons", "load_from_TCF.PNG"))
+		icon = QIcon(os.path.join(dir, "icons", "Load_from_TCF.PNG"))
 		self.load_tuflowFiles_from_TCF_action = QAction(icon, "Load TUFLOW Layers from TCF", self.iface.mainWindow())
 		self.load_tuflowFiles_from_TCF_action.triggered.connect(self.loadTuflowLayersFromTCF)
 		self.iface.addPluginToMenu("&TUFLOW", self.load_tuflowFiles_from_TCF_action)
 		self.iface.addToolBarIcon(self.load_tuflowFiles_from_TCF_action)
 
 		# Added MJS 24/11
-		icon = QIcon(os.path.dirname(__file__) + "/icons/tuflow_increment_24px.png")
+		icon = QIcon(os.path.join(dir, "icons", "tuflow_increment_24px.png"))
 		self.increment_action = QAction(icon, "Increment Selected Layer", self.iface.mainWindow())
 		#QObject.connect(self.increment_action, SIGNAL("triggered()"), self.increment_layer)
 		self.increment_action.triggered.connect(self.increment_layer)
@@ -189,7 +185,7 @@ class tuflowqgis_menu:
 		self.iface.addPluginToMenu("&TUFLOW", self.increment_action)
   
 		# Added MJS 11/02   
-		icon = QIcon(os.path.dirname(__file__) + "/icons/check_files_folder.png")
+		icon = QIcon(os.path.join(dir, "icons", "check_files_folder.png"))
 		self.import_chk_action = QAction(icon, "Import Check Files from Folder", self.iface.mainWindow())
 		#QObject.connect(self.import_chk_action, SIGNAL("triggered()"), self.import_check)
 		self.import_chk_action.triggered.connect(self.import_check)
@@ -197,7 +193,7 @@ class tuflowqgis_menu:
 		self.iface.addPluginToMenu("&TUFLOW", self.import_chk_action)
 	
 		#PAR 2016/02/12
-		icon = QIcon(os.path.dirname(__file__) + "/icons/check_files_open.png")
+		icon = QIcon(os.path.join(dir, "icons", "check_files_open.png"))
 		self.apply_chk_action = QAction(icon, "Apply TUFLOW Styles to Open Layers", self.iface.mainWindow())
 		#Object.connect(self.apply_chk_action, SIGNAL("triggered()"), self.apply_check)
 		self.apply_chk_action.triggered.connect(self.apply_check)
@@ -205,7 +201,7 @@ class tuflowqgis_menu:
 		self.iface.addPluginToMenu("&TUFLOW", self.apply_chk_action)
 		
 		#PAR 2016/02/15
-		icon = QIcon(os.path.dirname(__file__) + "/icons/check_files_currentlayer.png")
+		icon = QIcon(os.path.join(dir, "icons" "check_files_currentlayer.png"))
 		self.apply_chk_cLayer_action = QAction(icon, "Apply TUFLOW Styles to Current Layer", self.iface.mainWindow())
 		#QObject.connect(self.apply_chk_cLayer_action, SIGNAL("triggered()"), self.apply_check_cLayer)
 		self.apply_chk_cLayer_action.triggered.connect(self.apply_check_cLayer)
@@ -213,14 +209,14 @@ class tuflowqgis_menu:
 		self.iface.addPluginToMenu("&TUFLOW", self.apply_chk_cLayer_action)
 		
 		#Auto label generator ES 8/03/2018
-		icon = QIcon(os.path.dirname(__file__) + "/icons/Label_icon.PNG")
+		icon = QIcon(os.path.join(dir, "icons" "Label_icon.PNG"))
 		self.apply_auto_label_action = QAction(icon, "Apply Label to Current Layer", self.iface.mainWindow())
 		self.apply_auto_label_action.triggered.connect(self.apply_label_cLayer)
 		self.iface.addToolBarIcon(self.apply_auto_label_action)
 		self.iface.addPluginToMenu("&TUFLOW", self.apply_auto_label_action)
 		
 		#ES 2018/01 ARR2016 Beta
-		icon = QIcon(os.path.dirname(__file__) + "/icons/arr2016.PNG")
+		icon = QIcon(os.path.join(dir, "icons", "arr2016.PNG"))
 		self.extract_arr2016_action = QAction(icon, "Extract ARR2016 for TUFLOW (beta)", self.iface.mainWindow())
 		#QObject.connect(self.extract_arr2016_action, SIGNAL("triggered()"), self.extract_arr2016)
 		self.extract_arr2016_action.triggered.connect(self.extract_arr2016)
@@ -433,7 +429,7 @@ class tuflowqgis_menu:
 				return
 			else:
 				fpath, fname = os.path.split(inFileName)
-				if fpath != os.sep and fpath.lower() != 'c:\\' and fpath != '':
+				if fpath != os.sep and fpath.lower() != 'c://' and fpath != '':
 					settings.setValue("TUFLOW/load_TCF_last_folder", fpath)
 				if os.path.splitext(inFileName)[1].lower() != '.tcf':
 					QMessageBox.information(self.iface.mainWindow(), "Message", 'Must select TCF')
