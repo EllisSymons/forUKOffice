@@ -454,8 +454,8 @@ def tuflowqgis_import_check_tf(qgis, basepath, runID,showchecks):
 		return "Invalid location specified"
 
 	# Get all the check files in the given directory
-	check_files = glob.glob(basepath +  '\*'+ runID +'*.shp') + glob.glob(basepath +  '\*'+ runID +'*.mif') + \
-				  glob.glob(basepath + '\*' + runID + '*.SHP') + glob.glob(basepath + '\*' + runID + '*.MIF')
+	check_files = glob.glob(basepath +  '/*'+ runID +'*.shp') + glob.glob(basepath +  '/*'+ runID +'*.mif') + \
+				  glob.glob(basepath + '/*' + runID + '*.SHP') + glob.glob(basepath + '/*' + runID + '*.MIF')
 
 	if len(check_files) > 100:
 		QMessageBox.critical(qgis.mainWindow(),"Info", ("You have selected over 100 check files. You can use the RunID to reduce this selection."))
