@@ -1758,18 +1758,10 @@ class Arr2016(QObject):
 			
 			CREATE_NO_WINDOW = 0x08000000  # suppresses python console window
 			error = False
-			try:
-				proc = subprocess.Popen(sys_args, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-				                        creationflags=CREATE_NO_WINDOW)
-				out, err = proc.communicate()
-				logfile.write(out)
-				logfile.write(err)
-				logfile.close()
-				if err:
-					errors += '{0} - {1}'.format(self.name_list[i], err)
-			except:
-				try:
-					proc = subprocess.Popen(self.sys_args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+			if sys.platform == 'win32':
+				try:  # for some reason (in QGIS2 at least) creationsflags didn't work on all computers
+					proc = subprocess.Popen(sys_args, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+					                        creationflags=CREATE_NO_WINDOW)
 					out, err = proc.communicate()
 					logfile.write(out)
 					logfile.write(err)
@@ -1777,11 +1769,28 @@ class Arr2016(QObject):
 					if err:
 						errors += '{0} - {1}'.format(self.name_list[i], err)
 				except:
-					proc = subprocess.Popen(self.sys_args)
-					error = True
+					try:
+						proc = subprocess.Popen(sys_args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+						out, err = proc.communicate()
+						logfile.write(out)
+						logfile.write(err)
+						logfile.close()
+						if err:
+							errors += '{0} - {1}'.format(self.name_list[i], err)
+					except:
+						error = 'Error with subprocess call'
+			else:  # linux and mac
+				try:
+					proc = subprocess.Popen(sys_args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+					out, err = proc.communicate()
+					logfile.write(out)
+					logfile.write(err)
 					logfile.close()
-					if error:
-						errors += '{0}'.format(self.name_list[i])
+					if err:
+						errors += '{0} - {1}'.format(self.name_list[i], err)
+				except:
+					error = 'Error with subprocess call'
+				
 		
 		self.finished.emit(errors)
 		
