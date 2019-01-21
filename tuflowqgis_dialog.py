@@ -207,14 +207,25 @@ class tuflowqgis_import_empty_tf_dialog(QDialog, Ui_tuflowqgis_import_empty):
 			
 		engine = self.tfsettings.combined.engine
 		self.parent_folder_name = 'TUFLOWFV' if engine == 'flexible mesh' else 'TUFLOW'
-			
+		
 		self.browsedir.clicked.connect(self.browse_empty_dir)
 		self.emptydir.editingFinished.connect(self.dirChanged)
 		self.buttonBox.accepted.connect(self.run)
 
 		if self.tfsettings.combined.base_dir:
-			#self.emptydir.setText(self.tfsettings.combined.base_dir+"\\TUFLOW\\model\\gis\\empty")
-			self.emptydir.setText(os.path.join(self.tfsettings.combined.base_dir, self.parent_folder_name, "model", "gis", "empty"))
+			subfolders = [self.parent_folder_name.lower(), 'model', 'gis', 'empty']
+			emptydir = self.tfsettings.combined.base_dir
+			for i, subfolder in enumerate(subfolders):
+				for p in os.walk(emptydir):
+					for d in p[1]:
+						if d.lower() == subfolder:
+							if i == 0:
+								self.parent_folder_name = d
+							emptydir = os.path.join(emptydir, d)
+							break
+					break
+			self.emptydir.setText(emptydir)
+			#self.emptydir.setText(os.path.join(self.tfsettings.combined.base_dir, self.parent_folder_name, "model", "gis", "empty"))
 		else:
 			self.emptydir.setText("ERROR - Project not loaded")
 			
@@ -227,6 +238,9 @@ class tuflowqgis_import_empty_tf_dialog(QDialog, Ui_tuflowqgis_import_empty):
 		else:
 			search_string = '{0}{1}*.shp'.format(self.emptydir.text(), os.path.sep)
 			files = glob.glob(search_string)
+			if not files:
+				search_string = '{0}{1}*.SHP'.format(self.emptydir.text(), os.path.sep)
+				files = glob.glob(search_string)
 			empty_list = []
 			for file in files:
 				if len(file.split('_empty')) < 2:
