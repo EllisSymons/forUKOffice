@@ -1005,6 +1005,8 @@ def get_1d_nwk_labelName(layer, type):
 		field_name = "'ID: ' + \"{0}\" + '\n' + 'Type: ' + \"{1}\"".format(field_name1, field_name2)
 		
 	return field_name
+
+
 def tuflowqgis_apply_autoLabel_clayer(qgis):
 	#QMessageBox.information(qgis.mainWindow(),"Info", ("{0}".format(enabled)))
 	
@@ -1020,6 +1022,7 @@ def tuflowqgis_apply_autoLabel_clayer(qgis):
 	if cLayer.labelsEnabled() == False:
 		# demonstration of rule based labeling
 		if '1d_nwk' in fname:
+			field_name_1 = cLayer.fields().field(1).name()
 			# setup blank rule object
 			label = QgsPalLayerSettings()
 			rule = QgsRuleBasedLabeling.Rule(label)
@@ -1038,7 +1041,7 @@ def tuflowqgis_apply_autoLabel_clayer(qgis):
 			elif cLayer.geometryType() == 2:
 				label1.placement = 1
 			rule1 = QgsRuleBasedLabeling.Rule(label1)
-			rule1.setFilterExpression("\"Type\" LIKE '%C%' OR \"Type\" LIKE '%W%'")
+			rule1.setFilterExpression("\"{0}\" LIKE '%C%' OR \"{0}\" LIKE '%W%'".format(field_name_1))
 			# setup label rule 2
 			label2 = QgsPalLayerSettings()
 			label2.isExpression = True
@@ -1054,7 +1057,7 @@ def tuflowqgis_apply_autoLabel_clayer(qgis):
 			labelName2 = get_1d_nwk_labelName(cLayer, 'R')
 			label2.fieldName = labelName2
 			rule2 = QgsRuleBasedLabeling.Rule(label2)
-			rule2.setFilterExpression("\"Type\" LIKE '%R%'")
+			rule2.setFilterExpression("\"{0}\" LIKE '%R%'".format(field_name_1))
 			# setup label rule 3
 			label3 = QgsPalLayerSettings()
 			label3.isExpression = True
@@ -1070,9 +1073,9 @@ def tuflowqgis_apply_autoLabel_clayer(qgis):
 			labelName3 = get_1d_nwk_labelName(cLayer, 'other')
 			label3.fieldName = labelName3
 			rule3 = QgsRuleBasedLabeling.Rule(label3)
-			rule3.setFilterExpression("\"Type\" LIKE '%S%' OR \"Type\" LIKE '%B%' OR \"Type\" LIKE '%I%' OR \"Type\"" \
-			                          "LIKE '%P%' OR \"Type\" LIKE '%G%' OR \"Type\" LIKE '%M%' OR \"Type\" LIKE '%Q%'" \
-			                          "OR \"Type\" LIKE '%X%'")
+			rule3.setFilterExpression("\"{0}\" LIKE '%S%' OR \"{0}\" LIKE '%B%' OR \"{0}\" LIKE '%I%' OR \"{0}\"" \
+			                          "LIKE '%P%' OR \"{0}\" LIKE '%G%' OR \"{0}\" LIKE '%M%' OR \"{0}\" LIKE '%Q%'" \
+			                          "OR \"{0}\" LIKE '%X%'".format(field_name_1))
 			# append rule 1, 2, 3 to blank rule object
 			rule.appendChild(rule1)
 			rule.appendChild(rule2)
