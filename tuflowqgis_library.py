@@ -164,6 +164,13 @@ def tuflowqgis_create_tf_dir(qgis, crs, basepath, engine):
 		return "Invalid location specified"
 	
 	parent_folder_name = "TUFLOWFV" if engine == 'flexible mesh' else "TUFLOW"
+	# linux case sensitive tuflow directory
+	for p in os.walk(basepath):
+		for d in p[1]:
+			if d.lower() == parent_folder_name.lower():
+				parent_folder_name = d
+				break
+		break
 	
 	# Create folders, ignore top level (e.g. model, as these are create when the subfolders are created)
 	TUFLOW_Folders = ["bc_dbase",
@@ -1324,10 +1331,6 @@ def getPathFromRel(dir, relPath, **kwargs):
 				# not found if it reaches this point
 				path = os.path.join(path, c)
 				break
-
-	#files = getAllFilePaths(dir)
-	#if path.lower() in files:
-	#	return files[path.lower()]
 	
 	return path
 
