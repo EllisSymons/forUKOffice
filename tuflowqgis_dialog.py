@@ -1800,6 +1800,9 @@ class tuflowqgis_insert_tuflow_attributes_dialog(QDialog, Ui_tuflowqgis_insert_t
 			QMessageBox.information( self.iface.mainWindow(),"Error", "Error Loading Settings: "+message)			
 			return
 		
+		engine = self.tfsettings.combined.engine
+		self.parent_folder_name = 'TUFLOWFV' if engine == 'flexible mesh' else 'TUFLOW'
+		
 		# Get empty dir
 		if self.tfsettings.combined.base_dir:
 			subfolders = [self.parent_folder_name.lower(), 'model', 'gis', 'empty']
