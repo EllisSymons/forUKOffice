@@ -236,7 +236,14 @@ def tuflowqgis_import_empty_tf(qgis, basepath, runID, empty_types, points, lines
 	if (regions):
 		geom_type.append('_R')
 	
-	gis_folder = basepath.replace('{0}empty'.format(os.sep),'')
+	empty_folder = 'empty'
+	for p in os.walk(basepath):
+		for d in p[1]:
+			if d.lower() == empty_folder:
+				empty_folder = d
+				break
+		break
+	gis_folder = basepath.replace('{0}{1}'.format(os.sep, empty_folder), '')
 	# Create folders, ignore top level (e.g. model, as these are create when the subfolders are created)
 	for type in empty_types:
 		for geom in geom_type:
@@ -746,9 +753,15 @@ def tuflowqgis_insert_tf_attributes(qgis, inputLayer, basedir, runID, template, 
 		geomType = '_R'
 	else:
 		geomType = '_L'
-		
 	
-	gis_folder = basedir.replace('{0}empty'.format(os.sep), '')
+	empty_folder = 'empty'
+	for p in os.walk(basedir):
+		for d in p[1]:
+			if d.lower() == empty_folder:
+				empty_folder = d
+				break
+		break
+	gis_folder = basedir.replace('{0}{1}'.format(os.sep, empty_folder), '')
 	
 	# Create new vector file from template with appended attribute fields
 	if template == '1d_nwk':
