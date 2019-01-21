@@ -1114,7 +1114,7 @@ class tuflowqgis_extract_arr2016_dialog(QDialog, Ui_tuflowqgis_arr2016):
 		self.minArf.setValue(minARFValue)
 		
 		# setup browse boxes
-		folderIcon = QgsApplication.getThemeIcon('\mActionFileOpen.svg')
+		folderIcon = QgsApplication.getThemeIcon('/mActionFileOpen.svg')
 		self.btnBrowsePTP.setIcon(folderIcon)
 		self.btnBrowseATP.setIcon(folderIcon)
 		self.btnBrowseOut.setIcon(folderIcon)
