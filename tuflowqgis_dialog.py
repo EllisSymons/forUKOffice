@@ -108,8 +108,8 @@ class tuflowqgis_increment_dialog(QDialog, Ui_tuflowqgis_increment):
 
 	def browse_outfile(self):
 		outfolder = unicode(self.outfolder.displayText()).strip()
-		newname = QFileDialog.getSaveFileName(None, "Output Shapefile", outfolder, "*.shp")
-		if len(newname)>0:
+		newname = QFileDialog.getSaveFileName(self, "Output Shapefile", outfolder, "*.shp *.SHP")
+		if len(newname) > 0:
 			fpath, fname = os.path.split(newname[0])
 			self.outfolder.setText(fpath)
 			outfname = tuflowqgis_increment_fname(fname)
@@ -994,22 +994,32 @@ class tuflowqgis_import_check_dialog(QDialog, Ui_tuflowqgis_import_check):
 		if error:
 			QMessageBox.information( self.iface.mainWindow(),"Error", "Error Loading Settings: "+message)
 
-		#QObject.connect(self.browsedir, SIGNAL("clicked()"), self.browse_empty_dir)
 		self.browsedir.clicked.connect(self.browse_empty_dir)
-		#QObject.connect(self.buttonBox, QtCore.SIGNAL("accepted()"), self.run)
 		self.buttonBox.accepted.connect(self.run)
+		
+		engine = self.tfsettings.combined.engine
+		self.parent_folder_name = 'TUFLOWFV' if engine == 'flexible mesh' else 'TUFLOW'
 
-		if (self.last_chk_folder == "Undefined"):
+		if self.last_chk_folder == "Undefined":
 			if self.tfsettings.combined.base_dir:
-				self.last_chk_folder = os.path.join(self.tfsettings.combined.base_dir,"TUFLOW","Check")
+				subfolders = [self.parent_folder_name.lower(), 'check']
+				checkdir = self.tfsettings.combined.base_dir
+				for i, subfolder in enumerate(subfolders):
+					for p in os.walk(checkdir):
+						for d in p[1]:
+							if d.lower() == subfolder:
+								if i == 0:
+									self.parent_folder_name = d
+								checkdir = os.path.join(checkdir, d)
+								break
+						break
+				self.last_chk_folder = checkdir
 				self.emptydir.setText(self.last_chk_folder)
-		#	self.emptydir.setText(self.tfsettings.combined.base_dir+"\\TUFLOW\\check")
 		else:
 			self.emptydir.setText(self.last_chk_folder)
-		#self.emptydir.setText = self.tfsettings.get_last_mi_folder()
 
 	def browse_empty_dir(self):
-		newname = QFileDialog.getExistingDirectory(None, "Output Directory",self.last_chk_folder)
+		newname = QFileDialog.getExistingDirectory(None, "Output Directory", self.last_chk_folder)
 		if newname != None:
 			try:
 				self.emptydir.setText(newname)
@@ -1026,7 +1036,7 @@ class tuflowqgis_import_check_dialog(QDialog, Ui_tuflowqgis_import_check):
 
 		# run create dir script
 		#message = tuflowqgis_import_check_tf(self.iface, basedir, runID, empty_types, points, lines, regions)
-		message = tuflowqgis_import_check_tf(self.iface, basedir, runID,showchecks)
+		message = tuflowqgis_import_check_tf(self.iface, basedir, runID, showchecks)
 		#message = tuflowqgis_create_tf_dir(self.iface, crs, basedir)
 		if message != None:
 			QMessageBox.critical(self.iface.mainWindow(), "Importing TUFLOW Empty File(s)", message)
