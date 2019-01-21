@@ -1306,7 +1306,7 @@ def getPathFromRel(dir, relPath, **kwargs):
 			continue
 		else:
 			path = os.path.join(path, c)
-			
+
 	files = getAllFilePaths(dir)
 	if path.lower() in files:
 		return files[path.lower()]
@@ -2970,12 +2970,13 @@ def getAllFilePaths(dir):
 	files = {}
 	for r in os.walk(dir):
 		for f in r[2]:
-			files[f.lower()] = f
+			file = os.path.join(r[0], f)
+			files[file.lower()] = file
 		
 	return files
 	
 
 if __name__ == '__main__':
-	a = r"C:\TUFLOW\Tutorial_Data_QGIS\Tutorial_Data_QGIS\QGIS\Complete_Model\TUFLOW\results\M01\2d\M01_5m_002.2dm"
+	a = r"C:\TUFLOW\Tutorial_Data_QGIS\Tutorial_Data_QGIS\QGIS\Complete_Model\TUFLOW"
 	
-	___cellSize, ___wllVerticalOffset, ___origin, ___orientation, ___gridSize = getPropertiesFrom2dm(a)
+	files = getAllFilePaths(a)
