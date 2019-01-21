@@ -1287,7 +1287,7 @@ def getPathFromRel(dir, relPath, **kwargs):
 	:param relPath: string -> relative path
 	:return: string - full path
 	"""
-	
+
 	outputDrive = kwargs['output_drive'] if 'output_drive' in kwargs.keys() else None
 	
 	_components = relPath.split(os.sep)
@@ -1305,11 +1305,29 @@ def getPathFromRel(dir, relPath, **kwargs):
 		elif c == '.':
 			continue
 		else:
-			path = os.path.join(path, c)
+			found = False
+			for p in os.walk(path):
+				for d in p[1]:  # directory
+					if c.lower() == d.lower():
+						path = os.path.join(path, d)
+						found = True
+						break
+				if found:
+					break
+				for f in p[2]:  # files
+					if c.lower() == f.lower():
+						path = path = os.path.join(path, f)
+						found = True
+						break
+				if found:
+					break
+				# not found if it reaches this point
+				path = os.path.join(path, c)
+				break
 
-	files = getAllFilePaths(dir)
-	if path.lower() in files:
-		return files[path.lower()]
+	#files = getAllFilePaths(dir)
+	#if path.lower() in files:
+	#	return files[path.lower()]
 	
 	return path
 
