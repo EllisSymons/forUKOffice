@@ -472,6 +472,8 @@ def tuflowqgis_import_check_tf(qgis, basepath, runID,showchecks):
 	legint = QgsProject.instance().layerTreeRoot()
 
 	# Add each layer to QGIS and style
+	if not check_files:
+		return "No check files found to import"
 	for chk in check_files:
 		pfft,fname = os.path.split(chk)
 		fname = fname[:-4]
