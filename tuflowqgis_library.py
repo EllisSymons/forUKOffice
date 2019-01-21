@@ -49,13 +49,6 @@ def about(window):
 	                        "Build: {1}".format(build_type, build_vers))
 
 
-def casedPath(path):
-	"""Returns case sensitive path from an insensitive path. Used for linux file paths."""
-	
-	r = glob.glob(re.sub(r'([^:/\\])(?=[/\\]|$)', r'[\1]', path))
-	return r and r[0] or path
-
-
 def tuflowqgis_find_layer(layer_name, **kwargs):
 	
 	search_type = kwargs['search_type'] if 'search_type' in kwargs.keys() else 'name'
@@ -1313,8 +1306,12 @@ def getPathFromRel(dir, relPath, **kwargs):
 			continue
 		else:
 			path = os.path.join(path, c)
+			
+	files = getAllFilePaths(dir)
+	if path.lower() in files:
+		return files[path.lower()]
 	
-	return casedPath(path)
+	return path
 
 
 def checkForOutputDrive(tcf):
@@ -2960,6 +2957,22 @@ def copyLayerStyle(iface, layerCopyFrom, layerCopyTo):
 	# refresh map and legend
 	layerCopyTo.triggerRepaint()
 	iface.layerTreeView().refreshLayerSymbology(layerCopyTo.id())
+	
+	
+def getAllFilePaths(dir):
+	"""
+	Get all file paths in directory including any subdirectories in parent directory.
+	
+	:param dir: str full path to directory
+	:return: dict -> { lower case file path: actual case sensitive file path }
+	"""
+	
+	files = {}
+	for r in os.walk(dir):
+		for f in r[2]:
+			files[f.lower()] = f
+		
+	return files
 	
 
 if __name__ == '__main__':
