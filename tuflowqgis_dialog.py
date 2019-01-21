@@ -759,8 +759,8 @@ class tuflowqgis_configure_tf_dialog(QDialog, Ui_tuflowqgis_configure_tf):
 		for p in path_split[:]:
 			path_split += p.split(os.sep)
 			path_split.remove(p)
-		if path_split[-1] == parent_folder_name:
-			basedir = os.sep.join(path_split[:-1])
+		if path_split[-1].lower() == parent_folder_name.lower():
+			basedir = os.path.dirname(basedir)
 		tfexe = self.TUFLOW_exe.displayText().strip()
 		
 		baseexe = os.path.basename(tfexe)
