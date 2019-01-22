@@ -2526,7 +2526,7 @@ class TuBatchPlotExportDialog(QDialog, Ui_BatchPlotExport):
 		self.iface = TuView.iface
 		self.project = TuView.project
 		self.canvas = TuView.canvas
-		folderIcon = QgsApplication.getThemeIcon('\mActionFileOpen.svg')
+		folderIcon = QgsApplication.getThemeIcon('/mActionFileOpen.svg')
 		self.btnBrowse.setIcon(folderIcon)
 		self.populateGISLayers()
 		self.populateNameAttributes()
@@ -2891,7 +2891,7 @@ class TuUserPlotDataImportDialog(QDialog, Ui_UserPlotDataImportDialog):
 		QDialog.__init__(self)
 		self.setupUi(self)
 		self.iface = iface
-		folderIcon = QgsApplication.getThemeIcon('\mActionFileOpen.svg')
+		folderIcon = QgsApplication.getThemeIcon('/mActionFileOpen.svg')
 		self.btnBrowse.setIcon(folderIcon)
 		self.convertDate()
 		self.convertZeroDate()

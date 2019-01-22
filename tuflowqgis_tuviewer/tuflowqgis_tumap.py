@@ -217,11 +217,11 @@ class TuMapDialog(QDialog, Ui_MapDialog):
 	def populateLayoutTab(self):
 		"""Sets up Layout tab"""
 		
-		addIcon = QgsApplication.getThemeIcon('\symbologyAdd.svg')
-		removeIcon = QgsApplication.getThemeIcon('\symbologyRemove.svg')
-		upIcon = QgsApplication.getThemeIcon('\mActionArrowUp.svg')
-		downIcon = QgsApplication.getThemeIcon('\mActionArrowDown.svg')
-		folderIcon = QgsApplication.getThemeIcon('\mActionFileOpen.svg')
+		addIcon = QgsApplication.getThemeIcon('/symbologyAdd.svg')
+		removeIcon = QgsApplication.getThemeIcon('/symbologyRemove.svg')
+		upIcon = QgsApplication.getThemeIcon('/mActionArrowUp.svg')
+		downIcon = QgsApplication.getThemeIcon('/mActionArrowDown.svg')
+		folderIcon = QgsApplication.getThemeIcon('/mActionFileOpen.svg')
 		
 		self.setPageSize()
 		
@@ -243,11 +243,11 @@ class TuMapDialog(QDialog, Ui_MapDialog):
 	def populateExportMapsTab(self):
 		"""Sets up Export Maps tab"""
 		
-		addIcon = QgsApplication.getThemeIcon('\symbologyAdd.svg')
-		removeIcon = QgsApplication.getThemeIcon('\symbologyRemove.svg')
-		upIcon = QgsApplication.getThemeIcon('\mActionArrowUp.svg')
-		downIcon = QgsApplication.getThemeIcon('\mActionArrowDown.svg')
-		folderIcon = QgsApplication.getThemeIcon('\mActionFileOpen.svg')
+		addIcon = QgsApplication.getThemeIcon('/symbologyAdd.svg')
+		removeIcon = QgsApplication.getThemeIcon('/symbologyRemove.svg')
+		upIcon = QgsApplication.getThemeIcon('/mActionArrowUp.svg')
+		downIcon = QgsApplication.getThemeIcon('/mActionArrowDown.svg')
+		folderIcon = QgsApplication.getThemeIcon('/mActionFileOpen.svg')
 		
 		self.btnAddMap.setIcon(addIcon)
 		self.btnRemoveMap.setIcon(removeIcon)
@@ -594,7 +594,7 @@ class TuMapDialog(QDialog, Ui_MapDialog):
 
 		self.tableImages.setRowCount(self.tableImages.rowCount() + 1)
 		
-		folderIcon = QgsApplication.getThemeIcon('\mActionFileOpen.svg')
+		folderIcon = QgsApplication.getThemeIcon('/mActionFileOpen.svg')
 		btnBrowse = QToolButton(self.tableImages)
 		btnBrowse.setIcon(folderIcon)
 		btnBrowse.setToolTip('Image Location')
@@ -713,7 +713,7 @@ class TuMapDialog(QDialog, Ui_MapDialog):
 	           cboTimeTemplate=None, outputWidgetTemplate=None):
 		"""Add map to export list"""
 		
-		folderIcon = QgsApplication.getThemeIcon('\mActionFileOpen.svg')
+		folderIcon = QgsApplication.getThemeIcon('/mActionFileOpen.svg')
 		
 		# Available Results - user can choose a location through file explorer
 		btnBrowseInput = QToolButton(self.tableMaps)

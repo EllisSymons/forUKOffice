@@ -48,8 +48,8 @@ class TuContextMenu():
 		
 		if not update:  # only create menu if not just an update (updates when switching between plot type tabs)
 			self.plotMenu = QMenu(self.tuView)
-		iconRefreshPlot = QIcon(os.path.dirname(os.path.dirname(__file__)) + "\\icons\\RefreshPlotBlack.png")
-		iconClearPlot = QIcon(os.path.dirname(os.path.dirname(__file__)) + "\\icons\\ClearPlot.png")
+		iconRefreshPlot = QIcon(os.path.join(os.path.dirname(os.path.dirname(__file__)), "icons", "RefreshPlotBlack.png"))
+		iconClearPlot = QIcon(os.path.join(os.path.dirname(os.path.dirname(__file__)), "icons" "ClearPlot.png"))
 		
 		self.userPlotDataManager_action = viewToolbar.userPlotDataManagerButton.defaultAction()
 		self.freezeAxisLimits_action = viewToolbar.freezeXYAxisButton.defaultAction()

@@ -93,8 +93,8 @@ class TuMenuBar():
 		if not update:  # only create view menu if not just an update (updates when switching between plot type tabs)
 			self.viewMenu = self.menuBar.addMenu('&View')
 		iconRefresh = QgsApplication.getThemeIcon("/mActionRefresh.svg")
-		iconRefreshPlot = QIcon(os.path.dirname(os.path.dirname(__file__)) + "\\icons\\RefreshPlotBlack.png")
-		iconClearPlot = QIcon(os.path.dirname(os.path.dirname(__file__)) + "\\icons\\ClearPlot.png")
+		iconRefreshPlot = QIcon(os.path.join(os.path.dirname(os.path.dirname(__file__)), "icons", "RefreshPlotBlack.png"))
+		iconClearPlot = QIcon(os.path.join(os.path.dirname(os.path.dirname(__file__)), "icons", "ClearPlot.png"))
 		
 		# view menu items
 		self.freezeAxisLimits_action = viewToolbar.freezeXYAxisButton.defaultAction()
@@ -164,8 +164,8 @@ class TuMenuBar():
 		if not update:  # only create view menu if not just an update (updates when switching between plot type tabs)
 			self.settingsMenu = self.menuBar.addMenu('&Settings')
 		iconOptions = QgsApplication.getThemeIcon("/mActionOptions.svg")
-		iconScalar = QIcon(os.path.dirname(os.path.dirname(__file__)) + "/icons/icon_contours.png")
-		iconVector = QIcon(os.path.dirname(os.path.dirname(__file__)) + "/icons/icon_vectors.png")
+		iconScalar = QIcon(os.path.join(os.path.dirname(os.path.dirname(__file__)), "icons", "icon_contours.png"))
+		iconVector = QIcon(os.path.join(os.path.dirname(os.path.dirname(__file__)), "icons" "icon_vectors.png"))
 		
 		# settings menu items
 		self.userPlotDataManager_action = viewToolbar.userPlotDataManagerButton.defaultAction()
@@ -230,7 +230,7 @@ class TuMenuBar():
 			self.exportMenu = self.menuBar.addMenu('&Export')
 		lineFeatureIcon = QgsApplication.getThemeIcon("/mActionMoveFeatureLine.svg")
 		pointFeatureIcon = QgsApplication.getThemeIcon("/mActionMoveFeaturePoint.svg")
-		iconAnimation = QIcon(os.path.dirname(os.path.dirname(__file__)) + "/icons/icon_video.png")
+		iconAnimation = QIcon(os.path.join(os.path.dirname(os.path.dirname(__file__)), "icons", "icon_video.png"))
 		
 		# export menu items
 		self.exportAsCSV_action = QAction('Export Plot As CSV', self.window)
@@ -302,7 +302,7 @@ class TuMenuBar():
 		
 		helpMenu = self.menuBar.addMenu('&Help')
 		helpIcon = QgsApplication.getThemeIcon('/mActionHelpContents.svg')
-		aboutIcon = QIcon(os.path.dirname(os.path.dirname(__file__)) + "/icons/Flood.ico")
+		aboutIcon = QIcon(os.path.join(os.path.dirname(os.path.dirname(__file__)), "icons", "Flood.ico"))
 		
 		# Help Menu
 		documentation = r'https://wiki.tuflow.com/index.php?title=TuPlot'

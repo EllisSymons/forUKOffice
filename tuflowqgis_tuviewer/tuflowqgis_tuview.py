@@ -33,7 +33,7 @@ class TuView(QDockWidget, Ui_Tuplot):
 		self.project = QgsProject().instance()  # QgsProject
 		self.currentLayer = self.iface.activeLayer()
 		self.doubleClickEvent = False
-		playIcon = QIcon(os.path.dirname(os.path.dirname(__file__)) + "\\icons\\play_button.png")
+		playIcon = QIcon(os.path.join(os.path.dirname(os.path.dirname(__file__)), "icons", "play_button.png"))
 		self.btnTimePlay.setIcon(playIcon)
 		lock2DIcon = QgsApplication.getThemeIcon("/locked.svg")
 		self.btn2dLock.setIcon(lock2DIcon)

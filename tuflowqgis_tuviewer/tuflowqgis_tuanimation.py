@@ -322,7 +322,7 @@ def composition_set_plots(dialog, cfg, time, layout, dir, layout_type, showCurre
 		if properties.cbLegend.isChecked():
 			legend(ax, properties.cboLegendPos.currentIndex())
 		fig.tight_layout()
-		fname = '{0}\\{1}-{2}-{3}.svg'.format(dir, l.name(), plot, time)
+		fname = os.path.join('{0}', '{1}-{2}-{3}.svg'.format(dir, l.name(), plot, time))
 		fig.savefig(fname)
 		layoutcfg['plots'][plot]['source'] = fname
 		
@@ -919,11 +919,11 @@ class TuAnimationDialog(QDialog, Ui_AnimationDialog):
 		:return: void
 		"""
 		
-		addIcon = QgsApplication.getThemeIcon('\symbologyAdd.svg')
-		removeIcon = QgsApplication.getThemeIcon('\symbologyRemove.svg')
-		upIcon = QgsApplication.getThemeIcon('\mActionArrowUp.svg')
-		downIcon = QgsApplication.getThemeIcon('\mActionArrowDown.svg')
-		folderIcon = QgsApplication.getThemeIcon('\mActionFileOpen.svg')
+		addIcon = QgsApplication.getThemeIcon('/symbologyAdd.svg')
+		removeIcon = QgsApplication.getThemeIcon('/symbologyRemove.svg')
+		upIcon = QgsApplication.getThemeIcon('/mActionArrowUp.svg')
+		downIcon = QgsApplication.getThemeIcon('/mActionArrowDown.svg')
+		folderIcon = QgsApplication.getThemeIcon('/mActionFileOpen.svg')
 		
 		self.btnAddPlot.setIcon(addIcon)
 		self.btnRemovePlot.setIcon(removeIcon)
@@ -1083,7 +1083,7 @@ class TuAnimationDialog(QDialog, Ui_AnimationDialog):
 		:return: void
 		"""
 		
-		folderIcon = QgsApplication.getThemeIcon('\mActionFileOpen.svg')
+		folderIcon = QgsApplication.getThemeIcon('/mActionFileOpen.svg')
 		self.btnBrowseFfmpegPath.setIcon(folderIcon)
 		
 		settings = QSettings()
@@ -1410,7 +1410,7 @@ class TuAnimationDialog(QDialog, Ui_AnimationDialog):
 		
 		self.tableImages.setRowCount(self.tableImages.rowCount() + 1)
 		
-		folderIcon = QgsApplication.getThemeIcon('\mActionFileOpen.svg')
+		folderIcon = QgsApplication.getThemeIcon('/mActionFileOpen.svg')
 		btnBrowse = QToolButton(self.tableImages)
 		btnBrowse.setIcon(folderIcon)
 		btnBrowse.setToolTip('Image Location')
