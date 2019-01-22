@@ -93,7 +93,7 @@ class TuMenuBar():
 		if not update:  # only create view menu if not just an update (updates when switching between plot type tabs)
 			self.viewMenu = self.menuBar.addMenu('&View')
 		iconRefresh = QgsApplication.getThemeIcon("/mActionRefresh.svg")
-		iconRefreshPlot = QIcon(os.path.join(os.path.dirname(os.path.dirname(__file__)), "icons", "RefreshPlotBlack.png"))
+		iconRefreshPlot = QIcon(os.path.join(os.path.dirname(os.path.dirname(__file__)), "icons", "refreshplotblack.png"))
 		iconClearPlot = QIcon(os.path.join(os.path.dirname(os.path.dirname(__file__)), "icons", "ClearPlot.png"))
 		
 		# view menu items
