@@ -34,13 +34,14 @@ class ViewToolbar():
 		self.viewToolbar.resize(QSize(250, 30))
 		
 		# icons
-		refreshIcon = QIcon(os.path.dirname(os.path.dirname(__file__)) + "\\icons\\RefreshPlotBlack.png")
-		clearIcon = QIcon(os.path.dirname(os.path.dirname(__file__)) + "\\icons\\ClearPlot.png")
-		freezeXYAxisIcon = QIcon(os.path.dirname(os.path.dirname(__file__)) + "\\icons\\freeze_xyaxis.png")
-		freezeXAxisIcon = QIcon(os.path.dirname(os.path.dirname(__file__)) + "\\icons\\freeze_xaxis.png")
-		freezeYAxisIcon = QIcon(os.path.dirname(os.path.dirname(__file__)) + "\\icons\\freeze_yaxis.png")
-		legendIcon = QIcon(os.path.dirname(os.path.dirname(__file__)) + "\\icons\\legend_icon.png")
-		userPlotDataIcon = QIcon(os.path.dirname(os.path.dirname(__file__)) + "\\icons\\userPlotData.png")
+		dir = os.path.dirname(os.path.dirname(__file__))
+		refreshIcon = QIcon(os.path.join(dir, "icons", "RefreshPlotBlack.png"))
+		clearIcon = QIcon(os.path.join(dir, "icons", "ClearPlot.png"))
+		freezeXYAxisIcon = QIcon(os.path.join(dir, "icons", "freeze_xyaxis.png"))
+		freezeXAxisIcon = QIcon(os.path.join(dir, "icons", "freeze_xaxis.png"))
+		freezeYAxisIcon = QIcon(os.path.join(dir, "icons", "freeze_yaxis.png"))
+		legendIcon = QIcon(os.path.join(dir, "icons", "legend_icon.png"))
+		userPlotDataIcon = QIcon(os.path.join(dir, "icons", "userPlotData.png"))
 		
 		# buttons
 		self.refreshPlotButton = QToolButton(self.viewToolbar)

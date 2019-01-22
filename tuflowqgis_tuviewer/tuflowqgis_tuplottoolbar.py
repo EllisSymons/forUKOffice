@@ -89,12 +89,13 @@ class TuPlotToolbar():
 		self.mapOutputPlotToolbar.resize(QSize(250, 30))
 		
 		# icons
-		tsIcon = QIcon(os.path.dirname(os.path.dirname(__file__)) + "\\icons\\results_2.png")
-		csIcon = QIcon(os.path.dirname(os.path.dirname(__file__)) + "\\icons\\CrossSection_2.png")
-		fluxIcon = QIcon(os.path.dirname(os.path.dirname(__file__)) + "\\icons\\FluxLine.png")
-		fluxSecAxisIcon = QIcon(os.path.dirname(os.path.dirname(__file__)) + "\\icons\\2nd_axis_2.png")
-		cursorTrackingIcon = QIcon(os.path.dirname(os.path.dirname(__file__)) + "\\icons\\live_cursor_tracking.png")
-		meshGridIcon = QIcon(os.path.dirname(os.path.dirname(__file__)) + "\\icons\\meshGrid.png")
+		dir = os.path.dirname(os.path.dirname(__file__))
+		tsIcon = QIcon(os.path.join(dir, "icons", "results_2.png"))
+		csIcon = QIcon(os.path.join(dir, "icons", "CrossSection_2.png"))
+		fluxIcon = QIcon(os.path.join(dir, "icons", "FluxLine.png"))
+		fluxSecAxisIcon = QIcon(os.path.join(dir, "icons", "2nd_axis_2.png"))
+		cursorTrackingIcon = QIcon(os.path.join(dir, "icons", "live_cursor_tracking.png"))
+		meshGridIcon = QIcon(os.path.join(dir, "icons", "meshGrid.png"))
 		
 		# buttons
 		self.plotTSMenu = QMenu('Plot Time Series From Map Output')
