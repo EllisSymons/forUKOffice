@@ -3014,6 +3014,21 @@ def getAllFilePaths(dir):
 			files[file.lower()] = file
 		
 	return files
+
+
+def getOSIndependentFilePath(dir, folders):
+	"""
+	Returns a case sensitive file path from a case insenstive file path. Assumes dir is already correct.
+	
+	:param dir: str full path to working directory
+	:param folders: str or list -> subfolders and file
+	:return: str full case sensitive file path
+	"""
+	
+	if type(folders) is list:
+		folders = os.sep.join(folders)
+		
+	return getPathFromRel(dir, folders)
 	
 
 if __name__ == '__main__':
