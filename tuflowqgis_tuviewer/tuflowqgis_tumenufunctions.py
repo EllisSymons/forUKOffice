@@ -107,6 +107,7 @@ class TuMenuFunctions():
 					alsoOpenGis = QMessageBox.question(self.iface.mainWindow(),
 					                                   "Tuviewer", 'Do you also want to open result GIS layer?',
 					                                   QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel)
+			break  # only need to ask once
 		if alsoOpenGis == QMessageBox.Yes:
 			self.tuView.tuResults.tuResults1D.openGis(inFileNames[0][0])
 		elif alsoOpenGis == QMessageBox.Cancel:

@@ -90,6 +90,7 @@ class TuPlot1D():
 							if len(xdata) != len(ydata):
 								xAll.append([])
 								yAll.append([])
+								labels.append('')
 								continue
 						else:
 							continue
@@ -196,6 +197,11 @@ class TuPlot1D():
 									plotAsPatch.append(True)
 							# else normal X, Y data
 							else:
+								if len(x) != len(y):
+									xAll.append([])
+									yAll.append([])
+									labels.append('')
+									continue
 								xAll.append(x)
 								yAll.append(y)
 								if type == 'Water Level' or type == 'Bed Elevation':  # add 1D to label if name also in 2D results

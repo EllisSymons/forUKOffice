@@ -929,7 +929,7 @@ class TuPlot():
 		types1, types2, typesOrdered = [], [], []
 		data1, data2, dataOrdered = [], [], []
 		label1, label2, labelOrdered = [], [], []
-		
+
 		for i, rtype in enumerate(types):
 			if len(data[i][0]) > 0:
 				if rtype in self.tuView.tuResults.secondaryAxisTypes:

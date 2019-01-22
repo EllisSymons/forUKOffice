@@ -202,7 +202,12 @@ class TuResults():
 				self.activeResultsItems.append(item)
 				self.activeResultsIndexes.append(openResultTypes.model().item2index(item))
 		for item in openResultTypes.model().timeSeriesItem.children():
-			name = item.ds_name
+			nameAppend = ''
+			if item.ds_type == 4 or item.ds_type == 5 or item.ds_type == 6:
+				nameAppend = '_TS'
+			elif item.ds_type == 7:
+				nameAppend = '_LP'
+			name = item.ds_name + nameAppend
 			if name in self.activeResults:
 				self.activeResultsItems.append(item)
 				self.activeResultsIndexes.append(openResultTypes.model().item2index(item))
@@ -455,7 +460,12 @@ class TuResults():
 							self.activeResultsItems.pop(i)
 							break  # there will only be one to remove
 				# finally add clicked result type to generic active lists - applicable regardless of result type
-				self.activeResults.append(item.ds_name)
+				nameAppend = ''
+				if item.ds_type == 4 or item.ds_type == 5 or item.ds_type == 6:
+					nameAppend = '_TS'
+				elif item.ds_type == 7:
+					nameAppend = '_LP'
+				self.activeResults.append(item.ds_name + nameAppend)
 				self.activeResultsTypes.append(item.ds_type)
 				self.activeResultsIndexes.append(resultIndex)
 				self.activeResultsItems.append(item)

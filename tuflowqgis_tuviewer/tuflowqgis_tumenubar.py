@@ -302,7 +302,7 @@ class TuMenuBar():
 		
 		helpMenu = self.menuBar.addMenu('&Help')
 		helpIcon = QgsApplication.getThemeIcon('/mActionHelpContents.svg')
-		aboutIcon = QIcon(os.path.join(os.path.dirname(os.path.dirname(__file__)), "icons", "Flood.ico"))
+		aboutIcon = QIcon(os.path.join(os.path.dirname(os.path.dirname(__file__)), "icons", "tuview.png"))
 		
 		# Help Menu
 		documentation = r'https://wiki.tuflow.com/index.php?title=TuPlot'
