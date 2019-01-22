@@ -35,7 +35,7 @@ class ViewToolbar():
 		
 		# icons
 		dir = os.path.dirname(os.path.dirname(__file__))
-		refreshIcon = QIcon(os.path.join(dir, "icons", "RefreshPlotBlack.png"))
+		refreshIcon = QIcon(os.path.join(dir, "icons", "refreshplotblack.png"))
 		clearIcon = QIcon(os.path.join(dir, "icons", "ClearPlot.png"))
 		freezeXYAxisIcon = QIcon(os.path.join(dir, "icons", "freeze_xyaxis.png"))
 		freezeXAxisIcon = QIcon(os.path.join(dir, "icons", "freeze_xaxis.png"))
