@@ -146,15 +146,20 @@ class TuView(QDockWidget, Ui_Tuplot):
 					if self.tabWidget.currentIndex() == 0:
 						if self.currentLayer.geometryType() == 0:
 							self.OpenResultTypes.model().setEnabled(4)
+							self.tuResults.tuResults1D.activeType = 0
 						elif self.currentLayer.geometryType() == 1:
 							self.OpenResultTypes.model().setEnabled(5)
+							self.tuResults.tuResults1D.activeType = 1
 						elif self.currentLayer.geometryType() == 2:
 							self.OpenResultTypes.model().setEnabled(6)
+							self.tuResults.tuResults1D.activeType = 2
 					elif self.tabWidget.currentIndex() == 1:
 						if self.currentLayer.geometryType() == 1:
 							self.OpenResultTypes.model().setEnabled(7)
+							self.tuResults.tuResults1D.activeType = 1
 						else:
 							self.OpenResultTypes.model().setEnabled(0)  # i.e. none
+							self.tuResults.tuResults1D.activeType = -1
 					if not self.selectionChangeConnected:
 						self.currentLayer.selectionChanged.connect(self.selectionChanged)
 						self.selectionChangeConnected = True
@@ -589,7 +594,7 @@ class TuView(QDockWidget, Ui_Tuplot):
 
 		:return:
 		"""
-		
+
 		# update 1D results class
 		self.tuResults.tuResults1D.updateSelectedResults(self.currentLayer)
 		
