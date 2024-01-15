@@ -11,8 +11,7 @@
 
 TUFLOW Viewer now supports loading and viewing the 2d_bc_tables_check.csv file. Once imported, the boundary feature can be selected from the input GIS layer (e.g. 2d_bc, 2d_sa) and plotted using the Time Series plot and selecting an appropriate result type. The boundary input type requires a unique ID to be able to link the check file with the feature (i.e. HQ boundaries do not work as these are automatically generated and do not use the ID attribute).
 
-Link to TUFLOW Wiki Documentation:
-
+Link to TUFLOW Wiki Documentation:<br>
 [TUFLOW Viewer - Import 2D BC Tables](https://wiki.tuflow.com/TUFLOW_Viewer_-_Import_2D_BC_Tables)
 
 ![import_2d_bc_tables_check](assets/import_2d_bc_tables_check.PNG)
