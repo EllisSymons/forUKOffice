@@ -39,7 +39,7 @@ Flood modeller results can now be shown on cross-section even if they don't inte
 
 #### Support for FEH2022 Rainfall
 
-The FEH2022 rainfall model is now supported in the RefH2 to TUFLW tool.
+The FEH2022 rainfall model is now supported in the RefH2 to TUFLOW tool.
 
 ![refh2_feh2022](assets/refh2_feh2022.PNG)
 
