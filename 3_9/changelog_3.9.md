@@ -9,11 +9,15 @@
 
 #### Viewing Support for 2d_bc_tables_check.csv
 
-TUFLOW Viewer now support loading and viewing the2d_bc_tables_check.csv file.
+TUFLOW Viewer now support loading and viewing the 2d_bc_tables_check.csv file. Once imported, the boundary feature can be selected from the input GIS layer (e.g. 2d_bc, 2d_sa) and plotted using the Time Series plot and selecting an appropriate result type. The boundary input type requires a unique ID (e.g. HQ boundaries do not work as these are automatically generated and do not use the ID attribute).
 
+![import_2d_bc_tables_check](assets/import_2d_bc_tables_check.PNG)
+
+<!--
 <video style="max-width:640px" controls>
   <source src="videos/test.mp4" type="video/mp4">
 </video>
+-->
 
 #### User Defined Time Formatting in Animation Export
 
