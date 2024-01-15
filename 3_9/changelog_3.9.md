@@ -8,7 +8,7 @@
 
 TUFLOW Viewer now support loading and viewing the2d_bc_tables_check.csv file.
 
-<video width="320" height="240" controls>
+<video controls>
   <source src="videos/test.mp4" type="video/mp4">
 </video>
 
