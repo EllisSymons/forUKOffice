@@ -1,5 +1,6 @@
 # Changelog for TUFLOW Plugin v3.9
 
+* TOC
 {:toc}
 
 ## New Features and Enhancements
