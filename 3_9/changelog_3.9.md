@@ -107,3 +107,28 @@ New tool in TUFLOW processing toolbox (very similar to existing import empty).
 
 New tool in TUFLOW processing toolbox (very similar to configure project).
 
+## Bug Fixes
+
+### TUFLOW Viewer
+
+* Time series results are now loaded correctly using 'utf-8' encoding which enables handling of special characters
+* Loading NetCDF Grids will now try and load all selected layers before reporting errors
+* Results with only maximums will now appear in relevant plot menus
+* Fixes loading netCDF raster as mesh
+* XS deactivation was only working when using the MAT approach
+* Loading mesh layers on when TUFLOW Viewer is opened was getting tangled if layers of different types (vector layers / mesh layers) had the same name
+* Fixes flood modeller result cross-sections not loading when X,Y coordinate did not contain a space between them in DAT file
+* Fixes animations with embedded plots not working in QGIS 3.30
+* Fixes bug introduced in 3.8.2 that prevented NetCDF grid results from being loaded (produced python error about missing 'events' argument)
+
+### Other
+
+* TUFLOW Utilities - Fixes bug in asc_to_asc brkline tool where the vector layer was being passed into the utility instead of the raster layer
+* TUFLOW Utilities - Fixes bug where no 'browse' buttons were working
+* TUFLOW Utilities - Downloader was hanging indefinitely due to a python error on a separate thread in QGIS 3.32 (caused by new numpy version)
+* Configure Project - Fixes bug that would not correctly save empty file location for TUFLOW FV
+* TUFLOW Styling - Fixes default styling for sac_check_R
+* TUFLOW Styling - ISIS 1d_nwk layers are now given a single styling previously would cause python error because they are not guaranteed to have the standard 1d_nwk fields
+* Convert Model GIS Format - Fixes bug that cause new filepaths to be incorrect when convert filename that were only a number (e.g. 001.tgc)
+* Load from TCF - fixes bug that would not load layers if brackets were included in file path
+* Load from TCF - fixes issue that would cause a python error if there was a '|' at the end of a GIS input command
