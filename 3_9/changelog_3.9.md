@@ -8,7 +8,9 @@
 
 TUFLOW Viewer now support loading and viewing the2d_bc_tables_check.csv file.
 
-https://github.com/EllisSymons/forUKOffice/assets/32606860/edcf1689-9296-4f79-90db-e54f9d595b33
+<video width="320" height="240" controls>
+  <source src="videos/test.mp4" type="video/mp4">
+</video>
 
 #### Animation Export Now Supports User Defined Time Formatting
 
