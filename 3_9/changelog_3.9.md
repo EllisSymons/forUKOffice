@@ -24,7 +24,10 @@ Link to TUFLOW Wiki Documentation:<br>
 
 #### User Defined Time Formatting in Animation Export
 
-The animation export now supports user defined time formatting.
+The animation export now supports user defined time formatting for the time label. The format follows the Python time formatting convention as described at the following link:<br>
+[https://docs.python.org/3/library/datetime.html#strftime-and-strptime-format-codes](https://docs.python.org/3/library/datetime.html#strftime-and-strptime-format-codes)
+
+![animation_time_formatting](assets/animation_time_formatting.PNG)
 
 #### Flood Modeller Result Shown on Cross-Sections With the Same Name
 
