@@ -3,6 +3,4 @@ markdown            : kramdown
 
 # Markdown Processors
 kramdown:
-  auto_ids          : true
-  entity_output     : as_char
   toc_levels        : [2, 3]
