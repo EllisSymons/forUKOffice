@@ -6,4 +6,4 @@ Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum quis molesti
 
 ## Something Else
 
-Nam accumsan, purus eu suscipit ullamcorper, dui elit pharetra mi, in consequat dui nisi quis sapien. Morbi porta a sapien a faucibus. In fringilla dictum arcu ut finibus. Fusce elementum bibendum ipsum. Sed vitae ornare erat, non pellentesque nisi. Suspendisse vestibulum vehicula auctor. Proin porttitor vestibulum lacus, ut volutpat odio fermentum id. Cras sed pellentesque lorem, imperdiet pulvinar purus. Sed vitae neque nunc. Curabitur dapibus consectetur turpis, sed cursus ipsum imperdiet in. 
+[Linked File](linked_file.md) Nam accumsan, purus eu suscipit ullamcorper, dui elit pharetra mi, in consequat dui nisi quis sapien. Morbi porta a sapien a faucibus. In fringilla dictum arcu ut finibus. Fusce elementum bibendum ipsum. Sed vitae ornare erat, non pellentesque nisi. Suspendisse vestibulum vehicula auctor. Proin porttitor vestibulum lacus, ut volutpat odio fermentum id. Cras sed pellentesque lorem, imperdiet pulvinar purus. Sed vitae neque nunc. Curabitur dapibus consectetur turpis, sed cursus ipsum imperdiet in. 
