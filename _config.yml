@@ -1,3 +1,8 @@
-markdown: kramdown
+# Conversion
+markdown            : kramdown
 
-toc_levels: 2,3
+# Markdown Processors
+kramdown:
+  auto_ids          : true
+  entity_output     : as_char
+  toc_levels        : [2, 3]
