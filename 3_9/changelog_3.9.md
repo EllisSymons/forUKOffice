@@ -31,7 +31,9 @@ The animation export now supports user defined time formatting for the time labe
 
 #### Flood Modeller Result Shown on Cross-Sections With the Same Name
 
-Flood modeller results can now be shown on cross-section even if they don't intersect the PLOT_P points if they have the same name.
+Flood modeller results can now be shown on cross-section even if they don't intersect the created PLOT_P points if they have the same name as a result node (within PLOT_P layer).
+
+![fm_cross_section_with_result](assets/fm_cross_section_with_result.PNG)
 
 ### ReFH2 to TUFLOW
 
