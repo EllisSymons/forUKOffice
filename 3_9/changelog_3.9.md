@@ -41,7 +41,7 @@ Flood modeller results can now be shown on cross-section even if they don't inte
 
 Rainfall model FEH2022 now supported in tool.
 
-![refh2_feh2022](assetes/refh2_feh2022.PNG)
+![refh2_feh2022](assets/refh2_feh2022.PNG)
 
 ### TUFLOW Plugin Downloader
 
