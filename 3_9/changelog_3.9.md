@@ -131,4 +131,4 @@ New tool in TUFLOW processing toolbox (very similar to configure project).
 * TUFLOW Styling - ISIS 1d_nwk layers are now given a single styling previously would cause python error because they are not guaranteed to have the standard 1d_nwk fields
 * Convert Model GIS Format - Fixes bug that cause new filepaths to be incorrect when convert filename that were only a number (e.g. 001.tgc)
 * Load from TCF - fixes bug that would not load layers if brackets were included in file path
-* Load from TCF - fixes issue that would cause a python error if there was a '|' at the end of a GIS input command
+* Load from TCF - fixes issue that would cause a python error if there was a '\|' at the end of a GIS input command
