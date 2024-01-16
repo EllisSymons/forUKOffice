@@ -55,7 +55,9 @@ Adds button to the finish dialog that will copy the download path to the clipboa
 
 #### Missing Empty Types Added for Tooltips
 
-Adds new/missing empty types to the empty tooltips (2d_bg, 1d_bg, 1d_lc)
+Adds new/missing empty types to the empty tooltips (2d_bg, 1d_bg, 1d_lc).
+
+![missing_empty_type_tooltips](assets/missing_empty_type_tooltips.PNG)
 
 ### TUFLOW Context Menu - Layers Panel
 
