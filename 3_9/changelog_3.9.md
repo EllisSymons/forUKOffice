@@ -31,7 +31,7 @@ The animation export now supports user defined time formatting for the time labe
 
 #### Flood Modeller Result Shown on Cross-Sections With the Same Name
 
-Flood modeller results can now be shown on cross-section even if they don't intersect the created PLOT_P points if they have the same name as a result node (within PLOT_P layer).
+Flood modeller results can now be shown on cross-section even if they don't intersect the created PLOT_P points if they have the same name as a result node.
 
 ![fm_cross_section_with_result](assets/fm_cross_section_with_result.PNG)
 
@@ -45,9 +45,11 @@ The FEH2022 rainfall model is now supported in the RefH2 to TUFLOW tool.
 
 ### TUFLOW Plugin Downloader
 
-#### Copy Download Path to Clipboard
+#### Copy Path to Clipboard Button
 
-Adds button to copy the download path to the clipboard.
+Adds button to the finish dialog that will copy the download path to the clipboard (so that it can easily be pasted into the "Install from ZIP" plugin installation option).
+
+![copy_download_path_button](assets/copy_download_path_button.PNG)
 
 ### Import Empty
 
