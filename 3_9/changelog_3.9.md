@@ -65,6 +65,8 @@ Adds a "TUFLOW" context menu when a layer is right-clicked in the Layers Panel. 
 
 ![tuflow_context_menu](assets/tuflow_context_menu.PNG)
 
+The tools below have been added to the context menu options.
+
 #### Increment Layer (Layer Context Menu)
 
 Adds a new increment layer tool to the layer context menu. Similar to the existing increment layer tool however the dialog will be different depending on the option selected in the context menu. By adding context to the dialog, the available options in the increment tool can be limited and the dialog will be far less complicated and busy.
@@ -82,6 +84,8 @@ And the resulting dialog will be dependent on the selected option.
 #### Filter Messages by ID
 
 Adds Filter Message by ID to TUFLOW context menu for messages_P layers.
+
+![filter_msgs_by_id](assets/filter_msgs_by_id.PNG)
 
 #### Copy TUFLOW Command
 
