@@ -133,7 +133,9 @@ _ccA_L result file now has default styling.
 
 #### Support for LIMB Data
 
-LIMB data will now be processed if available
+Option add to process and use LIMB data will if available.
+
+![arr_limb_data](assets/arr_limb_data.PNG)
 
 #### Remove Longitude Limit
 
