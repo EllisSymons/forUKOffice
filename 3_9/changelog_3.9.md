@@ -61,7 +61,9 @@ Adds new/missing empty types to the empty tooltips (2d_bg, 1d_bg, 1d_lc).
 
 ### TUFLOW Context Menu - Layers Panel
 
-Adds TUFLOW context menu when a layer is right-clicked in the Layers Panel
+Adds a "TUFLOW" context menu when a layer is right-clicked in the Layers Panel. The provided options are dependent on the selected layer (e.g. if it is a SHP or GPKG, or some layers get extra commands like the messages_P output).
+
+![tuflow_context_menu](assets/tuflow_context_menu.PNG)
 
 #### Increment Layer (Layer Context Menu)
 
