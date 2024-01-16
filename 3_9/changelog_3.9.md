@@ -159,7 +159,9 @@ A new version of the import empty tool has been added to the TUFLOW processing t
 
 #### Create Project (Processing Toolbox)
 
-New tool in TUFLOW processing toolbox (very similar to configure project).
+A new version of the Create TUFLOW Project tool has been added to the TUFLOW processing toolbox. This has been done as this is probably the correct location for this tool and also allows a spring clean to remote legacy code and backward compatibility to old QGIS versions.
+
+![create_project_toolbox](assets/create_project_toolbox.PNG)
 
 ## Bug Fixes
 
