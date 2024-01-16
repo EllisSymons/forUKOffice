@@ -153,7 +153,9 @@ Adds user check when overwriting an existing layer in a GPKG.
 
 #### Import Empty (Processing Toolbox)
 
-New tool in TUFLOW processing toolbox (very similar to existing import empty).
+A new version of the import empty tool has been added to the TUFLOW processing toolbox. This has been done as this is probably the correct location for the import empty tool and also allows a spring clean to remove legacy code and backward compatibility to old QGIS versions.
+
+![import_empty_toolbox](assets/import_empty_toolbox.PNG)
 
 #### Create Project (Processing Toolbox)
 
