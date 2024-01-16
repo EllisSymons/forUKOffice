@@ -3,13 +3,6 @@
 * TOC
 {:toc}
 
-<nav>
-  <ol>
-  <li><a href="../">Visual Changelogs</a></li>
-  <li><a href="">Changelog for TUFLOW Plugin v3.9</a></li>
-  </ol>
-</nav>
-
 <!--
 <video style="max-width:640px" controls>
   <source src="videos/test.mp4" type="video/mp4">
