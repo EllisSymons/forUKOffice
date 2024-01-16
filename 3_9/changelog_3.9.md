@@ -14,7 +14,7 @@
 ### TUFLOW Viewer
 
 #### Support for 2d_bc_tables_check.csv
-{: .fs-4 : .fw-500}
+{: .fs-3 : .fw-700}
 
 TUFLOW Viewer now supports loading and viewing the 2d_bc_tables_check.csv file. Once imported, the boundary feature can be selected from the input GIS layer (e.g. 2d_bc, 2d_sa) and plotted using the Time Series plot and selecting an appropriate result type. The boundary input type requires a unique ID to be able to link the check file with the feature (i.e. HQ boundaries do not work as these are automatically generated and do not use the ID attribute).
 
@@ -24,7 +24,7 @@ Link to TUFLOW Wiki Documentation:<br>
 ![import_2d_bc_tables_check](assets/import_2d_bc_tables_check.PNG)
 
 #### User Defined Time Formatting in Animation Export
-{: .fs-4 : .fw-500}
+{: .fs-3 : .fw-700}
 
 The animation export now supports user defined time formatting for the time label. The format follows the Python time formatting convention as described at the following link:<br>
 [https://docs.python.org/3/library/datetime.html#strftime-and-strptime-format-codes](https://docs.python.org/3/library/datetime.html#strftime-and-strptime-format-codes)
@@ -32,7 +32,7 @@ The animation export now supports user defined time formatting for the time labe
 ![animation_time_formatting](assets/animation_time_formatting.PNG)
 
 #### Flood Modeller Result Shown on Cross-Sections With the Same Name
-{: .fs-4 : .fw-500}
+{: .fs-3 : .fw-700}
 
 Flood modeller results can now be shown on cross-section even if they don't intersect the created PLOT_P points if they have the same name as a result node.
 
@@ -41,7 +41,7 @@ Flood modeller results can now be shown on cross-section even if they don't inte
 ### ReFH2 to TUFLOW
 
 #### Support for FEH2022 Rainfall
-{: .fs-4 : .fw-500}
+{: .fs-3 : .fw-700}
 
 The FEH2022 rainfall model is now supported in the RefH2 to TUFLOW tool.
 
@@ -50,7 +50,7 @@ The FEH2022 rainfall model is now supported in the RefH2 to TUFLOW tool.
 ### TUFLOW Plugin Downloader
 
 #### Copy Path to Clipboard Button
-{: .fs-4 : .fw-500}
+{: .fs-3 : .fw-700}
 
 Adds button to the finish dialog that will copy the download path to the clipboard (so that it can easily be pasted into the "Install from ZIP" plugin installation option).
 
@@ -59,7 +59,7 @@ Adds button to the finish dialog that will copy the download path to the clipboa
 ### Import Empty
 
 #### Missing Empty Types Added for Tooltips
-{: .fs-4 : .fw-500}
+{: .fs-3 : .fw-700}
 
 Adds new/missing empty types to the empty tooltips (2d_bg, 1d_bg, 1d_lc).
 
