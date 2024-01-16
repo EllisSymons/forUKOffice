@@ -3,6 +3,12 @@
 * TOC
 {:toc}
 
+<!--
+<video style="max-width:640px" controls>
+  <source src="videos/test.mp4" type="video/mp4">
+</video>
+-->
+
 ## New Features and Enhancements
 
 ### TUFLOW Viewer
@@ -15,12 +21,6 @@ Link to TUFLOW Wiki Documentation:<br>
 [TUFLOW Viewer - Import 2D BC Tables](https://wiki.tuflow.com/TUFLOW_Viewer_-_Import_2D_BC_Tables)
 
 ![import_2d_bc_tables_check](assets/import_2d_bc_tables_check.PNG)
-
-<!--
-<video style="max-width:640px" controls>
-  <source src="videos/test.mp4" type="video/mp4">
-</video>
--->
 
 #### User Defined Time Formatting in Animation Export
 
@@ -83,13 +83,19 @@ And the resulting dialog will be dependent on the selected option.
 
 #### Filter Messages by ID
 
-Adds Filter Message by ID to TUFLOW context menu for messages_P layers.
+Adds Filter Message by ID to the TUFLOW context menu for messages_P layers.
 
 ![filter_msgs_by_id](assets/filter_msgs_by_id.PNG)
 
 #### Copy TUFLOW Command
 
-Adds 'Copy TUFLOW Command' tool to TUFLOW context menu.
+Adds 'Copy TUFLOW Command' tool to TUFLOW context menu. This tool will create a TUFLOW command based on the GIS layer name. From the layer name, the command and control file it belongs in will be inferred. The tool will do a search for the control file within the directory structure (based on the GIS file location), otherwise if the control file is not found, the standard location of the control file will be used.
+
+Multiple layers can be selected at once. If applicable, the command will be combined to a single line (e.g. for 2d_zsh) else separate commands will be created with line breaks.
+
+<video style="max-width:640px" controls>
+  <source src="videos/copy_tuflow_command.mp4" type="video/mp4">
+</video>
 
 ### TUFLOW Utilities
 
