@@ -125,7 +125,9 @@ GPKG rasters now supported.
 
 #### Support ccA_L Result File
 
-_ccA_L result file now has default styling
+_ccA_L result file now has default styling.
+
+![cca_L_styling](assets/cca_L_styling.PNG)
 
 ### ARR to TUFLOW
 
