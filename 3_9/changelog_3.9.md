@@ -67,7 +67,17 @@ Adds a "TUFLOW" context menu when a layer is right-clicked in the Layers Panel. 
 
 #### Increment Layer (Layer Context Menu)
 
-New tool in layer context menu (new tools but similar to existing import empty tool).
+Adds a new increment layer tool to the layer context menu. Similar to the existing increment layer tool however the dialog will be different depending on the option selected in the context menu. By adding context to the dialog, the available options in the increment tool can be limited and the dialog will be far less complicated and busy.
+
+E.g. depending on the format, the options will be:
+
+* SHP option - Increment File
+* GPKG option - Increment Layer and Database (create a new GPKG to increment layers into)
+* GPKG option - Increment Layer (increment layer inside the existing GPKG)
+
+And the resulting dialog will be dependent on the selected option.
+
+![increment_file](assets/increment_file.PNG)
 
 #### Filter Messages by ID
 
