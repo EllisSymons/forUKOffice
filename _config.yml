@@ -6,7 +6,6 @@ remote_theme        : just-the-docs/just-the-docs
 
 # custom theme settings
 color_scheme        : custom
-topography          : custom_topography
 
 # Markdown Processors
 kramdown:
