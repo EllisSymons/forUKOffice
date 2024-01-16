@@ -101,7 +101,9 @@ Multiple layers can be selected at once. If applicable, the command will be comb
 
 #### GPKG Raster Support
 
-GPKG rasters now supported when adding opened layers
+GPKG rasters now available and supported in the relevant 'Common Functions' drop down boxes.
+
+![gpkg_raster_utilities_dialog](assets/gpkg_raster_utilities_dialog.PNG)
 
 ### Load Layers From TCF
 
