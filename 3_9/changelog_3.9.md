@@ -1,6 +1,6 @@
 ---
 layout: default
-title: Changelog for TUFLOW Plugin v3.9
+title: Changelog for v3.9
 parent: Visual Changelogs
 nav_order: 2
 ---
