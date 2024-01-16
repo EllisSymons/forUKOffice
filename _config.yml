@@ -1,7 +1,11 @@
 # Conversion
 markdown            : kramdown
 
+# theme
 remote_theme        : just-the-docs/just-the-docs
+
+# custom theme settings
+color_scheme        : custom
 
 # Markdown Processors
 kramdown:
