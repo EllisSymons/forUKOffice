@@ -3,7 +3,7 @@
 * TOC
 {:toc}
 
-<a href="../index.md">home</a>
+<a href="../index">home</a>
 
 <!--
 <video style="max-width:640px" controls>
