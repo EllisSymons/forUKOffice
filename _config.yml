@@ -1,6 +1,8 @@
 # Conversion
 markdown            : kramdown
 
+remote_theme        : just-the-docs/just-the-docs
+
 # Markdown Processors
 kramdown:
   toc_levels        : [2, 3]
