@@ -94,7 +94,7 @@ Adds 'Copy TUFLOW Command' tool to TUFLOW context menu. This tool will create a 
 Multiple layers can be selected at once. If applicable, the command will be combined to a single line (e.g. for 2d_zsh) else separate commands will be created with line breaks.
 
 <video style="max-width:640px" controls>
-  <source src="videos/copy_tuflow_command.mp4" type="video/mp4">
+  <source src="assets/copy_tuflow_command.mp4" type="video/mp4">
 </video>
 
 ### TUFLOW Utilities
