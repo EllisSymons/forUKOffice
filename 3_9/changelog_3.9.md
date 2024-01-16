@@ -103,7 +103,8 @@ Adds Filter Message by ID to the TUFLOW context menu for messages_P layers.
 
 ![filter_msgs_by_id](assets/filter_msgs_by_id.PNG)
 
-#### Copy TUFLOW Command
+##### Copy TUFLOW Command
+{: .fs-4 : .fw-500}
 
 Adds 'Copy TUFLOW Command' tool to TUFLOW context menu. This tool will create a TUFLOW command based on the GIS layer name. From the layer name, the command and control file it belongs in will be inferred. The tool will do a search for the control file within the directory structure (based on the GIS file location), otherwise if the control file is not found, the standard location of the control file will be used.
 
@@ -115,7 +116,8 @@ Multiple layers can be selected at once. If applicable, the command will be comb
 
 ### TUFLOW Utilities
 
-#### GPKG Raster Support
+##### GPKG Raster Support
+{: .fs-4 : .fw-500}
 
 GPKG rasters now available and supported in the relevant 'Common Functions' drop down boxes.
 
@@ -123,7 +125,8 @@ GPKG rasters now available and supported in the relevant 'Common Functions' drop
 
 ### Load Layers From TCF
 
-#### Support for Old Auto Estry Command
+##### Support for Old Auto Estry Command
+{: .fs-4 : .fw-500}
 
 Older style 'ESTRY Control File AUTO' syntax now supported (previously only 'ESTRY Control File == AUTO' worked).
 
@@ -131,7 +134,8 @@ Older style 'ESTRY Control File AUTO' syntax now supported (previously only 'EST
 
 ### Apply GPKG Layer Names
 
-#### Support for GPKG Rasters
+##### Support for GPKG Rasters
+{: .fs-4 : .fw-500}
 
 GPKG rasters now supported.
 
@@ -139,7 +143,8 @@ GPKG rasters now supported.
 
 ### TUFLOW Layer Styling
 
-#### Support ccA_L Result File
+##### Support ccA_L Result File
+{: .fs-4 : .fw-500}
 
 _ccA_L result file now has default styling.
 
@@ -147,19 +152,22 @@ _ccA_L result file now has default styling.
 
 ### ARR to TUFLOW
 
-#### Support for LIMB Data
+##### Support for LIMB Data
+{: .fs-4 : .fw-500}
 
 Option add to process and use LIMB data will if available.
 
 ![arr_limb_data](assets/arr_limb_data.PNG)
 
-#### Remove Longitude Limit
+##### Remove Longitude Limit
+{: .fs-4 : .fw-500}
 
 Removes longitude limit (>153.2999). Previously this limit was in place as data was missing beyond this point.
 
 ### Increment Layer
 
-#### User Check Before Overwriting Existing Layers
+##### User Check Before Overwriting Existing Layers
+{: .fs-4 : .fw-500}
 
 Adds user check when overwriting an existing layer in a GPKG.
 
@@ -167,13 +175,15 @@ Adds user check when overwriting an existing layer in a GPKG.
 
 ### Processing Toolbox
 
-#### Import Empty (Processing Toolbox)
+##### Import Empty (Processing Toolbox)
+{: .fs-4 : .fw-500}
 
 A new version of the import empty tool has been added to the TUFLOW processing toolbox. This has been done as this is probably the correct location for the import empty tool and also allows a spring clean to remove legacy code and backward compatibility to old QGIS versions.
 
 ![import_empty_toolbox](assets/import_empty_toolbox.PNG)
 
-#### Create Project (Processing Toolbox)
+##### Create Project (Processing Toolbox)
+{: .fs-4 : .fw-500}
 
 A new version of the Create TUFLOW Project tool has been added to the TUFLOW processing toolbox. This has been done as this is probably the correct location for this tool and also allows a spring clean to remote legacy code and backward compatibility to old QGIS versions.
 
