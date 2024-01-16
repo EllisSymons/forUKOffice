@@ -147,6 +147,8 @@ Removes longitude limit (>153.2999). Previously this limit was in place as data 
 
 Adds user check when overwriting an existing layer in a GPKG.
 
+![increment_layer_confirmation_dlg](assets/increment_layer_confirmation_dlg.PNG)
+
 ### Processing Toolbox
 
 #### Import Empty (Processing Toolbox)
