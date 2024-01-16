@@ -9,4 +9,4 @@ child_nav_order: reversed
 
 # Visual Changelogs
 
-Below you will find the Visual Changelogs since version 3.9.
+Below you will find the Visual Changelogs for the QGIS TUFLOW plugin since version 3.9.
