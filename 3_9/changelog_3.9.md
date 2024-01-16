@@ -81,7 +81,7 @@ Adds a "TUFLOW" context menu when a layer is right-clicked in the Layers Panel. 
 
 The tools below have been added to the context menu options.
 
-##### Increment Layer (Layer Context Menu)
+##### Increment Layer
 {: .fs-4 : .fw-500}
 
 Adds a new increment layer tool to the layer context menu. Similar to the existing increment layer tool however the dialog will be different depending on the option selected in the context menu. By adding context to the dialog, the available options in the increment tool can be limited and the dialog will be far less complicated and busy.
