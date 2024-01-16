@@ -3,6 +3,8 @@
 * TOC
 {:toc}
 
+<a href="../index.md">home</a>
+
 <!--
 <video style="max-width:640px" controls>
   <source src="videos/test.mp4" type="video/mp4">
