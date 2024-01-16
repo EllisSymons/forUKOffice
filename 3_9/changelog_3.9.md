@@ -139,7 +139,7 @@ Option add to process and use LIMB data will if available.
 
 #### Remove Longitude Limit
 
-Removes longitude limit (>153.2999)
+Removes longitude limit (>153.2999). Previously this limit was in place as data was missing beyond this point.
 
 ### Increment Layer
 
