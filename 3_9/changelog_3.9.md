@@ -109,13 +109,17 @@ GPKG rasters now available and supported in the relevant 'Common Functions' drop
 
 #### Support for Old Auto Estry Command
 
-Older style 'ESTRY CONTROL FILE AUTO' syntax now supported.
+Older style 'ESTRY Control File AUTO' syntax now supported (previously only 'ESTRY Control File == AUTO' worked).
+
+![estry_file_auto](assets/estry_file_auto.PNG)
 
 ### Apply GPKG Layer Names
 
 #### Support for GPKG Rasters
 
 GPKG rasters now supported.
+
+![gpkg_raster_apply_name](assets/gpkg_raster_apply_name.PNG)
 
 ### TUFLOW Layer Styling
 
