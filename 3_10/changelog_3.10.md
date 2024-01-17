@@ -24,6 +24,18 @@ nav_order: 3
 ##### Support for TUFLOW-SWMM Results
 {: .fs-4 : .fw-700}
 
+Support for the new GPKG time-series output format (_swmm_ts.gpkg) has been added and can be loaded via:
+
+* Load Results *(via the TLF or TCF)*
+* Load Results - Time Series
+
+For more information on the format please visit the TUFLOW Wiki:
+[TUFLOW Viewer - GPKG_Time_Series_Format](https://wiki.tuflow.com/TUFLOW_Viewer#GPKG_Time_Series_Format)
+
+<video style="max-width:640px" controls>
+  <source src="assets/swmm_gpkg_ts.mp4" type="video/mp4">
+</video>
+
 ##### Support for NetCDF Rasters in Animation Tool
 {: .fs-4 : .fw-700}
 
