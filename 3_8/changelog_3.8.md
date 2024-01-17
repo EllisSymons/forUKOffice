@@ -55,7 +55,7 @@ Axis labels have been added for 1D hydraulic table plotting.
 ##### Adds Option to Flip Secondary Axis
 {: .fs-4 : .fw-700}
 
-The option to flip which axis has the secondary axis applied has been added to the plot context menu.
+The option to flip which axis has the secondary axis applied has been added to the plot context menu (i.e. the secondary axis can be either for the x-axis or y-axis).
 
 ![flipped_axis](assets/flipped_axis.PNG)
 
