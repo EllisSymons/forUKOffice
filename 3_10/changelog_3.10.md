@@ -101,6 +101,10 @@ A toolbox containing a number of tools for TUFLOW-SWMM model building has been a
 ##### MiTools
 {: .fs-4 : .fw-700}
 
+A toolbox containing a number of ported MiTools has been added.
+
+![mitools_toolbox](assets/mitools_toolbox.PNG)
+
 ##### Create TUFLOW Project Missing Commands
 {: .fs-4 : .fw-700}
 
