@@ -2,7 +2,7 @@
 layout: default
 title: Changelog for v3.9
 parent: Visual Changelogs
-nav_order: 2
+nav_order: 4
 ---
 
 
@@ -13,7 +13,7 @@ nav_order: 2
 
 <!--
 <video style="max-width:640px" controls>
-  <source src="videos/test.mp4" type="video/mp4">
+  <source src="assets/test.mp4" type="video/mp4">
 </video>
 -->
 

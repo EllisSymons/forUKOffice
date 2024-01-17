@@ -2,7 +2,7 @@
 layout: default
 title: Changelog for v3.10
 parent: Visual Changelogs
-nav_order: 3
+nav_order: 5
 ---
 
 
