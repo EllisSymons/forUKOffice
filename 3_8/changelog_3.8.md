@@ -182,7 +182,7 @@ The dialog will no longer close if an error occurs while running the Configure T
 * 1D Integrity Tool - Fixes spelling mistake in Continuity Tool description
 * Import Empty - Fixes bug that would cause 'convert to database' always to be checked when QGIS is first opened - now correctly remembers previous setting between sessions
 * Increment Layer Tool - Fixes bug that would update a layer's name in layer panel but not the data source if an incremented layer had duplicates in the project
-* Increment Layer Tool - Fixes bug that would display "|layername=" for shp files after using 'import from tcf' tool
+* Increment Layer Tool - Fixes bug that would display "\|layername=" for shp files after using 'import from tcf' tool
 * Convert TUFLOW Model GIS Format - Fixes bug that would not correctly convert TCF commands prefixed with '1D'
 * Convert TUFLOW Model GIS Format - Fixes a bug that would cause the tool to not bring in all layers if a scenario name had a decimal point in the name (e.g. If Scenario == 2.5m)
 * Configure Project - Fixes bug that would not cancel tool after user cancel request
