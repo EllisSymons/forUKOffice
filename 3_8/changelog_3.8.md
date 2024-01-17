@@ -80,7 +80,7 @@ The result name is added to the exported filename for batch export cross-section
 
 ![batch_export_cross_section](assets/batch_export_cross_section.png)
 
-##### Support Changing Reference Time for NetCDF Raster Results
+##### Support For Changing the Reference Time for NetCDF Raster Results
 {: .fs-4 : .fw-700}
 
 Support has been added to change the reference time for NetCDF rasters. Results must be loaded via **Load Results - NetCDF Grid**.
