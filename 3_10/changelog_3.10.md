@@ -49,6 +49,13 @@ Load Results - NetCDF Grid
 ##### New Option to Copy Results Before Loading
 {: .fs-4 : .fw-700}
 
+The option to create a temporary copy of the results before loading them has been added. This negates the issue of locked result files while trying to view results while TUFLOW is running. This is applicable for XMDF, DAT, and NetCDF results.
+
+For more information, please visit the following TUFLOW wiki page:<br>
+[TUFLOW Viewer - Loading Results While TUFLOW is Running](https://wiki.tuflow.com/TUFLOW_Viewer_-_Loading_Results_While_TUFLOW_is_Running)
+
+![copy_results](assets/copy_results.PNG)
+
 ##### Selecting 1D Nodes Does No Longer Affects 1D Long Sections
 {: .fs-4 : .fw-700}
 
