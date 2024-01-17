@@ -18,10 +18,107 @@ nav_order: 1
 
 ## New Features and Enhancements
 
+### General
+
+Removes most `sys.path.append` calls so that the TUFLOW Plugin doesn't get tangled with other plugins or python packages.
+
 ### TUFLOW Viewer
+
+##### Support for Saving Default Vector Styles for Streamlines and Flow Traces
+{: .fs-4 : .fw-700}
+
+##### TUFLOW FV NetCDF Output Renders Velocity Maximums
+{: .fs-4 : .fw-700}
+
+##### Adds Axis Labels for 1D Hydraulic Tables
+{: .fs-4 : .fw-700}
+
+##### Adds Optin to Flip Secondary Axis
+{: .fs-4 : .fw-700}
+
+##### Adds (xs) and (nwk) to Hydraulic Table Result Types
+{: .fs-4 : .fw-700}
+
+##### Animation Default Format Changed to MP4
+{: .fs-4 : .fw-700}
+
+##### Better Error Handling for FFMPEG Downloader
+{: .fs-4 : .fw-700}
+
+##### Adds Result Name to Filename for Cross-Section Batch Plot Exporter
+{: .fs-4 : .fw-700}
+
+##### Support Changing Reference Time for NetCDF Raster Results
+{: .fs-4 : .fw-700}
+
+##### Better Error Handling for FFMPEG Downloader
+{: .fs-4 : .fw-700}
+
+##### Open Result Widget Communicates with Layers Panel Visibility
+{: .fs-4 : .fw-700}
+
+### Load Layers from TCF
+
+##### Better Error Handling
+{: .fs-4 : .fw-700}
+
+##### Better at Handling Encoding Errors
+{: .fs-4 : .fw-700}
+
+### TUFLOW Layer Styling
+
+##### Adds Missing Layer Styling
+{: .fs-4 : .fw-700}
+
+### TUFLOW Utilities
+
+##### Adds Breakline Function to Common Functions
+{: .fs-4 : .fw-700}
+
+##### Adds ASC_to_ASC Version Number
+{: .fs-4 : .fw-700}
+
+##### Adds New Output Format Options to ASC_to_ASC Dialog
+{: .fs-4 : .fw-700}
+
+### Increment Layer
+
+##### Adds New GPKG Option to Save Superseded Version Out
+{: .fs-4 : .fw-700}
+
+### Configure Project
+
+##### Dialog Will No Longer Close on Error
+{: .fs-4 : .fw-700}
 
 ## Bug Fixes
 
 ### TUFLOW Viewer
 
+* Load results from TCF - Handles encoding errors
+* Fixes 1D xs viewing when using a GPKG layer
+* No longer recognised 1d_bc as a 1d_tab type
+* Fixes Minimum dt display in QGIS 3.30 - now should correctly display as only one result type
+* Fixes bug that would not load 1D results correctly on project load
+* Fixes bug that could retain feature selection in layers that were removed or otherwise deselected
+* Fixes a bug with plotting 1D cross-sections that would cause them to be plotted even though the 'XZ' type was not selected
+* Fixes a bug with plotting 1D cross-sections that would stop them from being plotted after switching to a different plotting tab then coming back to the cross-section plotting tab
+* Fixes a bug that would not plot cross-section hydraulic tables if the 1d_xs and source CSV were in different folders
+* Fixes a bug that could cause switching between results to be really slow if multiple 1D results were loaded at the same time
+* NetCDF grids are now correctly saved / loaded in qgis project
+* Fixes 'Move down' option when there are only 2 results open
+* Fixes python error that could occur if selecting channel results when another open result only contains 2D PO results
+* Fixes grammatical error in batch export map tool successful message box
+* Fixes python error that could occur when batch exporting plots when data was of different lengths
+
 ### Other
+
+* Correctly unloads a few tools so that plugin can be upgraded/removed properly
+* 1D Integrity Tool - Fixes X connectors not being properly handled when using flow trace tool
+* 1D Integrity Tool - Fixes spelling mistake in Continuity Tool description
+* Import Empty - Fixes bug that would cause 'convert to database' always to be checked when QGIS is first opened - now correctly remembers previous setting between sessions
+* Increment Layer Tool - Fixes bug that would update a layer's name in layer panel but not the data source if an incremented layer had duplicates in the project
+* Increment Layer Tool - Fixes bug that would display "|layername=" for shp files after using 'import from tcf' tool
+* Convert TUFLOW Model GIS Format - Fixes bug that would not correctly convert TCF commands prefixed with '1D'
+* Convert TUFLOW Model GIS Format - Fixes a bug that would cause the tool to not bring in all layers if a scenario name had a decimal point in the name (e.g. If Scenario == 2.5m)
+* Configure Project - Fixes bug that would not cancel tool after user cancel request
