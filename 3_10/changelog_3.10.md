@@ -108,6 +108,15 @@ A toolbox containing a number of ported MiTools has been added.
 ##### Create TUFLOW Project Missing Commands
 {: .fs-4 : .fw-700}
 
+Missing commands from the TCF has been added to the control file templates created when running the Create TUFLOW Project tool. The missing commands were:
+
+* <tt><span style="color:#0066ff">Start Time</span><span style="color:red"> ==</span></tt>
+* <tt><span style="color:#0066ff">Log Folder</span><span style="color:red"> ==</span></tt>
+* <tt><span style="color:#0066ff">Output Folder</span><span style="color:red"> ==</span></tt>
+* <tt><span style="color:#0066ff">Write Check Files</span><span style="color:red"> ==</span></tt>
+
+![cf_template](assets/cf_template.PNG)
+
 ##### Import Empty Supports Empty Folder or Project Folder
 {: .fs-4 : .fw-700}
 
