@@ -87,11 +87,10 @@ Support has been added to change the reference time for NetCDF rasters. Results 
 
 ![netcdf_reference_time](assets/netcdf_reference_time.PNG)
 
-##### Better Error Handling for FFMPEG Downloader
-{: .fs-4 : .fw-700}
-
 ##### Open Result Widget Communicates with Layers Panel Visibility
 {: .fs-4 : .fw-700}
+
+The "Open Results" widget is now linked with the Layer Styling panel so that when results are deselected in TUFLOW Viewer the layer is simultaneously unchecked in the Layers Panel (and visa-versa). This has been implemented as there can be conflict between the QGIS F7 styling panel and TUFLOW Viewer (the QGIS panel is overriding TUFLOW Viewer) when results are deselected.
 
 ### Load Layers from TCF
 
