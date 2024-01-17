@@ -68,6 +68,8 @@ Selecting 1D nodes while plotting a 1D long section no longer affec the long sec
 ##### Unchecking a Mesh Result in the Layers Panel No Longer Causes Result to be Deselected
 {: .fs-4 : .fw-700}
 
+Unchecking a mesh layer (e.g. XMDF) in the QGIS Layers Panel will no longer deselect the result in TUFLOW Viewer in the 'Open Results' widget. This was previously implemented because there was a bug in QGIS that would cause results to remain visible even after they were deselected in TUFLOW Viewer due to the F7 styling panel 'Live Update' option overriding TUFLOW Viewer (to fix this the Open Results widget was linked to the checked layer visibility).
+
 ### Import Empty
 
 ##### Adds Missing Tooltips
