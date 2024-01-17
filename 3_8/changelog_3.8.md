@@ -69,6 +69,10 @@ The default output file format for the animation tool has been changed from avi 
 ##### Better Error Handling for FFMPEG Downloader
 {: .fs-4 : .fw-700}
 
+Better error handling and reporting has been implemented when TUFLOW Viewer tries to download ffmpeg.exe for animation creation.
+
+![ffmpeg_error](assets/ffmpeg_error.PNG)
+
 ##### Adds Result Name to Filename for Cross-Section Batch Plot Exporter
 {: .fs-4 : .fw-700}
 
