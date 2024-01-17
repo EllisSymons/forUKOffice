@@ -97,6 +97,10 @@ The "Open Results" widget is now linked with the Layer Styling panel so that whe
 ##### Better Error Handling
 {: .fs-4 : .fw-700}
 
+Better error handling for issues occuring when trying to load layers from TCF into QGIS.
+
+![load_tcf_error_handling](assets/load_tcf_error_handling.PNG)
+
 ##### Better at Handling Encoding Errors
 {: .fs-4 : .fw-700}
 
