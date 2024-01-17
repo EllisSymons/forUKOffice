@@ -76,6 +76,10 @@ Better error handling and reporting has been implemented when TUFLOW Viewer trie
 ##### Adds Result Name to Filename for Cross-Section Batch Plot Exporter
 {: .fs-4 : .fw-700}
 
+The result name is added to the exported filename for batch export cross-section plot. This is the same (existing) behaviour when batch export time-series plots.
+
+![batch_export_cross_section](assets/batch_export_cross_section.png)
+
 ##### Support Changing Reference Time for NetCDF Raster Results
 {: .fs-4 : .fw-700}
 
