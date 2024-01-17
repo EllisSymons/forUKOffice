@@ -138,6 +138,13 @@ New formats added to the dialog for ASC_to_ASC.exe 'Common Functions'.
 ##### Adds New GPKG Option to Save Superseded Version Out
 {: .fs-4 : .fw-700}
 
+A new option to save the superseded GPKG layer out into a new database. This prevents the necessity of creating a copy of a GPKG each time a layer is incremented.
+
+For more information, please visit the following TUFLOW wiki page:<br>
+[Increment Layer - Save Layer Into Superseded Folder](https://wiki.tuflow.com/QGIS_TUFLOW_Increment_Layer#Save_Layer_Out_Into_Superseded_Folder)
+
+![increment_layer_into_ss_folder](assets/increment_layer_into_ss_folder.PNG)
+
 ### Configure Project
 
 ##### Dialog Will No Longer Close on Error
