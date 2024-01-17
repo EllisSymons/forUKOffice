@@ -93,6 +93,11 @@ Styling by different result types has been added to the GPKG time-series result 
 ##### SWMM Tools
 {: .fs-4 : .fw-700}
 
+A toolbox containing a number of tools for TUFLOW-SWMM model building has been added. For more information please visit the following TUFLOW wiki page:<br>
+[TUFLOW QGIS Plugin](https://wiki.tuflow.com/TUFLOW_QGIS_Plugin)
+
+![tuflow_swmm_toolbox](assets/tuflow_swmm_toolbox.PNG)
+
 ##### MiTools
 {: .fs-4 : .fw-700}
 
