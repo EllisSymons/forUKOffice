@@ -20,7 +20,7 @@ nav_order: 1
 
 ### General
 
-Removes most `sys.path.append` calls so that the TUFLOW Plugin doesn't get tangled with other plugins or python packages.
+Removes most `sys.path.append` calls so that the TUFLOW Plugin doesn't get tangled with other plugins or Python packages.
 
 ### TUFLOW Viewer
 

@@ -39,8 +39,7 @@ For more information on the format please visit the TUFLOW Wiki:<br>
 ##### Support for NetCDF Rasters in Animation Tool
 {: .fs-4 : .fw-700}
 
-Support for NetCDF rasters (including high-resolution NC outputs) has been added to the animation export tool. The rasters must be loaded via:<Br>
-Load Results - NetCDF Grid
+Support for NetCDF rasters (including high-resolution NC outputs) has been added to the animation export tool. The rasters must be loaded via **Load Results - NetCDF Grid**
 
 <video style="max-width:640px" controls>
   <source src="assets/nc_hr_animation.mp4" type="video/mp4">
@@ -49,7 +48,7 @@ Load Results - NetCDF Grid
 ##### New Option to Copy Results Before Loading
 {: .fs-4 : .fw-700}
 
-The option to create a temporary copy of the results before loading them has been added. This negates the issue of locked result files while trying to view results while TUFLOW is running. This is applicable for XMDF, DAT, and NetCDF results.
+The option to create a temporary copy of the results before loading has been added. This negates the issue of locked result files while trying to view results while TUFLOW is running. This is applicable for XMDF, DAT, and NetCDF results.
 
 For more information, please visit the following TUFLOW wiki page:<br>
 [TUFLOW Viewer - Loading Results While TUFLOW is Running](https://wiki.tuflow.com/TUFLOW_Viewer_-_Loading_Results_While_TUFLOW_is_Running)
@@ -59,7 +58,7 @@ For more information, please visit the following TUFLOW wiki page:<br>
 ##### Selecting 1D Nodes Does No Longer Affects 1D Long Sections
 {: .fs-4 : .fw-700}
 
-Selecting 1D nodes while plotting a 1D long section no longer affec the long section (i.e. cause it to disappear).
+Selecting 1D nodes while plotting a 1D long section no longer affects the long section (i.e. cause it to disappear).
 
 <video style="max-width:640px" controls>
   <source src="assets/long_plot_remaining.mp4" type="video/mp4">
