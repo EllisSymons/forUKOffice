@@ -115,6 +115,10 @@ Missing default TUFLOW layer styling has been added for bg_uvpt_check.
 ##### Adds Breakline Function to Common Functions
 {: .fs-4 : .fw-700}
 
+The ASC_to_ASC.exe utility breakline function is now available in the 'Common Functions' tab.
+
+![breakline_function](assets/breakline_function.png)
+
 ##### Adds ASC_to_ASC Version Number
 {: .fs-4 : .fw-700}
 
