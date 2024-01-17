@@ -62,6 +62,10 @@ The option to flip which axis has the secondary axis applied has been added to t
 ##### Animation Default Format Changed to MP4
 {: .fs-4 : .fw-700}
 
+The default output file format for the animation tool has been changed from avi to mp4.
+
+![animation_default_mp4](assets/animation_default_mp4.png)
+
 ##### Better Error Handling for FFMPEG Downloader
 {: .fs-4 : .fw-700}
 
