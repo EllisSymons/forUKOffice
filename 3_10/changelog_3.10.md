@@ -29,7 +29,7 @@ Support for the new GPKG time-series output format (_swmm_ts.gpkg) has been adde
 * Load Results *(via the TLF or TCF)*
 * Load Results - Time Series
 
-For more information on the format please visit the TUFLOW Wiki:
+For more information on the format please visit the TUFLOW Wiki:<br>
 [TUFLOW Viewer - GPKG_Time_Series_Format](https://wiki.tuflow.com/TUFLOW_Viewer#GPKG_Time_Series_Format)
 
 <video style="max-width:640px" controls>
