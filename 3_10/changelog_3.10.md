@@ -84,6 +84,10 @@ Missing tooltip for the 2d_wrf type added.
 ##### GPKG Time Series Result Styling
 {: .fs-4 : .fw-700}
 
+Styling by different result types has been added to the GPKG time-series result context menu. This is possible regardless of whether the layer has been opened via TUFLOW Viewer or opened in QGIS natively.
+
+![gpkg_ts_context_menu](assets/gpkg_ts_context_menu.PNG)
+
 ### Processing Toolbox
 
 ##### SWMM Tools
