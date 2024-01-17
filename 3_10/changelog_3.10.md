@@ -88,6 +88,15 @@ Styling by different result types has been added to the GPKG time-series result 
 
 ![gpkg_ts_context_menu](assets/gpkg_ts_context_menu.PNG)
 
+### Load Layers From TCF
+
+##### Commands Where No Files Were Loaded Are Now Reported
+{: .fs-4 : .fw-700}
+
+Commands that should have layers loaded but don't, are now reported to the user.
+
+![load_tcf_layers_error_handling](assets/load_tcf_layers_error_handling.PNG)
+
 ### Processing Toolbox
 
 ##### SWMM Tools
