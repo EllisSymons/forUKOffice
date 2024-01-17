@@ -38,6 +38,13 @@ A workaround has been added for TUFLOW FV NetCDF results so that velocity maximu
 
 ![tuflowfv_max_vel](assets/tuflowfv_max_vel.png)
 
+##### Adds (xs) and (nwk) to Hydraulic Table Result Types
+{: .fs-4 : .fw-700}
+
+1D hydraulic result types add "(xs)" or "(nwk)" at front of result types to indicate what part in the 1d_ta_tables_check.csv the property came from (either from the cross-section processing or from the channel network processing).
+
+![hydraulic_table_result_types](assets/hydraulic_table_result_types.PNG)
+
 ##### Adds Axis Labels for 1D Hydraulic Tables
 {: .fs-4 : .fw-700}
 
@@ -46,9 +53,6 @@ Axis labels have been added for 1D hydraulic table plotting.
 ![hydraulic_tables_axis_names](assets/hydraulic_tables_axis_names.PNG)
 
 ##### Adds Optin to Flip Secondary Axis
-{: .fs-4 : .fw-700}
-
-##### Adds (xs) and (nwk) to Hydraulic Table Result Types
 {: .fs-4 : .fw-700}
 
 ##### Animation Default Format Changed to MP4
