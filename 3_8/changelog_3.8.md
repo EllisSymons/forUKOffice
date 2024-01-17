@@ -129,6 +129,10 @@ The ASC_to_ASC.exe version number is presented in the lower left of the dialog. 
 ##### Adds New Output Format Options to ASC_to_ASC Dialog
 {: .fs-4 : .fw-700}
 
+New formats added to the dialog for ASC_to_ASC.exe 'Common Functions'.
+
+![asc_to_asc_new_formats](assets/asc_to_asc_new_formats.PNG)
+
 ### Increment Layer
 
 ##### Adds New GPKG Option to Save Superseded Version Out
