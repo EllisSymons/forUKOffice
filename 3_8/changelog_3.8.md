@@ -27,8 +27,16 @@ Removes most `sys.path.append` calls so that the TUFLOW Plugin doesn't get tangl
 ##### Support for Saving Default Vector Styles for Streamlines and Flow Traces
 {: .fs-4 : .fw-700}
 
+Support added for saving/loading default styling for vectors using streamline and flow trace styling.
+
+![flow_trace_example](assets/flow_trace_example.PNG)
+
 ##### TUFLOW FV NetCDF Output Renders Velocity Maximums
 {: .fs-4 : .fw-700}
+
+A workaround has been added for TUFLOW FV NetCDF results so that velocity maximums are rendered properly.
+
+![tuflowfv_max_vel](assets/tuflowfv_max_vel.png)
 
 ##### Adds Axis Labels for 1D Hydraulic Tables
 {: .fs-4 : .fw-700}
