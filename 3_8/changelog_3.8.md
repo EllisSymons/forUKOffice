@@ -150,6 +150,10 @@ For more information, please visit the following TUFLOW wiki page:<br>
 ##### Dialog Will No Longer Close on Error
 {: .fs-4 : .fw-700}
 
+The dialog will no longer close if an error occurs while running the Configure TUFLOW Project tool.
+
+![the dialog will no longer close](assets/configure_proj_error.PNG)
+
 ## Bug Fixes
 
 ### TUFLOW Viewer
