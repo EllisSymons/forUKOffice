@@ -122,6 +122,10 @@ The ASC_to_ASC.exe utility breakline function is now available in the 'Common Fu
 ##### Adds ASC_to_ASC Version Number
 {: .fs-4 : .fw-700}
 
+The ASC_to_ASC.exe version number is presented in the lower left of the dialog. This is important as the new GIS formats are only available in 2023 releases (or later) of the tool. The version is found when the TUFLOW Utilities dialog is initially loaded and is based on the asc_to_asc.exe path in the 'Executables' tab.
+
+![asc_to_asc_version](assets/asc_to_asc_version.png)
+
 ##### Adds New Output Format Options to ASC_to_ASC Dialog
 {: .fs-4 : .fw-700}
 
