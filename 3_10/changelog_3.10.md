@@ -39,6 +39,13 @@ For more information on the format please visit the TUFLOW Wiki:<br>
 ##### Support for NetCDF Rasters in Animation Tool
 {: .fs-4 : .fw-700}
 
+Support for NetCDF rasters (including high-resolution NC outputs) has been added to the animation export tool. The rasters must be loaded via:<Br>
+Load Results - NetCDF Grid
+
+<video style="max-width:640px" controls>
+  <source src="assets/nc_hr_animation.mp4" type="video/mp4">
+</video>
+
 ##### New Option to Copy Results Before Loading
 {: .fs-4 : .fw-700}
 
