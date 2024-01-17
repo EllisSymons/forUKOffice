@@ -122,6 +122,10 @@ Missing commands from the TCF has been added to the control file templates creat
 ##### Import Empty Supports Empty Folder or Project Folder
 {: .fs-4 : .fw-700}
 
+The import empty toolbox tool now supports the empty directory to be either the project directory (TUFLOW folder) or the empty directory itself. If using the project directory, the directory structure must match the standard TUFLOW structure.
+
+![import_empty_dir_location](assets/import_empty_dir_location.png)
+
 ## Bug Fixes
 
 ### TUFLOW Viewer
