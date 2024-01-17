@@ -21,20 +21,52 @@ nav_order: 3
 
 ### TUFLOW Viewer
 
+##### Support for TUFLOW-SWMM Results
+{: .fs-4 : .fw-700}
+
+##### Support for NetCDF Rasters in Animation Tool
+{: .fs-4 : .fw-700}
+
+##### New Option to Copy Results Before Loading
+{: .fs-4 : .fw-700}
+
 ##### Selecting 1D Nodes Does No Longer Affects 1D Long Sections
 {: .fs-4 : .fw-700}
 
-Selecting 1D nodes while plotting a 1D long section no longer causes the long section to disappear. Previously any selected nodes would be considered in the long plot and would either cause the long plot to disappear because the selection count was more than two, or it would try and find a connection between the channel and the node.
+Selecting 1D nodes while plotting a 1D long section no longer affec the long section (i.e. cause it to disappear).
 
 <video style="max-width:640px" controls>
   <source src="assets/long_plot_remaining.mp4" type="video/mp4">
 </video>
 
+##### Unchecking a Mesh Result in the Layers Panel No Longer Causes Result to be Deselected
+{: .fs-4 : .fw-700}
+
 ### Import Empty
+
+##### Adds Missing Tooltips
+{: .fs-4 : .fw-700}
+
+Missing tooltip (2d_wrf) added.
 
 ### TUFLOW Context Menu
 
+##### GPKG Time Series Result Styling
+{: .fs-4 : .fw-700}
+
 ### Processing Toolbox
+
+##### SWMM Tools
+{: .fs-4 : .fw-700}
+
+##### MiTools
+{: .fs-4 : .fw-700}
+
+##### Create TUFLOW Project Missing Commands
+{: .fs-4 : .fw-700}
+
+##### Import Empty Supports Empty Folder or Project Folder
+{: .fs-4 : .fw-700}
 
 ## Bug Fixes
 
