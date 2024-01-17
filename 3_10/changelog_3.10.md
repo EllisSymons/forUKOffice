@@ -75,7 +75,9 @@ Unchecking a mesh layer (e.g. XMDF) in the QGIS Layers Panel will no longer dese
 ##### Adds Missing Tooltips
 {: .fs-4 : .fw-700}
 
-Missing tooltip (2d_wrf) added.
+Missing tooltip for the 2d_wrf type added.
+
+![import_empty_wrf](assets/import_empty_wrf.PNG)
 
 ### TUFLOW Context Menu
 
