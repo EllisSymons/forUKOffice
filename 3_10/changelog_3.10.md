@@ -13,13 +13,22 @@ nav_order: 3
 
 <!--
 <video style="max-width:640px" controls>
-  <source src="videos/test.mp4" type="video/mp4">
+  <source src="assets/test.mp4" type="video/mp4">
 </video>
 -->
 
 ## New Features and Enhancements
 
 ### TUFLOW Viewer
+
+##### Selecting 1D Nodes Does No Longer Affects 1D Long Sections
+{: .fs-4 : .fw-700}
+
+Selecting 1D nodes while plotting a 1D long section no longer causes the long section to disappear. Previously any selected nodes would be considered in the long plot and would either cause the long plot to disappear because the selection count was more than two, or it would try and find a connection between the channel and the node.
+
+<video style="max-width:640px" controls>
+  <source src="assets/long_plot_remaining.mp4" type="video/mp4">
+</video>
 
 ### Import Empty
 
@@ -31,6 +40,7 @@ nav_order: 3
 
 ### TUFLOW Viewer
 
+* Disable matplotlib 3.5.1 "legend about to break" check and message
 * Fixes bug where Flood Modeller cross-sections weren't plotting due to the change in inactive area handling in TUFLOW Plugin v3.9
 * Fixes bug when loading a cross-section that starts with a valid float number in the header
 * Fixes python error that prevented TUFLOW Viewer from loading when there was a 1d_xs
