@@ -41,6 +41,10 @@ A workaround has been added for TUFLOW FV NetCDF results so that velocity maximu
 ##### Adds Axis Labels for 1D Hydraulic Tables
 {: .fs-4 : .fw-700}
 
+Axis labels have been added for 1D hydraulic table plotting.
+
+![hydraulic_tables_axis_names](assets/hydraulic_tables_axis_names.PNG)
+
 ##### Adds Optin to Flip Secondary Axis
 {: .fs-4 : .fw-700}
 
