@@ -111,6 +111,8 @@ A toolbox containing a number of ported MiTools has been added.
 Missing commands from the TCF has been added to the control file templates created when running the Create TUFLOW Project tool. The missing commands were:
 
 * <tt><span style="color:#0066ff">Start Time</span><span style="color:red"> ==</span></tt>
+* <tt><span style="color:#0066ff">End Time</span><span style="color:red"> ==</span></tt>
+* <tt><span style="color:#0066ff">Timestep</span><span style="color:red"> ==</span></tt>
 * <tt><span style="color:#0066ff">Log Folder</span><span style="color:red"> ==</span></tt>
 * <tt><span style="color:#0066ff">Output Folder</span><span style="color:red"> ==</span></tt>
 * <tt><span style="color:#0066ff">Write Check Files</span><span style="color:red"> ==</span></tt>
