@@ -101,13 +101,14 @@ Better error handling for issues occuring when trying to load layers from TCF in
 
 ![load_tcf_error_handling](assets/load_tcf_error_handling.PNG)
 
-##### Better at Handling Encoding Errors
-{: .fs-4 : .fw-700}
-
 ### TUFLOW Layer Styling
 
 ##### Adds Missing Layer Styling
 {: .fs-4 : .fw-700}
+
+Missing default TUFLOW layer styling has been added for bg_uvpt_check.
+
+![bg_uvpt_styling](assets/bg_uvpt_styling.PNG)
 
 ### TUFLOW Utilities
 
@@ -152,6 +153,7 @@ Better error handling for issues occuring when trying to load layers from TCF in
 
 ### Other
 
+* Load Layers From TCF - Encoding errors when reading TUFLOW control files are now ignored.
 * Correctly unloads a few tools so that plugin can be upgraded/removed properly
 * 1D Integrity Tool - Fixes X connectors not being properly handled when using flow trace tool
 * 1D Integrity Tool - Fixes spelling mistake in Continuity Tool description
