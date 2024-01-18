@@ -105,7 +105,9 @@ Updated to support mesh layers in QGIS 3.28+.
 ##### Improved Progress Bar
 {: .fs-4 : .fw-700}
 
-Improved progress bar.
+The progress bar has been improved and made more robust.
+
+![load_from_tcf_prog_bar](assets/load_from_tcf_prog_bar.PNG)
 
 ##### Support Any TUFLOW Control Selection
 {: .fs-4 : .fw-700}
