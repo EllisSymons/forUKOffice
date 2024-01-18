@@ -73,7 +73,7 @@ New tool - Arch Bridge Editor or 'BArch' types. For more information please visi
 ##### Point Temporal Patterns
 {: .fs-4 : .fw-700}
 
-Will download point temporal pattern CSV manually if no temporal patterns are found in the ARR_Web_Data.txt.
+The tool will now download the point temporal pattern CSV manually if no temporal patterns are found in the ARR_Web_Data.txt.
 
 #### CSV Output Includes Event ID
 {: .fs-4 : .fw-700}
