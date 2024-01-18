@@ -32,7 +32,9 @@ Changing rendering style of a result type will now also change the style of the 
 ##### Support For Reloading Mesh Layers
 {: .fs-4 : .fw-700}
 
-Support reloading of mesh layers (must use reload layer tool if results have changed otherwise QGIS crashes).
+Support reloading of mesh layers (must use reload layer tool if results have changed otherwise QGIS crashes). This is only available in QGIS 3.28+.
+
+![reload_mesh_layer](assets/reload_mesh_layer.png)
 
 ##### Increase Hover Over Label Speed
 {: .fs-4 : .fw-700}
