@@ -121,7 +121,9 @@ Adds support for any TUFLOW control file to import from.
 ##### Manually Assigning CRS
 {: .fs-4 : .fw-700}
 
-Adds ability to specify output CRS
+Adds ability to specify output CRS. The output CRS is assigned to all layers when converting formats, however no translation/warping is performed.
+
+![conv_gis_format_crs](assets/conv_gis_format_crs.png)
 
 ##### Commands That Do Not Copy Anything Reported
 {: .fs-4 : .fw-700}
