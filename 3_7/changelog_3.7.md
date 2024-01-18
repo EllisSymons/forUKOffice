@@ -130,6 +130,8 @@ Adds ability to specify output CRS. The output CRS is assigned to all layers whe
 
 Tool will now log commands that do not convert/copy any files (but should do).
 
+![conv_gis_format_nothing_copied](assets/conv_gis_format_nothing_copied.png)
+
 ##### Create Empty Files
 {: .fs-4 : .fw-700}
 
