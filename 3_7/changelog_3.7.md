@@ -144,6 +144,8 @@ Adds option to create empty files for the converted model. The tool will try and
 
 Adds option to specify the output GPKG database name when using a grouped profile.
 
+![conv_gis_format_gpkg_name](assets/conv_gis_format_gpkg_name.png)
+
 ### Toolbox
 
 TUFLOW toolbox added.
