@@ -63,7 +63,10 @@ Adds 'Water Level' and 'Max Water Level' result types to cross-section (previous
 
 ### Arch Bridge Editor
 
-New tool.
+New tool - Arch Bridge Editor or 'BArch' types. For more information please visit the following TUFLOW wiki page:<Br>
+[QGIS TUFLOW Arch Bridge Editor](https://wiki.tuflow.com/QGIS_TUFLOW_Arch_Bridge_Editor)
+
+![arch_bridge](assets/arch_bridge.PNG)
 
 ### ARR to TUFLOW
 
