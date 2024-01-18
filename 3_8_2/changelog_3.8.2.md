@@ -18,7 +18,29 @@ nav_order: 3
 
 ## New Features and Enhancements
 
-### TUFLOW Viewer
+### Load Layers From TCF
+
+##### New Option to Load Layers Sorted by Control File
+{: .fs-4 : .fw-700}
+
+The tool now supports sorting layer by control rather than alphabetically. This allows users to see layer priority as it exists in TUFLOW. An option also exists to group raster layers separately to the vector layers.
+
+![load_layers_from_tcf_sort_by_cf](assets/load_layers_from_tcf_sort_by_cf.png)
+
+##### If Event Logic Captured
+{: .fs-4 : .fw-700}
+
+Layers that sit inside "<tt><span style="color:#0066ff">If Event</span><span style="color:red"> == </span></tt>" logic blocks now are treated the same as scenario blocks.
+
+![load_layers_from_tcf_events](assets/load_layers_from_tcf_events.PNG)
+
+#### Visual Change - Keep Selection Highlighted Blue
+{: .fs-4 : .fw-700}
+
+### Import Empty
+
+##### Adds Import to Kart Option
+{: .fs-4 : .fw-700}
 
 ## Bug Fixes
 
