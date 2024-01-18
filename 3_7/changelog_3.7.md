@@ -36,10 +36,14 @@ Support reloading of mesh layers (must use reload layer tool if results have cha
 
 ![reload_mesh_layer](assets/reload_mesh_layer.png)
 
-##### Increase Hover Over Label Speed
+##### Increase Hover Over Labelling Speed
 {: .fs-4 : .fw-700}
 
-Increased hover over label speed. From testing 10,000 point dataset: prev. each label took ~1.0s to calculate and render, now = ~0.15s.
+Increased hover over labelling speed. From testing 10,000 point dataset: previously each label took ~1.0s to calculate and render, now ~0.15s.
+
+<video style="max-width:640px" controls>
+  <source src="assets/labelling_speed.mp4" type="video/mp4">
+</video>
 
 ##### Add Missing Plot Result Type Axis Labels and Uniots
 {: .fs-4 : .fw-700}
