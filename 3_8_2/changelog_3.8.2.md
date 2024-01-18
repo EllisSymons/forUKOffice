@@ -34,7 +34,7 @@ Layers that sit inside "<tt><span style="color:#0066ff">If Event</span><span sty
 
 ![load_layers_from_tcf_events](assets/load_layers_from_tcf_events.PNG)
 
-#### Visual Change - Keep Selection Highlighted Blue
+##### Visual Change - Keep Selection Highlighted Blue
 {: .fs-4 : .fw-700}
 
 Selection highlighting stays blue even when the widget hasn't got the focus (previously the selection would become grey). This allows better visual representation when both scenario and event options are present.
