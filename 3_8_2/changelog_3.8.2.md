@@ -46,6 +46,10 @@ Selection highlighting stays blue even when the widget hasn't got the focus (pre
 ##### Adds Import to Kart Option
 {: .fs-4 : .fw-700}
 
+Option to import empty layers into Kart repository. Import empty checks for the existance of Kart and gives the option only if it is available.
+
+![import_empty_kart](assets/import_empty_kart.png)
+
 ## Bug Fixes
 
 ### TUFLOW Viewer
