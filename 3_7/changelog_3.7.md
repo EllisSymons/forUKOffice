@@ -135,7 +135,9 @@ Tool will now log commands that do not convert/copy any files (but should do).
 ##### Create Empty Files
 {: .fs-4 : .fw-700}
 
-Adds option to create empty files for converted model.
+Adds option to create empty files for the converted model. The tool will try and locate an existing 'empty' folder or 'gis' folder to put the created empty folder, however the user can also specify a relative path (from the root directory i.e. 'TUFLOW' folder to place it).
+
+![conv_gis_format_create_empty](assets/conv_gis_format_create_empty.png)
 
 ##### Custom Output GPKG Name
 {: .fs-4 : .fw-700}
