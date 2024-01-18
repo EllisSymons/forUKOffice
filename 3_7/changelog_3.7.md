@@ -112,7 +112,9 @@ The progress bar has been improved and made more robust.
 ##### Support Any TUFLOW Control Selection
 {: .fs-4 : .fw-700}
 
-Adds ability to select any TUFLOW control file to import from.
+Adds support for any TUFLOW control file to import from.
+
+![load_from_tcf_all_cf](assets/load_from_tcf_all_cf.png)
 
 ### Convert Model GIS Format
 
