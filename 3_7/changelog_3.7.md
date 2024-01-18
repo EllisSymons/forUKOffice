@@ -23,7 +23,11 @@ nav_order: 1
 ###### Updating Mesh Styling Updates Both Temporal and Maximums
 {: .fs-4 : .fw-700}
 
-Changing rendering style of a result type will now also change the style of the maximum and minimum type of the same name (and visa versa).
+Changing rendering style of a result type will now also change the style of the maximum and minimum type of the same name (and visa versa). Previously this would not update both as QGIS treats these as separate datasets.
+
+<video style="max-width:640px" controls>
+  <source src="assets/tuflow_viewer_styling_for_temp_max.mp4" type="video/mp4">
+</video>
 
 ##### Support For Reloading Mesh Layers
 {: .fs-4 : .fw-700}
