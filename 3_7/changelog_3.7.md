@@ -148,12 +148,12 @@ Adds option to specify the output GPKG database name when using a grouped profil
 
 ### Toolbox
 
-TUFLOW toolbox added.
-
 ##### TMO to Points
 {: .fs-4 : .fw-700}
 
-Added 'TMO to Points' algorithm
+Added 'TMO to Points' algorithm to the TUFLOW toolbox. This tool converts outputs from a .tmo output (<tt><span style="color:#0066ff">Map Output Format</span><span style="color:red"> == </span>TMO</tt>) into a point vector layer.
+
+![tmo_to_points_toolbox](assets/tmo_to_points_toolbox.png)
 
 ## Bug Fixes
 
