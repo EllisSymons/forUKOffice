@@ -57,6 +57,10 @@ Adds units and label to y-axis for RFR, RFC, RFML outputs.
 
 Adds 'Water Level' and 'Max Water Level' result types to cross-section (previous had to use time series 'Level' result type).
 
+<video style="max-width:640px" controls>
+  <source src="assets/water_level_on_cross_section.mp4.mp4" type="video/mp4">
+</video>
+
 ### Arch Bridge Editor
 
 New tool.
