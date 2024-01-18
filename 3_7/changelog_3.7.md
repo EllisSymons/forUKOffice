@@ -98,6 +98,8 @@ The GPKG 'Spatial Database Options' settings are now saved after the tool is run
 
 Updated to support mesh layers in QGIS 3.28+.
 
+![reload_mesh_layer](assets/reload_mesh_layer.png)
+
 ### Load Layers From TCF
 
 ##### Improved Progress Bar
