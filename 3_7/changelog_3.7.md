@@ -50,6 +50,8 @@ Increased hover over labelling speed. From testing 10,000 point dataset: previou
 
 Adds units and label to y-axis for RFR, RFC, RFML outputs.
 
+![plot_rfr](assets/plot_rfr.png)
+
 ##### Cross-Section Results Can Use Water Level or Max Water Level
 {: .fs-4 : .fw-700}
 
