@@ -78,7 +78,9 @@ The tool will now download the point temporal pattern CSV manually if no tempora
 #### CSV Output Includes Event ID
 {: .fs-4 : .fw-700}
 
-CSV output now includes event id.
+The processed rainfall CSV files now contain the temporal pattern event ID. This makes it easier to match the processed data to the raw temporal pattern data from the Datahub.
+
+![arr_to_tuflow_event_id](assets/arr_to_tuflow_event_id.png)
 
 ### Import Empty
 
