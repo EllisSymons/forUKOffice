@@ -87,7 +87,9 @@ The processed rainfall CSV files now contain the temporal pattern event ID. This
 ##### GPKG Database Settings Saved
 {: .fs-4 : .fw-700}
 
-Database settings are now saved from previous tool runs.
+The GPKG 'Spatial Database Options' settings are now saved after the tool is run so that they are auto populated the next time the tool is used.
+
+![import_empty_gpkg_options](assets/import_empty_gpkg_options.png)
 
 ### Reload Layer
 
