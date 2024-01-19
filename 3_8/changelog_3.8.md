@@ -2,7 +2,7 @@
 layout: default
 title: Changelog for v3.8
 parent: Visual Changelogs
-nav_order: 7
+nav_order: 8
 ---
 
 # Changelog for TUFLOW Plugin v3.8
