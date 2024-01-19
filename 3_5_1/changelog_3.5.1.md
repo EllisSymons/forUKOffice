@@ -10,12 +10,7 @@ nav_order: 5
 * TOC
 {:toc}
 
-## New Features and Enhancements
-
-### TUFLOW Viewer
 
 ## Bug Fixes
 
-### TUFLOW Viewer
-
-### Other
+* ARR to TUFLOW - removes remote debugging breakpoint added in 3.5 which was causing crash.
