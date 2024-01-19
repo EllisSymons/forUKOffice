@@ -67,6 +67,7 @@ Adds button to the finish dialog that will copy the download path to the clipboa
 ### Import Empty
 
 ##### Missing Empty Types Added for Tooltips
+{: .fs-4 : .fw-700}
 
 Adds new/missing empty types to the empty tooltips (2d_bg, 1d_bg, 1d_lc).
 
