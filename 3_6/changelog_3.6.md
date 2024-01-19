@@ -65,6 +65,9 @@ Adds support for the raw ZZN time series output from Flood Modeller (**Load Resu
 
 New approach added that uses GIS polygon(s) and their attribute data for method calculation. This has the benefit of allowing multiple calculations to take place and spatial distribution of parameters.
 
+For more information, please visit the following TUFLOW wiki page:<br>
+[QGIS SCS to TUFLOW - GIS Approach](https://wiki.tuflow.com/QGIS_SCS_to_TUFLOW#GIS_Approach)
+
 ![scs_gis_approach](assets/scs_gis_approach.png)
 
 ### Load Layers From TCF
