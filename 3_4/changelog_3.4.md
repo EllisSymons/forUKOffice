@@ -31,7 +31,7 @@ User option added to view/hide inactive areas in 1D cross-sections. In-active ar
 ##### Cross-Section Source Leading With '/'
 {: .fs-4 : .fw-700}
 
-Cross-section source reference with a leading '/' (or '\') will now be interpreted the same as './'. Although this not correct (e.g. "./csv/cross_section.csv" is different than "/csv/cross_section.csv" especially in Linux), this is how TUFLOW currently handles leading slashes.
+Cross-section source reference with a leading '/' (or '\\') will now be interpreted the same as './'. Although this not correct (e.g. "./csv/cross_section.csv" is different than "/csv/cross_section.csv" especially in Linux), this is how TUFLOW currently handles leading slashes.
 
 ![](assets/cross_section_leading_slash.png)
 
