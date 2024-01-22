@@ -139,7 +139,7 @@ The GUI has been updated with links to documentation for the relevant tool.
 ###### Output 'tmp' Layers Given Same Style as Input
 {: .fs-4 : .fw-700}
 
-Output, correct, layers automatically copy the style of input layers.
+Output, corrected layers automatically copy the style of input layers.
 
 ###### Flow Trace Speed Up
 {: .fs-4 : .fw-700}
