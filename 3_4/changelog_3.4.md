@@ -17,22 +17,32 @@ nav_order: 3
 ##### Support for '_TS_P' GIS Outputs
 {: .fs-4 : .fw-700}
 
-added ability to 'quick view' _TS output GIS layers. Not full featured (no axis names, does not populate time slider, no secondary axis etc)
+Support for "quick viewing" '_TS_P' output GIS layers (just open them in QGIS while TUFLOW Viewer is open). Not full featured (no axis names, does not populate time slider, no secondary axis etc).
+
+![](assets/ts_gis_results.png)
 
 ##### Toggle Inactive Areas in Cross-Sections
 {: .fs-4 : .fw-700}
 
-User option added to view/hide inactive areas in 1D cross-sections.
+User option added to view/hide inactive areas in 1D cross-sections. In-active areas are controlled by negative material/mannings n values in the cross-section.
+
+![](assets/plotting_inactive_area.png)
 
 ##### Cross-Section Source Leading With '/'
 {: .fs-4 : .fw-700}
 
-Cross-section source reference with a leading '/' will now be interpreted the same as './'
+Cross-section source reference with a leading '/' (or '\') will now be interpreted the same as './'. Although this not correct (e.g. "./csv/cross_section.csv" is different than "/csv/cross_section.csv" especially in Linux), this is how TUFLOW currently handles leading slashes.
 
-##### Support Insets in Animation Export Tool
+![](assets/cross_section_leading_slash.png)
+
+##### Support For Insets in Animation Export Tool
 {: .fs-4 : .fw-700}
 
-animation exporter will now update temporal properties of all map windows (allows for insets)
+Animation export tool will now update temporal properties of all map windows in the print layout (i.e. support for insets).
+
+<video style="max-width:640px" controls>
+  <source src="assets/inset.mp4" type="video/mp4">
+</video>
 
 ### 1D Integrity Tool
 
@@ -46,36 +56,46 @@ Now produces a warning instead of an error if the input layer doesn't look like 
 ##### Stability Styling
 {: .fs-4 : .fw-700}
 
-new button is located using dropdown arrow under 'Style Current Layer' button
+A new styling button is located using dropdown arrow under 'Style Current Layer' button. This will automatically style the '_TS_P' layer based on perceived stability.
+
+![](assets/stability_styling.png)
 
 ##### VZSH_ZPT_CHECK
 {: .fs-4 : .fw-700}
 
-added custom styling for VZSH_ZPT_CHECK
+Styling for vzsh_zpt_check.
+
+![](assets/vzsh_zpt_check.png)
 
 ##### NWK_C Check 'all else' On By Default
 {: .fs-4 : .fw-700}
 
-NWK_C check styling now has purple "all else" style visible by default
+NWK_C check styling now has purple "all else" style visible by default.
+
+![](assets/nwk_c_all_else.png)
 
 ### ARR to TUFLOW
 
 ##### Assume Zero Values for NaN
 {: .fs-4 : .fw-700}
 
-If storm loss values are NaN from the datahub, the tool will now assume zero and produce an error message for the output log file
+If storm loss values are NaN from the datahub, the tool will now assume zero and produce an warning message in the output log file.
 
 ##### Additional Columns Added to Material.csv
 {: .fs-4 : .fw-700}
 
-Added additional columns ("Storage Reduction Factor" and "Fraction Impervious") to material.csv output
+Added additional columns ("Storage Reduction Factor" and "Fraction Impervious") to material.csv output.
+
+![](assets/materials_csv.PNG)
 
 ### TUFLOW Utilities
 
 ##### Increased Dropdown Box Width
 {: .fs-4 : .fw-700}
 
-Increased width of timesteps combobox for "TUFLOW to GIS" common tools
+Increased width of timesteps dropdown box for "TUFLOW to GIS" common tools.
+
+![](assets/wider_combobox.png)
 
 ## Bug Fixes
 
