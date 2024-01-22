@@ -21,22 +21,30 @@ GPKG compatibility added to relevant tools - Functionality added for the 2022 TU
 ##### New 'Load From TCF' Approach
 {: .fs-4 : .fw-700}
 
-New approach when loading from TCF - all possible results listed to user rather than possible scenarios. Old method still available via Settings > Defaults.
+New approach when loading from TCF - all possible results listed to user rather than possible scenarios. The old method is still available via Settings >> Defaults.
 
-##### New Support For Setting Axis Limits in Animation Export Tool
+![](assets/available_results.png)
+
+##### Support For New Method For Setting Axis Limits in Animation Export Tool
 {: .fs-4 : .fw-700}
 
-cross section / long plots in animation now gives user options to set axis limits different ways. Opening plot properties will no longer trigger axis limit calculation which could sometimes take a while.
+Setting axis limits for cross-section plots have a new method where the limits are taken from the TUFLOW Viewer plot. Opening plot properties will no longer trigger axis limit calculation which could sometimes take a while.
+
+![](assets/new_axis_limit_options.png)
 
 ##### Hover Over Open Channel Labelling
 {: .fs-4 : .fw-700}
 
-added hover over channel names to 1D results for long plotting - similar to culvert hover over labelling.
+Hover over labelling shows channel names in 1D results long plotting - similar to culvert hover over labelling.
+
+<video style="max-width:640px" controls>
+  <source src="assets/channel_labelling.mp4" type="video/mp4">
+</video>
 
 ##### Speed Up Hover Over Labelling
 {: .fs-4 : .fw-700}
 
-use blitting to make hover over labelling a lot quicker and hopefully now feels 'snappier'.
+Use blitting to make hover over labelling a lot quicker.
 
 ### Processing Toolbox
 
@@ -45,127 +53,165 @@ A TUFLOW toolbox has been added to the processing tool.
 ##### Convert TUFLOW Model GIS Format
 {: .fs-4 : .fw-700}
 
-Added "Convert TUFLOW Model GIS Format" tool
+Added "Convert TUFLOW Model GIS Format" tool.
+
+![](assets/conv_tuf_gis_format.png)
 
 ### Apply GPKG Layer Names
 
 New Tool - renames GPKG layers in QGIS Layers Panel to match their name in the GPKG database.
+
+![](assets/apply_gpkg_name.png)
 
 ### TUFLOW Layer Styling
 
 ###### GPKG Support
 {: .fs-4 : .fw-700}
 
-now supports GPKG layers
+Now supports GPKG layers.
 
 ### Import Check Files
 
 ###### GPKG Support
 {: .fs-4 : .fw-700}
 
-now supports GPKG layers
+Now supports GPKG layers.
 
 ### Import Empty Files
 
 ###### GPKG Support
 {: .fs-4 : .fw-700}
 
-now supports GPKG layers
+Now supports GPKG layers.
 
 ### Insert TUFLOW Attributes
 
 ###### GPKG Support
 {: .fs-4 : .fw-700}
 
-now supports GPKG layers
+Now supports GPKG layers.
 
 ### Configure Project
 
 ###### GPKG Support
 {: .fs-4 : .fw-700}
 
-now supports GPKG layers
+Now supports GPKG layers.
+
+![](assets/conf_proj_gpkg.png)
 
 ### About Dialog
 
-now has QGIS and Python version also listed for convenience
+QGIS and Python version also listed.
+
+![](assets/about.png)
 
 ### Integrity Tool
 
 ###### Additional 'Magnitude' Column in Output
 {: .fs-4 : .fw-700}
 
-Added additional 'magnitude' column to 'output' GIS layer that defines how far big the error is based on respective tool (bigger magnitude = bigger issue)
+Added additional 'magnitude' column to 'output' GIS layer that defines how far big the error is based on respective tool (bigger magnitude = bigger issue).
+
+![](assets/pipe_integrity_magnitude_attr.PNG)
 
 ###### Auto Styling for Output
 {: .fs-4 : .fw-700}
 
-Added auto symbology for the 'output' GIS layer that uses a graduated size based on the 'magnitude'
+Added auto symbology for the 'output' GIS layer that uses a graduated size based on the 'magnitude'. This is automatically applied when the layer is generated and can also be applied via the TUFLOW layer styling tool.
+
+![](assets/pipe_integrity_mag_styling.PNG)
 
 ###### Option to Auto Replace Input With Output
 {: .fs-4 : .fw-700}
 
-option will be given to automatically replace inputs with tool outputs after running certain tools
+After a given tool is run, if corrections were made and option will be given to automatically replace inputs with tool outputs after running.
+
+![](assets/pipe_integrity_replace_inputs.PNG)
 
 ###### Udated GUI With Documentation Links
 {: .fs-4 : .fw-700}
 
-updated GUI with links to documentation and reduced the height
+The GUI has been updated with links to documentation for the relevant tool.
+
+![](assets/pipe_integrity_documentation.png)
 
 ###### Output 'tmp' Layers Given Same Style as Input
 {: .fs-4 : .fw-700}
 
-output tmp layers automatically copy the style of input layers
+Output, correct, layers automatically copy the style of input layers.
 
 ###### Flow Trace Speed Up
 {: .fs-4 : .fw-700}
 
-Significantly improved the speed of the long plot generator in the flow trace tool - will be most noticeable on big datasets
+Significantly improved the speed of the long plot generator in the flow trace tool - will be most noticeable on big datasets.
 
 ###### Limit Flow Trace Between Channels
 {: .fs-4 : .fw-700}
 
-Can now limit flow trace and long plot to particular section of network by selecting 2+ channels to connect between
+Can now limit flow trace and long plot to particular section of network by selecting 2+ channels to connect between.
+
+![](assets/pipe_integrity_flow_trace.PNG)
 
 ###### Long Plot - Hover Over Labelling Shows More Info
 {: .fs-4 : .fw-700}
 
-hover over labelling now shows more information on the channel
+Hover over labelling now shows more information on the channel/pipe and any continuity flags.
+
+![](assets/pipe_integrity_hover_over_info.png)
+
+![](assets/pipe_integrity_hover_over_flag.png)
 
 ###### Long Plot - Copy / Export Data
 {: .fs-4 : .fw-700}
 
-added export/copy data options in context menu
+Export/copy data options to the context menu.
+
+![](assets/pipe_integrity_context_menu_export.png)
 
 ###### Long Plot - Hide Legend
 {: .fs-4 : .fw-700}
 
-can toggle legend on/off in context menu
+Toggle legend on/off option available in the context menu.
+
+![](assets/pipe_integrity_context_menu_legend.png)
 
 ###### Long Plot - Toggle Different Continuity Flags
 {: .fs-4 : .fw-700}
 
-can toggle continuity flags on/off in context menu
+Toggle different continuity flags on/off option available in the context menu.
+
+![](assets/pipe_integrity_context_menu_flags.png)
 
 ###### Long Plot - Plot Window Link with Map Window
 {: .fs-4 : .fw-700}
 
-current pipe at mouse position is shown in QGIS map window
+Current pipe at mouse position in the plotting window is highlighted red in QGIS map window.
+
+<video style="max-width:640px" controls>
+  <source src="assets/pipe_integrity_long_plot_map_link.mp4" type="video/mp4">
+</video>
 
 ###### Long Plot - Zoom to Channel in Map Window
 {: .fs-4 : .fw-700}
 
-can zoom to current channel in map window using context menu
+'Zoom to feature' option added to the context menu (if a channel has been right-clicked) that will zoom the map window to the selected channel.
+
+![](assets/pipe_integrity_context_menu_zoom_to_pipe.png)
 
 ###### Long Plot - Zoom to Path in Map Window
 {: .fs-4 : .fw-700}
 
-can zoom to selected path extent using context menu
+'Zoom to Selected Paths' option added to the context menu that will zoom the map window to the selected paths in the 'Paths' widget.
+
+![](assets/pipe_integrity_context_menu_zoom_to_path.png)
 
 ###### Long Plot - Better Label Conflict Management
 {: .fs-4 : .fw-700}
 
-pipe labels now try and avoid overlapping
+Channel labelling have better conflict management so that there is little to no overlaps.
+
+![](assets/pipe_integrity_label_channels.png)
 
 ## Bug Fixes
 
