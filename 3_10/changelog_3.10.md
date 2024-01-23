@@ -161,6 +161,7 @@ The import empty toolbox tool now supports the empty directory to be either the 
 * 1D Integrity Tool - Error is shown to user if selected channels are not connected when using the flow trace tool. Previously this would error silently and progress bar looked to hang.
 * 1D Integrity Tool - Remembers selected DEM which could reset if layers were added/removed from workspace
 * 1D Integrity Tool - Fixes Python error that could occur if an aerial image was accidentally used as ground surface
-* 1D Integrity Tool = Fixes a Python error that could occur when importing new layers when raster layers are open in the workspace
+* 1D Integrity Tool - Fixes a Python error that could occur when importing new layers when raster layers are open in the workspace
+* 1D Integrity Tool - Fixes a bug where using a cover limit of exactly zero would result in no cover limitations being flagged
 * Run TUFLOW - Fixes bug that can cause Python error when browsing for TUFLOW.exe
 * Copy TUFLOW Command - A little more clever when searching for control files in case it finds an erroneous 'TUFLOW' folder
