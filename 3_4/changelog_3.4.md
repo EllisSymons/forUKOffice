@@ -49,7 +49,9 @@ Animation export tool will now update temporal properties of all map windows in 
 ##### Error Downgraded to Warning When Input Checking
 {: .fs-4 : .fw-700}
 
-Now produces a warning instead of an error if the input layer doesn't look like a 1d_nwk type
+Now produces a warning instead of an error if the input layer doesn't look like a 1d_nwk type.
+
+![](assets/pipe_integrity_not_network_layer_warning.png)
 
 ### TUFLOW Layer Styling
 
