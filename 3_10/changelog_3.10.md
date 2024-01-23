@@ -151,7 +151,7 @@ The import empty toolbox tool now supports the empty directory to be either the 
 
 ### Other
 
-* Import Empty (Toobox) - Fixes bug that could potentially not correctly bring in new GPKG layer if GPKG contained more than one layer
+* Import Empty (Toolbox) - Fixes bug that could potentially not correctly bring in new GPKG layer if GPKG contained more than one layer
 * Import Empty (Toolbox) - Removes duplicate empty types from list
 * Apply GPKG Name - Fixes bug where name wasn't applied to raster layers where the database only containes one raster layer
 * Increment Layer - Fixes bug that would cause python error if a layer group was selected
